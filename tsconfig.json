@@ -1,0 +1,36 @@
+{
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist"
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "commonjs",
+    "target": "es2016",
+    "strict": true,
+    "lib": [
+      "es2022"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@app/*": [
+        "./src/application/*"
+      ],
+      "@domain/*": [
+        "./src/domain/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@__utils__/*": [
+        "./src/__utils__/*"
+      ],
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "booking-system",
+  "packageManager": "yarn@4.9.1",
+  "scripts": {
+    "build": "tsc",
+    "watch:ts": "tsc --watch",
+    "watch:node": "nodemon",
+    "start:dev": "run-p watch:ts watch:node"
+  },
+  "devDependencies": {
+    "@jest-mock/express": "^3.0.0",
+    "@types/express": "^5.0.1",
+    "@types/jest": "^29.5.14",
+    "eslint": "^9.24.0",
+    "jest": "^29.7.0",
+    "jest-mock-extended": "^3.0.7",
+    "nodemon": "^3.1.10",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.3.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "inversify": "^7.5.1",
+    "reflect-metadata": "^0.2.2",
+    "ts-pattern": "^5.7.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.3"
+  }
+}

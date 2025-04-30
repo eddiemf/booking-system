@@ -1,5 +1,5 @@
 {
-  "exec": "ts-node -r tsconfig-paths/register dist/index.js",
+  "exec": "ts-node -r tsconfig-paths/register dist/main.js",
   "watch": ["src"],
   "ignore": ["**/*.test.ts"],
   "ext": "ts"

@@ -26,12 +26,11 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "awilix": "^12.0.5",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
     "express": "^5.1.0",
-    "inversify": "^7.5.1",
     "pg": "^8.15.6",
-    "reflect-metadata": "^0.2.2",
     "ts-pattern": "^5.7.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.3"

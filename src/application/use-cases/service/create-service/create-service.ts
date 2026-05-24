@@ -1,10 +1,12 @@
-import { type ServiceCreationError, ServiceEntity, type ServiceRepository } from '@domain/entities';
-import type { StorageError } from '@domain/errors';
-import { TYPES } from '@shared/ioc-types';
-import { Ok, type PromiseResult } from '@shared/result';
-import { inject, injectable } from 'inversify';
-import type { ServiceDTO } from '../../../dtos';
-import { ServiceMapper } from '../../../mappers';
+import {
+  type ServiceCreationError,
+  ServiceEntity,
+  type ServiceRepository,
+} from "@domain/entities";
+import type { StorageError } from "@domain/errors";
+import { Ok, type PromiseResult } from "@shared/result";
+import type { ServiceDTO } from "../../../dtos";
+import { ServiceMapper } from "../../../mappers";
 
 type Input = {
   name: string;
@@ -12,11 +14,8 @@ type Input = {
   duration: number;
 };
 
-@injectable()
 export class CreateService {
-  constructor(
-    @inject(TYPES.ServiceRepository) private readonly serviceRepository: ServiceRepository
-  ) {}
+  constructor(private readonly serviceRepository: ServiceRepository) {}
 
   async execute({
     name,

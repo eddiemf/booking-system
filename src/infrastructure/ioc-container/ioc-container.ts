@@ -1,9 +1,9 @@
-import { CreateService } from "@app/use-cases";
-import { getConfig } from "@config/config";
-import { asClass, asValue, createContainer, InjectionMode } from "awilix";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { PostgressServiceRepository } from "../repositories";
-import { ServiceController } from "../server/controllers";
+import { CreateService } from '@app/use-cases';
+import { getConfig } from '@config/config';
+import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { PostgressServiceRepository } from '../repositories';
+import { ServiceController } from '../server/controllers';
 
 export const createIocContainer = () => {
   const config = getConfig();

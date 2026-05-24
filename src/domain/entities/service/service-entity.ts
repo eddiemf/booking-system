@@ -1,6 +1,6 @@
-import { ValidationError } from '@domain/errors';
-import { Error, Ok, type Result } from '@shared/result';
-import { v4 } from 'uuid';
+import { ValidationError } from "@domain/errors";
+import { Error, Ok, type Result } from "@shared/result";
+import { v4 } from "uuid";
 
 export type ServiceCreationError = ValidationError;
 
@@ -13,36 +13,37 @@ interface ServiceEntityProps {
 
 export class ServiceEntity {
   private constructor(
-    private readonly id: string,
-    private readonly name: string,
-    private readonly description: string,
-    private readonly duration: number
+    private _id: string,
+    private _name: string,
+    private _description: string,
+    private _duration: number,
   ) {}
 
-  getId(): string {
-    return this.id;
+  get id(): string {
+    return this._id;
   }
 
-  getName(): string {
-    return this.name;
+  get name(): string {
+    return this._name;
   }
 
-  getDescription(): string {
-    return this.description;
+  get description(): string {
+    return this._description;
   }
 
-  getDuration(): number {
-    return this.duration;
+  get duration(): number {
+    return this._duration;
   }
 
   static create({
     name,
     duration,
-    description = '',
+    description = "",
     id = v4(),
   }: ServiceEntityProps): Result<ServiceEntity, ServiceCreationError> {
-    if (!name) return Error(new ValidationError('name', 'Value is required.'));
-    if (duration <= 0) return Error(new ValidationError('duration', 'Value is required.'));
+    if (!name) return Error(new ValidationError("name", "Value is required."));
+    if (duration <= 0)
+      return Error(new ValidationError("duration", "Value is required."));
 
     return Ok(new ServiceEntity(id, name, description, duration));
   }

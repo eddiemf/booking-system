@@ -1,8 +1,8 @@
-import type { CreateService } from "@app/use-cases";
-import { getZodErrorMap } from "@shared/get-zod-error-map";
-import type { Request, Response } from "express";
-import { match } from "ts-pattern";
-import z from "zod";
+import type { CreateService } from '@app/use-cases';
+import { getZodErrorMap } from '@shared/get-zod-error-map';
+import type { Request, Response } from 'express';
+import { match } from 'ts-pattern';
+import z from 'zod';
 
 export class ServiceController {
   private readonly serviceSchema = z.object({
@@ -19,7 +19,7 @@ export class ServiceController {
 
       const validation = this.serviceSchema.safeParse(
         { name, description, duration },
-        { errorMap: getZodErrorMap() },
+        { errorMap: getZodErrorMap() }
       );
       if (!validation.success) {
         res.status(400).json({ error: validation.error.issues[0].message });
@@ -38,11 +38,11 @@ export class ServiceController {
       }
 
       const error = match(result.error.code)
-        .with("ValidationError", () => ({
+        .with('ValidationError', () => ({
           status: 400,
           message: result.error.message,
         }))
-        .with("StorageError", () => ({
+        .with('StorageError', () => ({
           status: 500,
           message: result.error.message,
         }))
@@ -50,7 +50,7 @@ export class ServiceController {
 
       res.status(error.status).json({ error: error.message });
     } catch (error) {
-      res.status(500).json({ error: "Internal server error." });
+      res.status(500).json({ error: 'Internal server error.' });
     }
   }
 }

@@ -1,10 +1,4 @@
-export interface Config {
-  database: {
-    url: string;
-  };
-}
-
-export function getConfig(): Config {
+export function getConfig() {
   return {
     database: {
       url: process.env.DATABASE_URL || '',

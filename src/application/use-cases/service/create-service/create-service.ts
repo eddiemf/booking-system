@@ -1,12 +1,8 @@
-import {
-  type ServiceCreationError,
-  ServiceEntity,
-  type ServiceRepository,
-} from "@domain/entities";
-import type { StorageError } from "@domain/errors";
-import { Ok, type PromiseResult } from "@shared/result";
-import type { ServiceDTO } from "../../../dtos";
-import { ServiceMapper } from "../../../mappers";
+import { type ServiceCreationError, ServiceEntity, type ServiceRepository } from '@domain/entities';
+import type { StorageError } from '@domain/errors';
+import { Ok, type PromiseResult } from '@shared/result';
+import type { ServiceDTO } from '../../../dtos';
+import { ServiceMapper } from '../../../mappers';
 
 type Input = {
   name: string;

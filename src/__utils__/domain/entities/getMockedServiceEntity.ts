@@ -1,4 +1,4 @@
-import { ServiceEntity } from '@domain/entities';
+import type { ServiceEntity } from '@domain/entities';
 
 export const getMockedServiceEntity = () => {
   return {

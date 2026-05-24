@@ -1,6 +1,6 @@
-import { CreateService } from '@app/use-cases';
+import type { CreateService } from '@app/use-cases';
 import { getZodErrorMap } from '@shared/get-zod-error-map';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { injectable } from 'inversify';
 import { match } from 'ts-pattern';
 import z from 'zod';

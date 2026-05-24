@@ -1,10 +1,10 @@
-import { Ok, PromiseResult } from '@shared/result';
+import { type ServiceCreationError, ServiceEntity, type ServiceRepository } from '@domain/entities';
+import type { StorageError } from '@domain/errors';
 import { TYPES } from '@shared/ioc-types';
-import { ServiceCreationError, ServiceEntity, ServiceRepository } from '@domain/entities';
-import { StorageError } from '@domain/errors';
-import { ServiceMapper } from '../../../mappers';
-import { ServiceDTO } from '../../../dtos';
+import { Ok, type PromiseResult } from '@shared/result';
 import { inject, injectable } from 'inversify';
+import type { ServiceDTO } from '../../../dtos';
+import { ServiceMapper } from '../../../mappers';
 
 type Input = {
   name: string;

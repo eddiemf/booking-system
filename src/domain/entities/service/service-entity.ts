@@ -1,6 +1,6 @@
-import { v4 } from 'uuid';
-import { Error, Ok, Result } from '@shared/result';
 import { ValidationError } from '@domain/errors';
+import { Error, Ok, type Result } from '@shared/result';
+import { v4 } from 'uuid';
 
 export type ServiceCreationError = ValidationError;
 

@@ -1,9 +1,9 @@
-import { mock } from 'jest-mock-extended';
-import { ServiceEntity, ServiceRepository } from '@domain/entities';
-import { StorageError, ValidationError } from '@domain/errors';
-import { CreateService } from './create-service';
 import { getMockedServiceEntity } from '@__utils__/domain/entities';
 import { ServiceMapper } from '@app/mappers';
+import { ServiceEntity, type ServiceRepository } from '@domain/entities';
+import { StorageError, ValidationError } from '@domain/errors';
+import { mock } from 'jest-mock-extended';
+import { CreateService } from './create-service';
 
 jest.mock('@domain/entities');
 jest.mock('@app/mappers');

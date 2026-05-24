@@ -1,8 +1,8 @@
-import { CreateService } from '@app/use-cases';
+import type { CreateService } from '@app/use-cases';
+import { StorageError, ValidationError } from '@domain/errors';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import { mock } from 'jest-mock-extended';
 import { ServiceController } from './service-controller';
-import { StorageError, ValidationError } from '@domain/errors';
 
 describe('ServiceController', () => {
   const mockedValidInput = {

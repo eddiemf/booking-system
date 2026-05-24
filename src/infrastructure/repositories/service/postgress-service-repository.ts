@@ -1,10 +1,10 @@
-import { ServiceEntity, ServiceRepository } from '@domain/entities';
-import { StorageError } from '@domain/errors';
+import type { ServiceEntity, ServiceRepository } from '@domain/entities';
+import type { StorageError } from '@domain/errors';
 import { TYPES } from '@shared/ioc-types';
-import { Ok, PromiseResult } from '@shared/result';
+import { Ok, type PromiseResult } from '@shared/result';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { inject, injectable } from 'inversify';
 import { servicesTable } from '../../db/schema';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 @injectable()
 export class PostgressServiceRepository implements ServiceRepository {

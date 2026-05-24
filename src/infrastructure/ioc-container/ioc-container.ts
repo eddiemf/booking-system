@@ -1,11 +1,11 @@
-import { ServiceRepository } from '@domain/entities';
-import { PostgressServiceRepository } from '../repositories';
 import { CreateService } from '@app/use-cases';
-import { ServiceController } from '../api/controllers';
-import { Container } from 'inversify';
 import { getConfig } from '@config/config';
-import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { ServiceRepository } from '@domain/entities';
 import { TYPES } from '@shared/ioc-types';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Container } from 'inversify';
+import { ServiceController } from '../api/controllers';
+import { PostgressServiceRepository } from '../repositories';
 
 export const createContainer = () => {
   const container = new Container();

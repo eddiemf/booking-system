@@ -1,7 +1,7 @@
 import express from 'express';
+import { Config } from '../../config';
 import { createContainer } from '../ioc-container';
 import { ServiceController } from './controllers';
-import { Config } from '../../config';
 
 export const startServer = () => {
   const app = express();

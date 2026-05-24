@@ -1,5 +1,5 @@
-import { ServiceEntity } from './service-entity';
 import { ValidationError } from '@domain/errors';
+import { ServiceEntity } from './service-entity';
 
 describe('ServiceEntity', () => {
   describe('create()', () => {

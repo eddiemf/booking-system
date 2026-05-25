@@ -1,7 +1,7 @@
 import express from 'express';
 import { createIocContainer } from '../ioc-container';
 
-export const startServer = () => {
+export function createServer() {
   const app = express();
   const container = createIocContainer();
 
@@ -12,7 +12,5 @@ export const startServer = () => {
 
   app.post('/services', (req, res) => serviceController.create(req, res));
 
-  app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-  });
-};
+  return app;
+}

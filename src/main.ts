@@ -1,9 +1,10 @@
-import { getZodErrorMap } from '@shared/get-zod-error-map';
 import { configDotenv } from 'dotenv';
-import { z } from 'zod';
-import { startServer } from './infrastructure/server/server';
+import { createServer } from './infrastructure/server';
 
 configDotenv();
 
-z.setErrorMap(getZodErrorMap());
-startServer();
+const server = createServer();
+
+server.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});

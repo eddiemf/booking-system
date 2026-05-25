@@ -14,7 +14,7 @@ describe('DeleteService', () => {
   it('returns not-found error when service does not exist', async () => {
     serviceRepository.delete.mockResolvedValue(fail(new NotFoundError('Service', '10')));
 
-    const error = await useCase.execute(input).then((r) => r.getError());
+    const error = await useCase.execute(input).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -24,7 +24,7 @@ describe('DeleteService', () => {
       fail(new ConflictError('Service has future bookings.'))
     );
 
-    const error = await useCase.execute(input).then((r) => r.getError());
+    const error = await useCase.execute(input).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ConflictError);
   });
@@ -32,7 +32,7 @@ describe('DeleteService', () => {
   it('returns storage error when delete fails', async () => {
     serviceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
-    const error = await useCase.execute(input).then((r) => r.getError());
+    const error = await useCase.execute(input).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });

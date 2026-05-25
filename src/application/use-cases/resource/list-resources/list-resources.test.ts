@@ -1,25 +1,24 @@
 import {
   type EstablishmentRepository,
-  ServiceEntity,
-  type ServiceRepository,
+  ResourceEntity,
+  type ResourceRepository,
 } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
-import { ListServices } from './list-services';
+import { ListResources } from './list-resources';
 
-describe('ListServices', () => {
+describe('ListResources', () => {
   const establishmentRepository = mock<EstablishmentRepository>();
-  const serviceRepository = mock<ServiceRepository>();
-  const useCase = new ListServices(establishmentRepository, serviceRepository);
+  const resourceRepository = mock<ResourceRepository>();
+  const useCase = new ListResources(establishmentRepository, resourceRepository);
 
   const establishmentId = '1';
-  const mockService = ServiceEntity.reconstruct({
+  const mockResource = ResourceEntity.reconstruct({
     id: '10',
-    name: 'Haircut',
-    description: 'A haircut',
-    duration: 30,
+    name: 'Alice',
+    type: 'employee',
     establishmentId,
   });
 
@@ -39,38 +38,30 @@ describe('ListServices', () => {
     expect(error).toBeInstanceOf(StorageError);
   });
 
-  it('returns storage error when service listing fails', async () => {
+  it('returns storage error when resource listing fails', async () => {
     establishmentRepository.findById.mockResolvedValue(ok({ id: '1', name: 'Salon' } as never));
-    serviceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
+    resourceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute({ establishmentId }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
 
-  it('returns a list of service DTOs on success', async () => {
+  it('returns list of resource DTOs on success', async () => {
     establishmentRepository.findById.mockResolvedValue(ok({ id: '1', name: 'Salon' } as never));
-    serviceRepository.findAll.mockResolvedValue(ok([mockService]));
+    resourceRepository.findAll.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase.execute({ establishmentId }).then((result) => result.getData());
 
-    expect(data).toEqual([
-      {
-        id: '10',
-        name: 'Haircut',
-        description: 'A haircut',
-        duration: 30,
-        establishmentId,
-      },
-    ]);
+    expect(data).toEqual([{ id: '10', name: 'Alice', type: 'employee', establishmentId }]);
   });
 
-  it('returns an empty array when establishment has no services', async () => {
+  it('passes type filter to the repository', async () => {
     establishmentRepository.findById.mockResolvedValue(ok({ id: '1', name: 'Salon' } as never));
-    serviceRepository.findAll.mockResolvedValue(ok([]));
+    resourceRepository.findAll.mockResolvedValue(ok([]));
 
-    const data = await useCase.execute({ establishmentId }).then((result) => result.getData());
+    await useCase.execute({ establishmentId, type: 'room' });
 
-    expect(data).toEqual([]);
+    expect(resourceRepository.findAll).toHaveBeenCalledWith(establishmentId, 'room');
   });
 });

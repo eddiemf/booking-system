@@ -1,19 +1,31 @@
 import {
   CreateEstablishment,
+  CreateResource,
   CreateService,
   DeleteEstablishment,
+  DeleteResource,
   DeleteService,
   FindEstablishment,
   FindService,
+  ListResources,
   ListServices,
   UpdateEstablishment,
+  UpdateResource,
   UpdateService,
 } from '@app/use-cases';
 import { getConfig } from '@config/config';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { PostgressEstablishmentRepository, PostgressServiceRepository } from '../repositories';
-import { EstablishmentController, ServiceController } from '../server/controllers';
+import {
+  PostgressEstablishmentRepository,
+  PostgressResourceRepository,
+  PostgressServiceRepository,
+} from '../repositories';
+import {
+  EstablishmentController,
+  ResourceController,
+  ServiceController,
+} from '../server/controllers';
 
 export const createIocContainer = () => {
   const config = getConfig();
@@ -23,6 +35,7 @@ export const createIocContainer = () => {
   }).register({
     // Controllers
     establishmentController: asClass(EstablishmentController).singleton(),
+    resourceController: asClass(ResourceController).singleton(),
     serviceController: asClass(ServiceController).singleton(),
 
     // Use cases
@@ -30,6 +43,10 @@ export const createIocContainer = () => {
     deleteEstablishment: asClass(DeleteEstablishment).singleton(),
     findEstablishment: asClass(FindEstablishment).singleton(),
     updateEstablishment: asClass(UpdateEstablishment).singleton(),
+    createResource: asClass(CreateResource).singleton(),
+    deleteResource: asClass(DeleteResource).singleton(),
+    listResources: asClass(ListResources).singleton(),
+    updateResource: asClass(UpdateResource).singleton(),
     createService: asClass(CreateService).singleton(),
     deleteService: asClass(DeleteService).singleton(),
     findService: asClass(FindService).singleton(),
@@ -38,6 +55,7 @@ export const createIocContainer = () => {
 
     // Repositories
     establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),
+    resourceRepository: asClass(PostgressResourceRepository).singleton(),
     serviceRepository: asClass(PostgressServiceRepository).singleton(),
 
     // Database

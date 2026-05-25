@@ -14,7 +14,7 @@ describe('DeleteEstablishment', () => {
       fail(new NotFoundError('Establishment', '99'))
     );
 
-    const error = await useCase.execute({ id: '99' }).then((r) => r.getError());
+    const error = await useCase.execute({ id: '99' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -24,7 +24,7 @@ describe('DeleteEstablishment', () => {
       fail(new ConflictError('Establishment has associated services or bookings.'))
     );
 
-    const error = await useCase.execute({ id: '1' }).then((r) => r.getError());
+    const error = await useCase.execute({ id: '1' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ConflictError);
     expect(error.message).toBe('Establishment has associated services or bookings.');
@@ -34,7 +34,7 @@ describe('DeleteEstablishment', () => {
     const error = new StorageError('Failed to delete establishment.');
     establishmentRepository.delete.mockResolvedValue(fail(error));
 
-    const result = await useCase.execute({ id: '1' }).then((r) => r.getError());
+    const result = await useCase.execute({ id: '1' }).then((result) => result.getError());
 
     expect(result).toBe(error);
   });

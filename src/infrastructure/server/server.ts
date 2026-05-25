@@ -6,6 +6,7 @@ export function createServer() {
   const container = createIocContainer();
 
   const establishmentController = container.resolve('establishmentController');
+  const resourceController = container.resolve('resourceController');
   const serviceController = container.resolve('serviceController');
 
   app.use(express.json());
@@ -15,6 +16,14 @@ export function createServer() {
   app.get('/establishments/:id', (req, res) => establishmentController.findById(req, res));
   app.put('/establishments/:id', (req, res) => establishmentController.update(req, res));
   app.delete('/establishments/:id', (req, res) => establishmentController.delete(req, res));
+  app.post('/establishments/:establishmentId/resources', (req, res) =>
+    resourceController.create(req, res)
+  );
+  app.get('/establishments/:establishmentId/resources', (req, res) =>
+    resourceController.list(req, res)
+  );
+  app.put('/resources/:id', (req, res) => resourceController.update(req, res));
+  app.delete('/resources/:id', (req, res) => resourceController.delete(req, res));
   app.post('/establishments/:establishmentId/services', (req, res) =>
     serviceController.create(req, res)
   );

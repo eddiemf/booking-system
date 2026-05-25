@@ -23,3 +23,11 @@ export const servicesTable = pgTable('services', {
   establishmentId: integer('establishment_id').references(() => establishmentsTable.id),
   userId: integer('user_id').references(() => usersTable.id),
 });
+
+export const resourcesTable = pgTable('resources', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  type: varchar({ length: 50 }).notNull(),
+  ...timestamps,
+  establishmentId: integer('establishment_id').references(() => establishmentsTable.id),
+});

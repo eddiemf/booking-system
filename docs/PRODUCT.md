@@ -174,7 +174,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Establishments define the people and spaces needed to deliver services.
 
-#### Feature 3.1 — Create a Resource `[planned]`
+#### Feature 3.1 — Create a Resource `[done]`
 
 - **Endpoint:** `POST /establishments/:establishmentId/resources`
 - **Acceptance criteria:**
@@ -183,14 +183,14 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `400` on missing or invalid fields.
   - [ ] Returns `404` when the establishment does not exist.
 
-#### Feature 3.2 — List Resources for an Establishment `[planned]`
+#### Feature 3.2 — List Resources for an Establishment `[done]`
 
 - **Endpoint:** `GET /establishments/:establishmentId/resources`
 - **Acceptance criteria:**
   - [ ] Returns all resources for the establishment.
   - [ ] Supports optional filtering by `type`.
 
-#### Feature 3.3 — Update a Resource `[planned]`
+#### Feature 3.3 — Update a Resource `[done]`
 
 - **Endpoint:** `PUT /resources/:id`
 - **Acceptance criteria:**
@@ -198,7 +198,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns the updated resource DTO.
   - [ ] Returns `404` when not found.
 
-#### Feature 3.4 — Delete a Resource `[planned]`
+#### Feature 3.4 — Delete a Resource `[done]`
 
 - **Endpoint:** `DELETE /resources/:id`
 - **Acceptance criteria:**

@@ -12,7 +12,7 @@ describe('FindEstablishment', () => {
   it('returns a not-found error when the establishment does not exist', async () => {
     establishmentRepository.findById.mockResolvedValue(ok(null));
 
-    const error = await useCase.execute({ id: '99' }).then((r) => r.getError());
+    const error = await useCase.execute({ id: '99' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
     expect(error.message).toBe('Establishment with id 99 was not found.');
@@ -22,7 +22,7 @@ describe('FindEstablishment', () => {
     const error = new StorageError('Failed to find establishment.');
     establishmentRepository.findById.mockResolvedValue(fail(error));
 
-    const result = await useCase.execute({ id: '1' }).then((r) => r.getError());
+    const result = await useCase.execute({ id: '1' }).then((result) => result.getError());
 
     expect(result).toBe(error);
   });
@@ -32,7 +32,7 @@ describe('FindEstablishment', () => {
       ok(EstablishmentEntity.reconstruct({ id: '1', name: 'My Salon' }))
     );
 
-    const data = await useCase.execute({ id: '1' }).then((r) => r.getData());
+    const data = await useCase.execute({ id: '1' }).then((result) => result.getData());
 
     expect(data).toEqual({ id: '1', name: 'My Salon' });
   });

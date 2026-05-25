@@ -22,7 +22,7 @@ describe('FindService', () => {
   it('returns not-found error when service does not exist', async () => {
     serviceRepository.findById.mockResolvedValue(ok(null));
 
-    const error = await useCase.execute({ id, establishmentId }).then((r) => r.getError());
+    const error = await useCase.execute({ id, establishmentId }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -30,7 +30,7 @@ describe('FindService', () => {
   it('returns storage error when lookup fails', async () => {
     serviceRepository.findById.mockResolvedValue(fail(new StorageError('DB error')));
 
-    const error = await useCase.execute({ id, establishmentId }).then((r) => r.getError());
+    const error = await useCase.execute({ id, establishmentId }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
@@ -38,7 +38,7 @@ describe('FindService', () => {
   it('returns service DTO on success', async () => {
     serviceRepository.findById.mockResolvedValue(ok(mockService));
 
-    const data = await useCase.execute({ id, establishmentId }).then((r) => r.getData());
+    const data = await useCase.execute({ id, establishmentId }).then((result) => result.getData());
 
     expect(data).toEqual({
       id,

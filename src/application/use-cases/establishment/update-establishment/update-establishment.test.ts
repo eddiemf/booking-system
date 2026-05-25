@@ -10,7 +10,7 @@ describe('UpdateEstablishment', () => {
   const useCase = new UpdateEstablishment(establishmentRepository);
 
   it('returns a validation error if name is empty', async () => {
-    const error = await useCase.execute({ id: '1', name: '' }).then((r) => r.getError());
+    const error = await useCase.execute({ id: '1', name: '' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
@@ -20,7 +20,7 @@ describe('UpdateEstablishment', () => {
       fail(new NotFoundError('Establishment', '99'))
     );
 
-    const error = await useCase.execute({ id: '99', name: 'New Name' }).then((r) => r.getError());
+    const error = await useCase.execute({ id: '99', name: 'New Name' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
     expect(error.message).toBe('Establishment with id 99 was not found.');
@@ -30,7 +30,7 @@ describe('UpdateEstablishment', () => {
     const error = new StorageError('Failed to update establishment.');
     establishmentRepository.update.mockResolvedValue(fail(error));
 
-    const result = await useCase.execute({ id: '1', name: 'New Name' }).then((r) => r.getError());
+    const result = await useCase.execute({ id: '1', name: 'New Name' }).then((result) => result.getError());
 
     expect(result).toBe(error);
   });
@@ -40,7 +40,7 @@ describe('UpdateEstablishment', () => {
       ok(EstablishmentEntity.reconstruct({ id: '1', name: 'New Name' }))
     );
 
-    const data = await useCase.execute({ id: '1', name: 'New Name' }).then((r) => r.getData());
+    const data = await useCase.execute({ id: '1', name: 'New Name' }).then((result) => result.getData());
 
     expect(data).toEqual({ id: '1', name: 'New Name' });
   });

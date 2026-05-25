@@ -26,13 +26,13 @@ describe('UpdateService', () => {
   });
 
   it('returns validation error for invalid name', async () => {
-    const error = await useCase.execute({ ...validInput, name: '' }).then((r) => r.getError());
+    const error = await useCase.execute({ ...validInput, name: '' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
 
   it('returns validation error for invalid duration', async () => {
-    const error = await useCase.execute({ ...validInput, duration: 0 }).then((r) => r.getError());
+    const error = await useCase.execute({ ...validInput, duration: 0 }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
@@ -40,7 +40,7 @@ describe('UpdateService', () => {
   it('returns not-found error when service does not exist', async () => {
     serviceRepository.update.mockResolvedValue(fail(new NotFoundError('Service', '10')));
 
-    const error = await useCase.execute(validInput).then((r) => r.getError());
+    const error = await useCase.execute(validInput).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -48,7 +48,7 @@ describe('UpdateService', () => {
   it('returns storage error when update fails', async () => {
     serviceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
-    const error = await useCase.execute(validInput).then((r) => r.getError());
+    const error = await useCase.execute(validInput).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
@@ -56,7 +56,7 @@ describe('UpdateService', () => {
   it('returns updated service DTO on success', async () => {
     serviceRepository.update.mockResolvedValue(ok(updatedEntity));
 
-    const data = await useCase.execute(validInput).then((r) => r.getData());
+    const data = await useCase.execute(validInput).then((result) => result.getData());
 
     expect(data).toEqual({
       id: '10',

@@ -1,6 +1,6 @@
 import { type ServiceCreationError, ServiceEntity, type ServiceRepository } from '@domain/entities';
 import type { StorageError } from '@domain/errors';
-import { Ok, type PromiseResult } from '@shared/result';
+import { ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
 
@@ -26,6 +26,6 @@ export class CreateService {
     const saveResult = await this.serviceRepository.save(entity);
     if (!saveResult.isOk) return saveResult;
 
-    return Ok(ServiceMapper.toDTO(entity));
+    return ok(ServiceMapper.toDTO(entity));
   }
 }

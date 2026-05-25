@@ -1,5 +1,5 @@
 import { ValidationError } from '@domain/errors';
-import { Fail, Ok, type Result } from '@shared/result';
+import { fail, ok, type Result } from '@shared/result';
 import { v4 } from 'uuid';
 
 export type ServiceCreationError = ValidationError;
@@ -41,9 +41,9 @@ export class ServiceEntity {
     description = '',
     id = v4(),
   }: ServiceEntityProps): Result<ServiceEntity, ServiceCreationError> {
-    if (!name) return Fail(new ValidationError('name', 'Value is required.'));
-    if (duration <= 0) return Fail(new ValidationError('duration', 'Value is required.'));
+    if (!name) return fail(new ValidationError('name', 'Value is required.'));
+    if (duration <= 0) return fail(new ValidationError('duration', 'Value is required.'));
 
-    return Ok(new ServiceEntity(id, name, description, duration));
+    return ok(new ServiceEntity(id, name, description, duration));
   }
 }

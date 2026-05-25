@@ -4,16 +4,17 @@ import { ServiceMapper } from './service-mapper';
 describe('ServiceMapper', () => {
   describe('toDTO()', () => {
     it('maps from entity to DTO', () => {
-      const serviceResult = ServiceEntity.create({
+      const entity = ServiceEntity.create({
         id: '123',
         name: 'service',
         duration: 60,
         description: 'description',
-      });
+      }).getData();
 
-      if (!serviceResult.isOk) throw new Error('Expected service creation to succeed');
+      const dto = ServiceMapper.toDTO(entity);
 
-      expect(ServiceMapper.toDTO(serviceResult.data)).toEqual({
+      expect(dto).not.toBeInstanceOf(ServiceEntity);
+      expect(dto).toEqual({
         id: '123',
         name: 'service',
         duration: 60,

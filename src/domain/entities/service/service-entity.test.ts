@@ -3,90 +3,54 @@ import { ServiceEntity } from './service-entity';
 
 describe('ServiceEntity', () => {
   describe('create()', () => {
-    const expectedFailMessage = 'Expected an error, but got a valid service entity.';
-    const expectedSuccessMessage = 'Expected a valid service entity, but got an error.';
-
     it('fails to create with empty name', () => {
-      const result = ServiceEntity.create({
-        name: '',
-        duration: 60,
-      });
+      const error = ServiceEntity.create({ name: '', duration: 60 }).getError();
 
-      if (result.isOk) throw new Error(expectedFailMessage);
-
-      expect(result.isOk).toBe(false);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error.message).toBe('Invalid value for field: name. Value is required.');
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
     it('fails to create with duration less than zero', () => {
-      const result = ServiceEntity.create({
-        name: 'service',
-        duration: -1,
-      });
+      const error = ServiceEntity.create({ name: 'service', duration: -1 }).getError();
 
-      if (result.isOk) throw new Error(expectedFailMessage);
-
-      expect(result.isOk).toBe(false);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error.message).toBe('Invalid value for field: duration. Value is required.');
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
     });
 
     it('fails to create with duration equal to zero', () => {
-      const result = ServiceEntity.create({
-        name: 'service',
-        duration: 0,
-      });
+      const error = ServiceEntity.create({ name: 'service', duration: 0 }).getError();
 
-      if (result.isOk) throw new Error(expectedFailMessage);
-
-      expect(result.isOk).toBe(false);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error.message).toBe('Invalid value for field: duration. Value is required.');
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
     });
 
     it('creates a valid service with default description', () => {
-      const result = ServiceEntity.create({
-        name: 'service',
-        duration: 60,
-      });
+      const data = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
 
-      if (!result.isOk) throw new Error(expectedSuccessMessage);
-
-      expect(result.isOk).toBe(true);
-      expect(result.data).toBeInstanceOf(ServiceEntity);
-      expect(result.data.description).toBe('');
+      expect(data).toBeInstanceOf(ServiceEntity);
+      expect(data.description).toBe('');
     });
 
     it('creates a valid service with default ID', () => {
-      const result = ServiceEntity.create({
-        name: 'service',
-        duration: 60,
-      });
+      const data = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
 
-      if (!result.isOk) throw new Error(expectedSuccessMessage);
-
-      expect(result.isOk).toBe(true);
-      expect(result.data).toBeInstanceOf(ServiceEntity);
-      expect(typeof result.data.id).toBe('string');
+      expect(data).toBeInstanceOf(ServiceEntity);
+      expect(typeof data.id).toBe('string');
     });
 
     it('creates a valid service', () => {
-      const result = ServiceEntity.create({
+      const data = ServiceEntity.create({
         id: '123',
         name: 'service',
         duration: 60,
         description: 'description',
-      });
+      }).getData();
 
-      if (!result.isOk) throw new Error(expectedSuccessMessage);
-
-      expect(result.isOk).toBe(true);
-      expect(result.data).toBeInstanceOf(ServiceEntity);
-      expect(result.data.id).toBe('123');
-      expect(result.data.name).toBe('service');
-      expect(result.data.description).toBe('description');
-      expect(result.data.duration).toBe(60);
+      expect(data).toBeInstanceOf(ServiceEntity);
+      expect(data.id).toBe('123');
+      expect(data.name).toBe('service');
+      expect(data.description).toBe('description');
+      expect(data.duration).toBe(60);
     });
   });
 });

@@ -1,83 +1,64 @@
-import { getMockedServiceEntity } from '@__utils__/domain/entities';
-import { ServiceMapper } from '@app/mappers';
-import { ServiceEntity, type ServiceRepository } from '@domain/entities';
+import type { ServiceRepository } from '@domain/entities';
 import { StorageError, ValidationError } from '@domain/errors';
+import { fail, ok } from '@shared/result';
 import { mock } from 'jest-mock-extended';
 import { CreateService } from './create-service';
 
-jest.mock('@domain/entities');
-jest.mock('@app/mappers');
-
 describe('CreateService', () => {
   const serviceRepository = mock<ServiceRepository>();
-  const serviceEntityMock = jest.mocked(ServiceEntity);
-  const serviceMapperMock = jest.mocked(ServiceMapper);
 
   const useCase = new CreateService(serviceRepository);
 
   it('returns a validation error if creating the entity returns a validation error', async () => {
-    const error = new ValidationError('name', 'Value is required.');
-    serviceEntityMock.create.mockReturnValue({ isOk: false, error });
+    const resultError = await useCase
+      .execute({
+        name: '',
+        description: 'Test Service',
+        duration: 60,
+      })
+      .then((result) => result.getError());
 
-    const result = await useCase.execute({
-      name: '',
-      description: 'Test Service',
-      duration: 60,
-    });
-
-    if (result.isOk) throw new Error('Expected an error result');
-
-    expect(result.error).toBe(error);
-    expect(serviceEntityMock.create).toHaveBeenCalledWith({
-      name: '',
-      description: 'Test Service',
-      duration: 60,
-    });
+    expect(resultError).toBeInstanceOf(ValidationError);
   });
 
   it('returns a storage error if saving the entity returns a storage error', async () => {
-    const mockedEntity = getMockedServiceEntity();
-    serviceEntityMock.create.mockReturnValue({ isOk: true, data: mockedEntity });
     const error = new StorageError('Failed to save the entity');
-    serviceRepository.save.mockResolvedValue({ isOk: false, error });
+    serviceRepository.save.mockResolvedValue(fail(error));
 
-    const result = await useCase.execute({
-      name: 'Service',
-      description: 'Test Service',
-      duration: 60,
-    });
+    const resultError = await useCase
+      .execute({
+        name: 'Service',
+        description: 'Test Service',
+        duration: 60,
+      })
+      .then((result) => result.getError());
 
-    if (result.isOk) throw new Error('Expected an error result');
-
-    expect(serviceRepository.save).toHaveBeenCalledWith(mockedEntity);
-    expect(result.error).toBe(error);
+    expect(serviceRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Service',
+        description: 'Test Service',
+        duration: 60,
+      })
+    );
+    expect(resultError).toBe(error);
   });
 
   it('returns a service DTO when creation was successful', async () => {
-    const mockedEntity = getMockedServiceEntity();
-    serviceEntityMock.create.mockReturnValue({ isOk: true, data: mockedEntity });
-    serviceRepository.save.mockResolvedValue({ isOk: true, data: undefined });
-    serviceMapperMock.toDTO.mockReturnValue({
-      id: '123',
+    serviceRepository.save.mockResolvedValue(ok(undefined));
+
+    const data = await useCase
+      .execute({
+        name: 'Service',
+        description: 'Test Service',
+        duration: 60,
+      })
+      .then((result) => result.getData());
+
+    expect(data).toEqual({
+      id: expect.any(String),
       name: 'Service',
       description: 'Test Service',
       duration: 60,
     });
-
-    const result = await useCase.execute({
-      name: 'Service',
-      description: 'Test Service',
-      duration: 60,
-    });
-
-    if (!result.isOk) throw new Error('Expected a success result');
-
-    expect(result.data).toEqual({
-      id: '123',
-      name: 'Service',
-      description: 'Test Service',
-      duration: 60,
-    });
-    expect(serviceMapperMock.toDTO).toHaveBeenCalledWith(mockedEntity);
   });
 });

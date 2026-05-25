@@ -1,6 +1,6 @@
 import type { ServiceEntity, ServiceRepository } from '@domain/entities';
 import type { StorageError } from '@domain/errors';
-import { Ok, type PromiseResult } from '@shared/result';
+import { ok, type PromiseResult } from '@shared/result';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { servicesTable } from '../../db/schema';
 
@@ -16,6 +16,6 @@ export class PostgressServiceRepository implements ServiceRepository {
       });
     } catch (error) {}
 
-    return Ok(undefined);
+    return ok(undefined);
   }
 }

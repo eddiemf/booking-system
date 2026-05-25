@@ -85,7 +85,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Must be built first. All other entities (Services, Resources) are scoped to an Establishment.
 
-#### Feature 2.1 — Create an Establishment `[planned]`
+#### Feature 2.1 — Create an Establishment `[done]`
 
 - **Endpoint:** `POST /establishments`
 - **Acceptance criteria:**

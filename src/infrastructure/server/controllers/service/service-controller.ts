@@ -15,7 +15,7 @@ export class ServiceController extends Controller {
     super();
   }
 
-  async create(req: Request, res: Response): Promise<Response<ServiceDTO | ErrorResponse>> {
+  async create(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
     try {
       const validation = this.newServiceSchema.safeParse(req.body);
       if (!validation.success) {

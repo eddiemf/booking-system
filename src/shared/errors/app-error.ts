@@ -13,7 +13,7 @@ export abstract class AppError<ErrorCodeType extends string> extends Error {
    * The original error that caused this error, if any.
    * Standardized via ErrorOptions in modern JS/TS.
    */
-  public readonly cause?: Error;
+  public override readonly cause?: Error;
 
   /**
    * Creates an instance of AppError.

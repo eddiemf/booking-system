@@ -10,7 +10,7 @@ import { ServiceMapper } from '../../../mappers';
 
 type Input = {
   name: string;
-  description?: string;
+  description?: string | undefined;
   duration: number;
 };
 

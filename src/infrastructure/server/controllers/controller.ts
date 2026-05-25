@@ -9,8 +9,11 @@ export interface ErrorResponse {
 
 export abstract class Controller {
   protected mapZodValidationError(error: z.ZodError): ErrorResponse {
-    const field = String(error.issues[0].path[0]);
-    const message = error.issues[0].message;
+    const [issue] = error.issues;
+    if (!issue) throw new Error('Unexpected validation error format');
+
+    const field = String(issue.path[0]);
+    const message = issue.message;
     const validationError = new ValidationError(field, message);
 
     return {

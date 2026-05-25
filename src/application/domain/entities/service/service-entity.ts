@@ -7,7 +7,7 @@ export type ServiceCreationError = ValidationError;
 interface ServiceEntityProps {
   id?: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   duration: number;
 }
 

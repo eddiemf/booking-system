@@ -26,7 +26,7 @@ describe('ServiceController', () => {
       body: { ...mockedValidInput, name: undefined },
     });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -41,7 +41,7 @@ describe('ServiceController', () => {
       body: { ...mockedValidInput, duration: undefined },
     });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -54,7 +54,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: { ...mockedValidInput, duration: 'not-a-number' } });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -68,9 +68,13 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
-    expect(createServiceMock.execute).toHaveBeenCalledWith(mockedValidInput);
+    expect(createServiceMock.execute).toHaveBeenCalledWith({
+      name: mockedValidInput.name,
+      duration: mockedValidInput.duration,
+      description: mockedValidInput.description,
+    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mockedServiceDTO);
   });
@@ -82,7 +86,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -96,7 +100,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
@@ -110,7 +114,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
-    await controller.createService(req, res);
+    await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({

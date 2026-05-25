@@ -2,6 +2,8 @@ import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
 import { ServiceEntity } from './service-entity';
 
+const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 describe('ServiceEntity', () => {
   describe('create()', () => {
     it('fails to create with empty name', () => {
@@ -26,32 +28,52 @@ describe('ServiceEntity', () => {
     });
 
     it('creates a valid service with default description', () => {
-      const data = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
+      const service = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
 
-      expect(data).toBeInstanceOf(ServiceEntity);
-      expect(data.description).toBe('');
+      expect(service).toBeInstanceOf(ServiceEntity);
+      expect(service.description).toBe('');
     });
 
-    it('creates a valid service with default ID', () => {
-      const data = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
-
-      expect(data).toBeInstanceOf(ServiceEntity);
-      expect(typeof data.id).toBe('string');
-    });
-
-    it('creates a valid service', () => {
-      const data = ServiceEntity.create({
-        id: '123',
-        name: 'service',
-        duration: 60,
-        description: 'description',
+    it('creates a valid service with all properties set', () => {
+      const service = ServiceEntity.create({
+        name: 'haircut',
+        description: 'A basic haircut',
+        duration: 30,
       }).getData();
 
-      expect(data).toBeInstanceOf(ServiceEntity);
-      expect(data.id).toBe('123');
-      expect(data.name).toBe('service');
-      expect(data.description).toBe('description');
-      expect(data.duration).toBe(60);
+      expect(service.name).toBe('haircut');
+      expect(service.description).toBe('A basic haircut');
+      expect(service.duration).toBe(30);
+    });
+
+    it('generates a UUIDv7 id', () => {
+      const service = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
+
+      expect(service.id).toMatch(UUID_V7_REGEX);
+    });
+
+    it('generates a unique id per instance', () => {
+      const a = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
+      const b = ServiceEntity.create({ name: 'service', duration: 60 }).getData();
+
+      expect(a.id).not.toBe(b.id);
+    });
+  });
+
+  describe('reconstruct()', () => {
+    it('restores all properties from the given data', () => {
+      const service = ServiceEntity.reconstruct({
+        id: 'id',
+        name: 'massage',
+        description: 'Haircut',
+        duration: 90,
+      });
+
+      expect(service).toBeInstanceOf(ServiceEntity);
+      expect(service.id).toBe('id');
+      expect(service.name).toBe('massage');
+      expect(service.description).toBe('Haircut');
+      expect(service.duration).toBe(90);
     });
   });
 });

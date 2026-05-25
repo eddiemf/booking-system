@@ -68,10 +68,22 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Architecture
 
-- Keep the domain layer free of framework and infrastructure concerns.
-- Keep HTTP and Express details in `src/infrastructure/server`.
-- Keep persistence details in `src/infrastructure/repositories`.
-- Application use cases may depend on domain contracts, but not on Express or database-specific code.
+This project follows strict Clean Architecture. Layer boundaries are non-negotiable. When in doubt, **stop and ask** rather than finding a shortcut that compiles.
+
+### Layer rules
+
+- **Domain layer** (`src/application/domain`): pure business logic and rules. No framework imports, no ORM types, no DTOs, no infrastructure concerns of any kind.
+- **Application layer** (`src/application`): use cases and mappers. May depend on domain contracts. Must not import from Express, Drizzle, or any infrastructure detail.
+- **Infrastructure layer** (`src/infrastructure`): repositories, controllers, server, IoC container. The only layer allowed to depend on frameworks.
+
+### Repository contracts
+
+- Repository interfaces live in the **domain layer** and return domain entities or primitives only. No DTOs, no ORM types.
+- Repository implementations live in the **infrastructure layer** and are the only place that knows about Drizzle, SQL, or table schemas.
+
+### When something feels awkward
+
+If a design forces you to violate a layer boundary, add a bypass factory, or import infrastructure into the domain — **that is a signal the design is wrong**, not a reason to bend the rule. Stop, explain the tension, and propose a proper fix.
 
 ## Dependency Injection
 

@@ -42,6 +42,35 @@ User (customer) ──► Booking ──► Service + Resource + time slot
 
 ---
 
+## Architectural Decisions
+
+These decisions are fixed for the current phase of development and inform how features are built.
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| **Entity IDs** | DB-assigned integer, returned as string in APIs | Keeps the ID source of truth in one place. No UUID generation in the domain layer. |
+| **Scoping** | Services, Resources, and Schedules belong to an Establishment | All reads and writes must be scoped to an `establishmentId`. |
+| **API route nesting** | `GET /establishments/:id/services`, not `GET /services` | Prevents cross-establishment data leakage and aligns with the ownership model. |
+| **Domain ↔ DB mapping** | `ServiceEntity.create()` for new (unperisted) entities; `reconstruct()` for DB-sourced ones | Keeps UUIDs and DB IDs from ever getting mixed up. |
+
+---
+
+## Development Sequence
+
+Features must be built in this order because of data dependency: you cannot scope a Service to an Establishment that doesn't exist yet.
+
+```
+1. Establishment CRUD (Epic 2)
+2. Service CRUD — scoped to establishment (Epic 1, revised)
+3. Resource CRUD — scoped to establishment (Epic 3)
+4. Schedule / Availability (Epic 4)
+5. Booking (Epic 5)
+```
+
+> Features 1.1 and 1.2 were bootstrapped without establishment scope as a foundation exercise. They will be refactored to establishment-scoped endpoints after Epic 2 is complete.
+
+---
+
 ## MVP Scope
 
 The MVP delivers a functional end-to-end flow: an owner sets up an establishment with services and resources, and a customer can book a service.
@@ -52,64 +81,15 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 ---
 
-### Epic 1: Service Management
-
-> Establishments define what they offer.
-
-#### Feature 1.1 — Create a Service `[done]`
-
-- **Endpoint:** `POST /services`
-- **Acceptance criteria:**
-  - [x] A service requires a `name` and a positive `duration` (in minutes).
-  - [x] `description` is optional.
-  - [x] Returns `201` with the created service DTO.
-  - [x] Returns `400` when `name` is missing or `duration` is ≤ 0.
-
-#### Feature 1.2 — List Services `[planned]`
-
-- **Endpoint:** `GET /services`
-- **Acceptance criteria:**
-  - [ ] Returns a list of all services.
-  - [ ] Returns an empty array when no services exist.
-  - [ ] Each item includes `id`, `name`, `description`, and `duration`.
-
-#### Feature 1.3 — Get Service by ID `[planned]`
-
-- **Endpoint:** `GET /services/:id`
-- **Acceptance criteria:**
-  - [ ] Returns the service matching the given ID.
-  - [ ] Returns `404` when no service with that ID exists.
-
-#### Feature 1.4 — Update a Service `[planned]`
-
-- **Endpoint:** `PUT /services/:id`
-- **Acceptance criteria:**
-  - [ ] Allows updating `name`, `description`, and `duration`.
-  - [ ] Returns the updated service DTO.
-  - [ ] Returns `404` when the service does not exist.
-  - [ ] Returns `400` on invalid values (same rules as creation).
-
-#### Feature 1.5 — Delete a Service `[planned]`
-
-- **Endpoint:** `DELETE /services/:id`
-- **Acceptance criteria:**
-  - [ ] Removes the service permanently.
-  - [ ] Returns `204` on success.
-  - [ ] Returns `404` when the service does not exist.
-  - [ ] Returns `409` if the service has future bookings.
-
----
-
 ### Epic 2: Establishment Management
 
-> Owners register and manage their establishments.
+> Must be built first. All other entities (Services, Resources) are scoped to an Establishment.
 
 #### Feature 2.1 — Create an Establishment `[planned]`
 
 - **Endpoint:** `POST /establishments`
 - **Acceptance criteria:**
   - [ ] Requires a `name`.
-  - [ ] Associates the establishment with the authenticated user (owner).
   - [ ] Returns `201` with the created establishment DTO (`id`, `name`).
   - [ ] Returns `400` when `name` is missing.
 
@@ -134,7 +114,59 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 - **Acceptance criteria:**
   - [ ] Returns `204` on success.
   - [ ] Returns `404` when not found.
-  - [ ] Returns `409` if the establishment has future bookings.
+  - [ ] Returns `409` if the establishment has active services or future bookings.
+
+---
+
+### Epic 1: Service Management
+
+> Services belong to an Establishment. Features 1.1 and 1.2 were bootstrapped globally and must be refactored to establishment-scoped endpoints after Epic 2 is done.
+
+#### Feature 1.1 — Create a Service `[done]` ⚠️ needs establishment scope
+
+- **Current endpoint:** `POST /services` *(temporary — will become `POST /establishments/:id/services`)*
+- **Acceptance criteria:**
+  - [x] A service requires a `name` and a positive `duration` (in minutes).
+  - [x] `description` is optional.
+  - [x] Returns `201` with the created service DTO.
+  - [x] Returns `400` when `name` is missing or `duration` is ≤ 0.
+  - [ ] *(post-Epic 2)* Requires a valid `establishmentId` in the URL.
+  - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
+
+#### Feature 1.2 — List Services `[done]` ⚠️ needs establishment scope
+
+- **Current endpoint:** `GET /services` *(temporary — will become `GET /establishments/:id/services`)*
+- **Acceptance criteria:**
+  - [x] Returns a list of all services.
+  - [x] Returns an empty array when no services exist.
+  - [x] Each item includes `id`, `name`, `description`, and `duration`.
+  - [ ] *(post-Epic 2)* Returns only services belonging to the given establishment.
+  - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
+
+#### Feature 1.3 — Get Service by ID `[planned]`
+
+- **Endpoint:** `GET /establishments/:establishmentId/services/:id`
+- **Acceptance criteria:**
+  - [ ] Returns the service matching the given ID.
+  - [ ] Returns `404` when no service with that ID exists in the establishment.
+
+#### Feature 1.4 — Update a Service `[planned]`
+
+- **Endpoint:** `PUT /establishments/:establishmentId/services/:id`
+- **Acceptance criteria:**
+  - [ ] Allows updating `name`, `description`, and `duration`.
+  - [ ] Returns the updated service DTO.
+  - [ ] Returns `404` when the service does not exist in the establishment.
+  - [ ] Returns `400` on invalid values (same rules as creation).
+
+#### Feature 1.5 — Delete a Service `[planned]`
+
+- **Endpoint:** `DELETE /establishments/:establishmentId/services/:id`
+- **Acceptance criteria:**
+  - [ ] Removes the service permanently.
+  - [ ] Returns `204` on success.
+  - [ ] Returns `404` when the service does not exist in the establishment.
+  - [ ] Returns `409` if the service has future bookings.
 
 ---
 

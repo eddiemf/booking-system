@@ -30,6 +30,6 @@ export class CreateService {
     const saveResult = await this.serviceRepository.save(entity);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(ServiceMapper.toDTO(entity));
+    return ok(ServiceMapper.toDTO(saveResult.data));
   }
 }

@@ -5,12 +5,12 @@ import { ServiceMapper } from './service-mapper';
 describe('ServiceMapper', () => {
   describe('toDTO()', () => {
     it('maps from entity to DTO', () => {
-      const entity = ServiceEntity.create({
+      const entity = ServiceEntity.reconstruct({
         id: '123',
         name: 'service',
-        duration: 60,
         description: 'description',
-      }).getData();
+        duration: 60,
+      });
 
       const dto = ServiceMapper.toDTO(entity);
 

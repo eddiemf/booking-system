@@ -1,4 +1,4 @@
-import type { ServiceRepository } from '@app/domain/entities';
+import { ServiceEntity, type ServiceRepository } from '@app/domain/entities';
 import { StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -45,7 +45,16 @@ describe('CreateService', () => {
   });
 
   it('returns a service DTO when creation was successful', async () => {
-    serviceRepository.save.mockResolvedValue(ok(undefined));
+    serviceRepository.save.mockResolvedValue(
+      ok(
+        ServiceEntity.reconstruct({
+          id: 'service-id',
+          name: 'Service',
+          description: 'Test Service',
+          duration: 60,
+        })
+      )
+    );
 
     const data = await useCase
       .execute({
@@ -56,7 +65,7 @@ describe('CreateService', () => {
       .then((result) => result.getData());
 
     expect(data).toEqual({
-      id: expect.any(String),
+      id: 'service-id',
       name: 'Service',
       description: 'Test Service',
       duration: 60,

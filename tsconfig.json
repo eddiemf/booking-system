@@ -12,7 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@app/*": ["./src/application/*"],
-      "@domain/*": ["./src/domain/*"],
       "@shared/*": ["./src/shared/*"],
       "@config/*": ["./src/config/*"],
       "@__utils__/*": ["./src/__utils__/*"]

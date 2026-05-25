@@ -8,7 +8,6 @@ module.exports = {
   resetMocks: true,
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/application/$1',
-    '^@domain/(.*)$': '<rootDir>/src/domain/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@__utils__/(.*)$': '<rootDir>/src/__utils__/$1',

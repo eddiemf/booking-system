@@ -1,4 +1,4 @@
-import { ValidationError } from '@domain/errors';
+import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
 import { v4 } from 'uuid';
 

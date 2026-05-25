@@ -1,5 +1,5 @@
-import type { ServiceRepository } from '@domain/entities';
-import { StorageError, ValidationError } from '@domain/errors';
+import type { ServiceRepository } from '@app/domain/entities';
+import { StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { mock } from 'jest-mock-extended';
 import { CreateService } from './create-service';

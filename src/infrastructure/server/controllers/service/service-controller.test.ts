@@ -1,6 +1,7 @@
+import { StorageError, ValidationError } from '@app/domain/errors';
 import type { CreateService } from '@app/use-cases';
-import { StorageError, ValidationError } from '@domain/errors';
 import { getMockReq, getMockRes } from '@jest-mock/express';
+import { fail, ok } from '@shared/result';
 import { mock } from 'jest-mock-extended';
 import { ServiceController } from './service-controller';
 
@@ -60,7 +61,7 @@ describe('ServiceController', () => {
   });
 
   it('returns a service DTO if params are valid', async () => {
-    createServiceMock.execute.mockResolvedValue({ isOk: true, data: mockedServiceDTO });
+    createServiceMock.execute.mockResolvedValue(ok(mockedServiceDTO));
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
@@ -72,10 +73,9 @@ describe('ServiceController', () => {
   });
 
   it('returns a validation error if createService use case returns a validation error', async () => {
-    createServiceMock.execute.mockResolvedValue({
-      isOk: false,
-      error: new ValidationError('some field', 'Invalid input'),
-    });
+    createServiceMock.execute.mockResolvedValue(
+      fail(new ValidationError('some field', 'Invalid input'))
+    );
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
@@ -88,10 +88,7 @@ describe('ServiceController', () => {
   });
 
   it('returns a storage error if createService use case returns a storage error', async () => {
-    createServiceMock.execute.mockResolvedValue({
-      isOk: false,
-      error: new StorageError('Storage error'),
-    });
+    createServiceMock.execute.mockResolvedValue(fail(new StorageError('Storage error')));
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 

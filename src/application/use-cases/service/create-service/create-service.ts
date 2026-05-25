@@ -1,5 +1,9 @@
-import { type ServiceCreationError, ServiceEntity, type ServiceRepository } from '@domain/entities';
-import type { StorageError } from '@domain/errors';
+import {
+  type ServiceCreationError,
+  ServiceEntity,
+  type ServiceRepository,
+} from '@app/domain/entities';
+import type { StorageError } from '@app/domain/errors';
 import { ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';

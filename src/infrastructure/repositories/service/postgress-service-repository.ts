@@ -1,5 +1,5 @@
-import type { ServiceEntity, ServiceRepository } from '@domain/entities';
-import type { StorageError } from '@domain/errors';
+import type { ServiceEntity, ServiceRepository } from '@app/domain/entities';
+import type { StorageError } from '@app/domain/errors';
 import { ok, type PromiseResult } from '@shared/result';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { servicesTable } from '../../db/schema';

@@ -1,4 +1,4 @@
-import { ValidationError } from '@domain/errors';
+import { ValidationError } from '@app/domain/errors';
 import { ServiceEntity } from './service-entity';
 
 describe('ServiceEntity', () => {

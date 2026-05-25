@@ -1,4 +1,4 @@
-import { ServiceEntity } from '@domain/entities';
+import { ServiceEntity } from '@app/domain/entities';
 import { ServiceMapper } from './service-mapper';
 
 describe('ServiceMapper', () => {

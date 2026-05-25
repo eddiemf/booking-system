@@ -1,5 +1,10 @@
-import { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
-import type { CreateEstablishment, FindEstablishment, UpdateEstablishment } from '@app/use-cases';
+import { ConflictError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
+import type {
+  CreateEstablishment,
+  DeleteEstablishment,
+  FindEstablishment,
+  UpdateEstablishment,
+} from '@app/use-cases';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { getMockReq, getMockRes } from 'vitest-mock-express';
@@ -12,10 +17,12 @@ describe('EstablishmentController', () => {
   const createEstablishmentMock = mock<CreateEstablishment>();
   const findEstablishmentMock = mock<FindEstablishment>();
   const updateEstablishmentMock = mock<UpdateEstablishment>();
+  const deleteEstablishmentMock = mock<DeleteEstablishment>();
   const controller = new EstablishmentController(
     createEstablishmentMock,
     findEstablishmentMock,
-    updateEstablishmentMock
+    updateEstablishmentMock,
+    deleteEstablishmentMock
   );
 
   describe('create()', () => {
@@ -237,6 +244,78 @@ describe('EstablishmentController', () => {
         message: 'Something went wrong. Try again later.',
         code: 'InternalServerError',
       });
+    });
+  });
+
+  describe('delete()', () => {
+    it('returns 204 on success', async () => {
+      deleteEstablishmentMock.execute.mockResolvedValue(ok(undefined));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(deleteEstablishmentMock.execute).toHaveBeenCalledWith({ id: '42' });
+      expect(res.status).toHaveBeenCalledWith(204);
+    });
+
+    it('returns 404 when establishment is not found', async () => {
+      deleteEstablishmentMock.execute.mockResolvedValue(
+        fail(new NotFoundError('Establishment', '42'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Establishment with id 42 was not found.',
+        code: 'NotFoundError',
+      });
+    });
+
+    it('returns 409 when establishment has associated services', async () => {
+      deleteEstablishmentMock.execute.mockResolvedValue(
+        fail(new ConflictError('Establishment has associated services or bookings.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Establishment has associated services or bookings.',
+        code: 'ConflictError',
+      });
+    });
+
+    it('returns 500 if deleteEstablishment returns a storage error', async () => {
+      deleteEstablishmentMock.execute.mockResolvedValue(
+        fail(new StorageError('Failed to delete establishment.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('returns 500 if deleteEstablishment throws an unexpected error', async () => {
+      deleteEstablishmentMock.execute.mockRejectedValue(new Error('Unexpected'));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 });

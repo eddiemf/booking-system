@@ -1,5 +1,10 @@
 import type { EstablishmentDTO } from '@app/dtos';
-import type { CreateEstablishment, FindEstablishment, UpdateEstablishment } from '@app/use-cases';
+import type {
+  CreateEstablishment,
+  DeleteEstablishment,
+  FindEstablishment,
+  UpdateEstablishment,
+} from '@app/use-cases';
 import type { Request, Response } from 'express';
 import z from 'zod';
 import { Controller, type ErrorResponse } from '../controller';
@@ -12,7 +17,8 @@ export class EstablishmentController extends Controller {
   constructor(
     private readonly createEstablishment: CreateEstablishment,
     private readonly findEstablishment: FindEstablishment,
-    private readonly updateEstablishment: UpdateEstablishment
+    private readonly updateEstablishment: UpdateEstablishment,
+    private readonly deleteEstablishment: DeleteEstablishment
   ) {
     super();
   }
@@ -87,6 +93,29 @@ export class EstablishmentController extends Controller {
       }
 
       return res.status(200).json(result.data);
+    } catch (error) {
+      return res.status(500).json(this.getInternalServerError());
+    }
+  }
+
+  async delete(req: Request, res: Response<ErrorResponse | void>) {
+    try {
+      const id = String(req.params.id);
+
+      const result = await this.deleteEstablishment.execute({ id });
+
+      if (!result.isOk) {
+        if (result.error.code === 'NotFoundError') {
+          return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ConflictError') {
+          return res.status(409).json(this.mapErrorFromResult(result));
+        }
+
+        return res.status(500).json(this.getInternalServerError());
+      }
+
+      return res.status(204).send();
     } catch (error) {
       return res.status(500).json(this.getInternalServerError());
     }

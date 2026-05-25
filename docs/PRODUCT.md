@@ -108,7 +108,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns the updated establishment DTO.
   - [ ] Returns `404` when not found.
 
-#### Feature 2.4 — Delete an Establishment `[planned]`
+#### Feature 2.4 — Delete an Establishment `[done]`
 
 - **Endpoint:** `DELETE /establishments/:id`
 - **Acceptance criteria:**

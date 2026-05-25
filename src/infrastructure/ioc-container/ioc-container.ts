@@ -1,6 +1,7 @@
 import {
   CreateEstablishment,
   CreateService,
+  DeleteEstablishment,
   FindEstablishment,
   UpdateEstablishment,
 } from '@app/use-cases';
@@ -22,6 +23,7 @@ export const createIocContainer = () => {
 
     // Use cases
     createEstablishment: asClass(CreateEstablishment).singleton(),
+    deleteEstablishment: asClass(DeleteEstablishment).singleton(),
     findEstablishment: asClass(FindEstablishment).singleton(),
     updateEstablishment: asClass(UpdateEstablishment).singleton(),
     createService: asClass(CreateService).singleton(),

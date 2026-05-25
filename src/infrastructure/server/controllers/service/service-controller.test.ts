@@ -1,8 +1,9 @@
 import { StorageError, ValidationError } from '@app/domain/errors';
 import type { CreateService } from '@app/use-cases';
-import { getMockReq, getMockRes } from '@jest-mock/express';
 import { fail, ok } from '@shared/result';
-import { mock } from 'jest-mock-extended';
+import { describe, expect, it } from 'vitest';
+import { getMockReq, getMockRes } from 'vitest-mock-express';
+import { mock } from 'vitest-mock-extended';
 import { ServiceController } from './service-controller';
 
 describe('ServiceController', () => {
@@ -26,6 +27,7 @@ describe('ServiceController', () => {
       body: { ...mockedValidInput, name: undefined },
     });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -41,6 +43,7 @@ describe('ServiceController', () => {
       body: { ...mockedValidInput, duration: undefined },
     });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -54,6 +57,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: { ...mockedValidInput, duration: 'not-a-number' } });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -68,6 +72,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(createServiceMock.execute).toHaveBeenCalledWith({
@@ -86,6 +91,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -100,6 +106,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
@@ -114,6 +121,7 @@ describe('ServiceController', () => {
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });
 
+    // @ts-expect-error
     await controller.create(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);

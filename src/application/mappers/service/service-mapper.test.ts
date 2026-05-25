@@ -1,4 +1,5 @@
 import { ServiceEntity } from '@app/domain/entities';
+import { describe, expect, it } from 'vitest';
 import { ServiceMapper } from './service-mapper';
 
 describe('ServiceMapper', () => {

@@ -1,7 +1,8 @@
 import type { ServiceRepository } from '@app/domain/entities';
 import { StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
-import { mock } from 'jest-mock-extended';
+import { describe, expect, it } from 'vitest';
+import { mock } from 'vitest-mock-extended';
 import { CreateService } from './create-service';
 
 describe('CreateService', () => {

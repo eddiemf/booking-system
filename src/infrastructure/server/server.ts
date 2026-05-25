@@ -15,7 +15,21 @@ export function createServer() {
   app.get('/establishments/:id', (req, res) => establishmentController.findById(req, res));
   app.put('/establishments/:id', (req, res) => establishmentController.update(req, res));
   app.delete('/establishments/:id', (req, res) => establishmentController.delete(req, res));
-  app.post('/services', (req, res) => serviceController.create(req, res));
+  app.post('/establishments/:establishmentId/services', (req, res) =>
+    serviceController.create(req, res)
+  );
+  app.get('/establishments/:establishmentId/services', (req, res) =>
+    serviceController.list(req, res)
+  );
+  app.get('/establishments/:establishmentId/services/:id', (req, res) =>
+    serviceController.findById(req, res)
+  );
+  app.put('/establishments/:establishmentId/services/:id', (req, res) =>
+    serviceController.update(req, res)
+  );
+  app.delete('/establishments/:establishmentId/services/:id', (req, res) =>
+    serviceController.delete(req, res)
+  );
 
   return app;
 }

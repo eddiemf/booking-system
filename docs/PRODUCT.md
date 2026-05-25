@@ -122,9 +122,9 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Services belong to an Establishment. Features 1.1 and 1.2 were bootstrapped globally and must be refactored to establishment-scoped endpoints after Epic 2 is done.
 
-#### Feature 1.1 — Create a Service `[done]` ⚠️ needs establishment scope
+#### Feature 1.1 — Create a Service `[done]`
 
-- **Current endpoint:** `POST /services` *(temporary — will become `POST /establishments/:id/services`)*
+- **Endpoint:** `POST /establishments/:establishmentId/services`
 - **Acceptance criteria:**
   - [x] A service requires a `name` and a positive `duration` (in minutes).
   - [x] `description` is optional.
@@ -133,9 +133,9 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] *(post-Epic 2)* Requires a valid `establishmentId` in the URL.
   - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
 
-#### Feature 1.2 — List Services `[done]` ⚠️ needs establishment scope
+#### Feature 1.2 — List Services `[done]`
 
-- **Current endpoint:** `GET /services` *(temporary — will become `GET /establishments/:id/services`)*
+- **Endpoint:** `GET /establishments/:establishmentId/services`
 - **Acceptance criteria:**
   - [x] Returns a list of all services.
   - [x] Returns an empty array when no services exist.
@@ -143,14 +143,14 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] *(post-Epic 2)* Returns only services belonging to the given establishment.
   - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
 
-#### Feature 1.3 — Get Service by ID `[planned]`
+#### Feature 1.3 — Get Service by ID `[done]`
 
 - **Endpoint:** `GET /establishments/:establishmentId/services/:id`
 - **Acceptance criteria:**
   - [ ] Returns the service matching the given ID.
   - [ ] Returns `404` when no service with that ID exists in the establishment.
 
-#### Feature 1.4 — Update a Service `[planned]`
+#### Feature 1.4 — Update a Service `[done]`
 
 - **Endpoint:** `PUT /establishments/:establishmentId/services/:id`
 - **Acceptance criteria:**
@@ -159,7 +159,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `404` when the service does not exist in the establishment.
   - [ ] Returns `400` on invalid values (same rules as creation).
 
-#### Feature 1.5 — Delete a Service `[planned]`
+#### Feature 1.5 — Delete a Service `[done]`
 
 - **Endpoint:** `DELETE /establishments/:establishmentId/services/:id`
 - **Acceptance criteria:**

@@ -8,6 +8,7 @@ export class ServiceMapper {
       name: service.name,
       description: service.description,
       duration: service.duration,
+      establishmentId: service.establishmentId,
     };
   }
 }

@@ -3,7 +3,7 @@ import {
   ServiceEntity,
   type ServiceRepository,
 } from '@app/domain/entities';
-import type { StorageError } from '@app/domain/errors';
+import type { NotFoundError, StorageError } from '@app/domain/errors';
 import { ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
@@ -12,6 +12,7 @@ type Input = {
   name: string;
   description?: string | undefined;
   duration: number;
+  establishmentId: string;
 };
 
 export class CreateService {
@@ -21,8 +22,9 @@ export class CreateService {
     name,
     description,
     duration,
-  }: Input): PromiseResult<ServiceDTO, ServiceCreationError | StorageError> {
-    const serviceResult = ServiceEntity.create({ name, description, duration });
+    establishmentId,
+  }: Input): PromiseResult<ServiceDTO, ServiceCreationError | StorageError | NotFoundError> {
+    const serviceResult = ServiceEntity.create({ name, description, duration, establishmentId });
     if (!serviceResult.isOk) return serviceResult;
 
     const entity = serviceResult.data;

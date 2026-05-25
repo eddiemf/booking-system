@@ -3,4 +3,5 @@ export interface ServiceDTO {
   name: string;
   description: string;
   duration: number;
+  establishmentId: string;
 }

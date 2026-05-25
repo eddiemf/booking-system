@@ -8,6 +8,7 @@ interface Props {
   name: string;
   description?: string | undefined;
   duration: number;
+  establishmentId: string;
 }
 
 interface ReconstructProps {
@@ -15,6 +16,7 @@ interface ReconstructProps {
   name: string;
   description: string;
   duration: number;
+  establishmentId: string;
 }
 
 export class ServiceEntity {
@@ -22,7 +24,8 @@ export class ServiceEntity {
     private _id: string,
     private _name: string,
     private _description: string,
-    private _duration: number
+    private _duration: number,
+    private _establishmentId: string
   ) {}
 
   get id(): string {
@@ -41,18 +44,23 @@ export class ServiceEntity {
     return this._duration;
   }
 
+  get establishmentId(): string {
+    return this._establishmentId;
+  }
+
   static create({
     name,
     duration,
     description = '',
+    establishmentId,
   }: Props): Result<ServiceEntity, ServiceCreationError> {
     if (!name) return fail(new ValidationError('name', 'Value is required.'));
     if (duration <= 0) return fail(new ValidationError('duration', 'Value is required.'));
 
-    return ok(new ServiceEntity(v7(), name, description, duration));
+    return ok(new ServiceEntity(v7(), name, description, duration, establishmentId));
   }
 
-  static reconstruct({ id, name, duration, description }: ReconstructProps) {
-    return new ServiceEntity(id, name, description, duration);
+  static reconstruct({ id, name, duration, description, establishmentId }: ReconstructProps) {
+    return new ServiceEntity(id, name, description, duration, establishmentId);
   }
 }

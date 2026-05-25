@@ -2,8 +2,12 @@ import {
   CreateEstablishment,
   CreateService,
   DeleteEstablishment,
+  DeleteService,
   FindEstablishment,
+  FindService,
+  ListServices,
   UpdateEstablishment,
+  UpdateService,
 } from '@app/use-cases';
 import { getConfig } from '@config/config';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
@@ -27,6 +31,10 @@ export const createIocContainer = () => {
     findEstablishment: asClass(FindEstablishment).singleton(),
     updateEstablishment: asClass(UpdateEstablishment).singleton(),
     createService: asClass(CreateService).singleton(),
+    deleteService: asClass(DeleteService).singleton(),
+    findService: asClass(FindService).singleton(),
+    listServices: asClass(ListServices).singleton(),
+    updateService: asClass(UpdateService).singleton(),
 
     // Repositories
     establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),

@@ -2,6 +2,14 @@
 
 These instructions apply to work in this repository.
 
+## Product Backlog
+
+Before implementing any feature, read `docs/PRODUCT.md`. It contains the domain model, the MVP scope, and all features with their acceptance criteria and current status.
+
+When a feature is completed, update its status in `docs/PRODUCT.md` from `[planned]` or `[in-progress]` to `[done]` and check off the relevant acceptance criteria.
+
+When starting a feature, set its status to `[in-progress]` in `docs/PRODUCT.md`.
+
 ## 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**

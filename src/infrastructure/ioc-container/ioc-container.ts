@@ -1,4 +1,4 @@
-import { CreateEstablishment, CreateService } from '@app/use-cases';
+import { CreateEstablishment, CreateService, FindEstablishment } from '@app/use-cases';
 import { getConfig } from '@config/config';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -17,6 +17,7 @@ export const createIocContainer = () => {
 
     // Use cases
     createEstablishment: asClass(CreateEstablishment).singleton(),
+    findEstablishment: asClass(FindEstablishment).singleton(),
     createService: asClass(CreateService).singleton(),
 
     // Repositories

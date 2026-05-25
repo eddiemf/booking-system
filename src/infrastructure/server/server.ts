@@ -12,6 +12,7 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   app.post('/establishments', (req, res) => establishmentController.create(req, res));
+  app.get('/establishments/:id', (req, res) => establishmentController.findById(req, res));
   app.post('/services', (req, res) => serviceController.create(req, res));
 
   return app;

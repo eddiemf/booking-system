@@ -93,7 +93,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `201` with the created establishment DTO (`id`, `name`).
   - [ ] Returns `400` when `name` is missing.
 
-#### Feature 2.2 — Get Establishment by ID `[planned]`
+#### Feature 2.2 — Get Establishment by ID `[done]`
 
 - **Endpoint:** `GET /establishments/:id`
 - **Acceptance criteria:**

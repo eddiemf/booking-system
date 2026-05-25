@@ -1,30 +1,28 @@
+import type { ServiceDTO } from '@app/dtos';
 import type { CreateService } from '@app/use-cases';
-import { getZodErrorMap } from '@shared/get-zod-error-map';
 import type { Request, Response } from 'express';
-import { match } from 'ts-pattern';
 import z from 'zod';
+import { Controller, type ErrorResponse } from '../controller';
 
-export class ServiceController {
-  private readonly serviceSchema = z.object({
+export class ServiceController extends Controller {
+  private readonly newServiceSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
     duration: z.number({ coerce: true }),
   });
 
-  constructor(private readonly createServiceUseCase: CreateService) {}
+  constructor(private readonly createServiceUseCase: CreateService) {
+    super();
+  }
 
-  async createService(req: Request, res: Response): Promise<void> {
+  async createService(req: Request, res: Response): Promise<Response<ServiceDTO | ErrorResponse>> {
     try {
-      const { name, description, duration } = req.body;
-
-      const validation = this.serviceSchema.safeParse(
-        { name, description, duration },
-        { errorMap: getZodErrorMap() }
-      );
+      const validation = this.newServiceSchema.safeParse(req.body);
       if (!validation.success) {
-        res.status(400).json({ error: validation.error.issues[0].message });
-        return;
+        return res.status(400).json(this.mapZodValidationError(validation.error));
       }
+
+      const { name, description, duration } = validation.data;
 
       const result = await this.createServiceUseCase.execute({
         name,
@@ -32,25 +30,17 @@ export class ServiceController {
         duration,
       });
 
-      if (result.isOk) {
-        res.status(201).json(result.data);
-        return;
+      if (!result.isOk) {
+        if (result.error.code === 'ValidationError') {
+          return res.status(400).json(this.mapErrorFromResult(result));
+        }
+
+        return res.status(500).json(this.getInternalServerError());
       }
 
-      const error = match(result.error.code)
-        .with('ValidationError', () => ({
-          status: 400,
-          message: result.error.message,
-        }))
-        .with('StorageError', () => ({
-          status: 500,
-          message: result.error.message,
-        }))
-        .exhaustive();
-
-      res.status(error.status).json({ error: error.message });
+      return res.status(201).json(result.data);
     } catch (error) {
-      res.status(500).json({ error: 'Internal server error.' });
+      return res.status(500).json(this.getInternalServerError());
     }
   }
 }

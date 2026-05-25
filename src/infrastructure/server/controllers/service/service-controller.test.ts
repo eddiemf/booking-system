@@ -30,7 +30,8 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Field 'name' is invalid. Expected string but received undefined.",
+      message: 'Invalid value for field: name. Required',
+      code: 'ValidationError',
     });
   });
 
@@ -44,7 +45,8 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Field 'duration' is invalid. Expected number but received nan.",
+      message: 'Invalid value for field: duration. Expected number, received nan',
+      code: 'ValidationError',
     });
   });
 
@@ -56,7 +58,8 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Field 'duration' is invalid. Expected number but received nan.",
+      message: 'Invalid value for field: duration. Expected number, received nan',
+      code: 'ValidationError',
     });
   });
 
@@ -83,7 +86,8 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Invalid value for field: some field. Invalid input',
+      message: 'Invalid value for field: some field. Invalid input',
+      code: 'ValidationError',
     });
   });
 
@@ -95,7 +99,10 @@ describe('ServiceController', () => {
     await controller.createService(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Storage error' });
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Something went wrong. Try again later.',
+      code: 'InternalServerError',
+    });
   });
 
   it('returns an interval server error if createService throws', async () => {
@@ -106,6 +113,9 @@ describe('ServiceController', () => {
     await controller.createService(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error.' });
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Something went wrong. Try again later.',
+      code: 'InternalServerError',
+    });
   });
 });

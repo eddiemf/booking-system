@@ -1,5 +1,5 @@
 import { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
-import type { CreateEstablishment, FindEstablishment } from '@app/use-cases';
+import type { CreateEstablishment, FindEstablishment, UpdateEstablishment } from '@app/use-cases';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { getMockReq, getMockRes } from 'vitest-mock-express';
@@ -11,7 +11,12 @@ describe('EstablishmentController', () => {
   const mockedEstablishmentDTO = { id: '42', name: 'My Salon' };
   const createEstablishmentMock = mock<CreateEstablishment>();
   const findEstablishmentMock = mock<FindEstablishment>();
-  const controller = new EstablishmentController(createEstablishmentMock, findEstablishmentMock);
+  const updateEstablishmentMock = mock<UpdateEstablishment>();
+  const controller = new EstablishmentController(
+    createEstablishmentMock,
+    findEstablishmentMock,
+    updateEstablishmentMock
+  );
 
   describe('create()', () => {
     it('returns a validation error if a name is not provided', async () => {
@@ -147,6 +152,85 @@ describe('EstablishmentController', () => {
 
       // @ts-expect-error
       await controller.findById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Something went wrong. Try again later.',
+        code: 'InternalServerError',
+      });
+    });
+  });
+
+  describe('update()', () => {
+    it('returns 400 if name is not provided', async () => {
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' }, body: {} });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message:
+          'Invalid value for field: name. Invalid input: expected string, received undefined',
+        code: 'ValidationError',
+      });
+    });
+
+    it('returns 200 with updated establishment DTO on success', async () => {
+      updateEstablishmentMock.execute.mockResolvedValue(ok(mockedEstablishmentDTO));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' }, body: mockedValidInput });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(updateEstablishmentMock.execute).toHaveBeenCalledWith({ id: '42', name: 'My Salon' });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockedEstablishmentDTO);
+    });
+
+    it('returns 404 when establishment is not found', async () => {
+      updateEstablishmentMock.execute.mockResolvedValue(
+        fail(new NotFoundError('Establishment', '42'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' }, body: mockedValidInput });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Establishment with id 42 was not found.',
+        code: 'NotFoundError',
+      });
+    });
+
+    it('returns 500 if updateEstablishment returns a storage error', async () => {
+      updateEstablishmentMock.execute.mockResolvedValue(
+        fail(new StorageError('Failed to update establishment.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' }, body: mockedValidInput });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Something went wrong. Try again later.',
+        code: 'InternalServerError',
+      });
+    });
+
+    it('returns 500 if updateEstablishment throws an unexpected error', async () => {
+      updateEstablishmentMock.execute.mockRejectedValue(new Error('Unexpected'));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { id: '42' }, body: mockedValidInput });
+
+      // @ts-expect-error
+      await controller.update(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

@@ -9,11 +9,19 @@ export const createIocContainer = () => {
   const config = getConfig();
   const container = createContainer({
     injectionMode: InjectionMode.CLASSIC,
+    strict: true,
   }).register({
-    db: asValue(drizzle(config.database.url)),
-    serviceRepository: asClass(PostgressServiceRepository).singleton(),
-    createServiceUseCase: asClass(CreateService).singleton(),
+    // Controllers
     serviceController: asClass(ServiceController).singleton(),
+
+    // Use cases
+    createService: asClass(CreateService).singleton(),
+
+    // Repositories
+    serviceRepository: asClass(PostgressServiceRepository).singleton(),
+
+    // Database
+    db: asValue(drizzle(config.database.url)),
   });
 
   return container;

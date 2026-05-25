@@ -10,7 +10,7 @@ export const startServer = () => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.post('/services', (req, res) => serviceController.createService(req, res));
+  app.post('/services', (req, res) => serviceController.create(req, res));
 
   app.listen(3000, () => {
     console.log('Server is running on port 3000');

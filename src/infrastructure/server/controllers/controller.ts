@@ -9,7 +9,7 @@ export interface ErrorResponse {
 
 export abstract class Controller {
   protected mapZodValidationError(error: z.ZodError): ErrorResponse {
-    const field = error.issues[0].path[0] as string;
+    const field = String(error.issues[0].path[0]);
     const message = error.issues[0].message;
     const validationError = new ValidationError(field, message);
 

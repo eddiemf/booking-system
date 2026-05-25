@@ -8,14 +8,14 @@ export class ServiceController extends Controller {
   private readonly newServiceSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
-    duration: z.number({ coerce: true }),
+    duration: z.coerce.number(),
   });
 
-  constructor(private readonly createServiceUseCase: CreateService) {
+  constructor(private readonly createService: CreateService) {
     super();
   }
 
-  async createService(req: Request, res: Response): Promise<Response<ServiceDTO | ErrorResponse>> {
+  async create(req: Request, res: Response): Promise<Response<ServiceDTO | ErrorResponse>> {
     try {
       const validation = this.newServiceSchema.safeParse(req.body);
       if (!validation.success) {
@@ -24,7 +24,7 @@ export class ServiceController extends Controller {
 
       const { name, description, duration } = validation.data;
 
-      const result = await this.createServiceUseCase.execute({
+      const result = await this.createService.execute({
         name,
         description,
         duration,

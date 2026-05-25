@@ -26,13 +26,13 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "awilix": "^12.0.5",
+    "awilix": "^13.0.3",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.43.1",
+    "drizzle-orm": "^0.45.2",
     "express": "^5.1.0",
-    "pg": "^8.15.6",
+    "pg": "^8.21.0",
     "ts-pattern": "^5.7.0",
     "uuid": "^11.1.0",
-    "zod": "^3.24.3"
+    "zod": "^4.4.3"
   }
 }

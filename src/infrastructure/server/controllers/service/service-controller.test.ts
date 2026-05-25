@@ -30,7 +30,7 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Invalid value for field: name. Required',
+      message: 'Invalid value for field: name. Invalid input: expected string, received undefined',
       code: 'ValidationError',
     });
   });
@@ -45,7 +45,7 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Invalid value for field: duration. Expected number, received nan',
+      message: 'Invalid value for field: duration. Invalid input: expected number, received NaN',
       code: 'ValidationError',
     });
   });
@@ -58,7 +58,7 @@ describe('ServiceController', () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Invalid value for field: duration. Expected number, received nan',
+      message: 'Invalid value for field: duration. Invalid input: expected number, received NaN',
       code: 'ValidationError',
     });
   });
@@ -105,7 +105,7 @@ describe('ServiceController', () => {
     });
   });
 
-  it('returns an interval server error if createService throws', async () => {
+  it('returns an internal server error if createService throws', async () => {
     createServiceMock.execute.mockRejectedValue('anything');
     const { res } = getMockRes();
     const req = getMockReq({ body: mockedValidInput });

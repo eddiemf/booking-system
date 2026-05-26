@@ -41,12 +41,12 @@ export class ScheduleEntity {
     return this._dayOfWeek;
   }
 
-  get startTime(): string {
-    return this._startTime.value;
+  get startTime(): TimeOfDay {
+    return this._startTime;
   }
 
-  get endTime(): string {
-    return this._endTime.value;
+  get endTime(): TimeOfDay {
+    return this._endTime;
   }
 
   static create({

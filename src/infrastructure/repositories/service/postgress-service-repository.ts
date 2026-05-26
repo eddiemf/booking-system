@@ -15,7 +15,7 @@ export class PostgressServiceRepository implements ServiceRepository {
         code: service.code,
         name: service.name,
         description: service.description,
-        duration: service.duration,
+        duration: service.duration.toMinutes(),
         establishmentId: service.establishmentId,
       });
       return ok(service);
@@ -105,7 +105,11 @@ export class PostgressServiceRepository implements ServiceRepository {
 
       const rows = await this.db
         .update(servicesTable)
-        .set({ name: service.name, description: service.description, duration: service.duration })
+        .set({
+          name: service.name,
+          description: service.description,
+          duration: service.duration.toMinutes(),
+        })
         .where(
           and(
             eq(servicesTable.code, code),
@@ -124,7 +128,7 @@ export class PostgressServiceRepository implements ServiceRepository {
           code: rows[0].code,
           name: service.name,
           description: service.description,
-          duration: service.duration,
+          duration: service.duration.toMinutes(),
           establishmentId: rows[0].establishmentId,
         })
       );

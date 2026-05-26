@@ -64,7 +64,7 @@ describe('ServiceEntity', () => {
 
       expect(service.name).toBe('haircut');
       expect(service.description).toBe('A basic haircut');
-      expect(service.duration).toBe(30);
+      expect(service.duration.toMinutes()).toBe(30);
       expect(service.establishmentId).toBe('1');
     });
 
@@ -110,7 +110,7 @@ describe('ServiceEntity', () => {
       expect(service.code).toBe('svc123');
       expect(service.name).toBe('massage');
       expect(service.description).toBe('Haircut');
-      expect(service.duration).toBe(90);
+      expect(service.duration.toMinutes()).toBe(90);
       expect(service.establishmentId).toBe('1');
     });
   });
@@ -152,7 +152,7 @@ describe('ServiceEntity', () => {
 
       expect(updatedService.name).toBe('Haircut');
       expect(updatedService.description).toBe('Updated');
-      expect(updatedService.duration).toBe(60);
+      expect(updatedService.duration.toMinutes()).toBe(60);
       expect(updatedService.id).toBe(service.id);
       expect(updatedService.code).toBe(service.code);
       expect(updatedService.establishmentId).toBe(service.establishmentId);

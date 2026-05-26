@@ -7,8 +7,8 @@ export class ScheduleMapper {
       id: entity.id,
       resourceId: entity.resourceId,
       dayOfWeek: entity.dayOfWeek,
-      startTime: entity.startTime,
-      endTime: entity.endTime,
+      startTime: entity.startTime.value,
+      endTime: entity.endTime.value,
     };
   }
 }

@@ -7,7 +7,7 @@ export class ServiceMapper {
       id: service.code,
       name: service.name,
       description: service.description,
-      duration: service.duration,
+      duration: service.duration.toMinutes(),
       establishmentId: service.establishmentId,
     };
   }

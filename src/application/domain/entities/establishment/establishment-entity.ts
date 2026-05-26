@@ -49,9 +49,21 @@ export class EstablishmentEntity {
   }
 
   static create({ name }: Props): Result<EstablishmentEntity, EstablishmentCreationError> {
-    if (!name) return fail(new ValidationError('name', 'Value is required.'));
+    const nameError = EstablishmentEntity.requireName(name);
+    if (nameError) return fail(nameError);
 
     return ok(new EstablishmentEntity(v7(), nanoid(10), name, [], []));
+  }
+
+  update({ name }: { name: string }): Result<EstablishmentEntity, ValidationError> {
+    const nameError = EstablishmentEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
+    return ok(new EstablishmentEntity(this._id, this._code, name, this._resources, this._services));
+  }
+
+  private static requireName(name: string): ValidationError | null {
+    return name ? null : new ValidationError('name', 'Value is required.');
   }
 
   static reconstruct({

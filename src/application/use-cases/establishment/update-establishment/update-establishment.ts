@@ -1,10 +1,6 @@
-import {
-  type EstablishmentCreationError,
-  EstablishmentEntity,
-  type EstablishmentRepository,
-} from '@app/domain/entities';
-import type { NotFoundError, StorageError } from '@app/domain/errors';
-import { ok, type PromiseResult } from '@shared/result';
+import type { EstablishmentCreationError, EstablishmentRepository } from '@app/domain/entities';
+import { NotFoundError, type StorageError } from '@app/domain/errors';
+import { fail, ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
@@ -23,10 +19,16 @@ export class UpdateEstablishment {
     EstablishmentDTO,
     EstablishmentCreationError | StorageError | NotFoundError
   > {
-    const entityResult = EstablishmentEntity.create({ name });
-    if (!entityResult.isOk) return entityResult;
+    const findResult = await this.establishmentRepository.findByCode(code);
+    if (!findResult.isOk) return findResult;
+    if (!findResult.data) return fail(new NotFoundError('Establishment', code));
 
-    const updateResult = await this.establishmentRepository.update(code, entityResult.data);
+    const establishment = findResult.data;
+    const editedEstablishmentResult = establishment.update({ name });
+    if (!editedEstablishmentResult.isOk) return editedEstablishmentResult;
+
+    const editedEstablishment = editedEstablishmentResult.data;
+    const updateResult = await this.establishmentRepository.update(code, editedEstablishment);
     if (!updateResult.isOk) return updateResult;
 
     return ok(EstablishmentMapper.toDTO(updateResult.data));

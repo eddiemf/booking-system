@@ -25,7 +25,9 @@ describe('ServiceEntity', () => {
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
-      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
+      expect(error.message).toBe(
+        'Invalid value for field: duration. Value must be greater than 0.'
+      );
     });
 
     it('fails to create with duration equal to zero', () => {
@@ -36,7 +38,9 @@ describe('ServiceEntity', () => {
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
-      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
+      expect(error.message).toBe(
+        'Invalid value for field: duration. Value must be greater than 0.'
+      );
     });
 
     it('creates a valid service with default description', () => {
@@ -132,7 +136,9 @@ describe('ServiceEntity', () => {
       const error = service.update({ name: 'Haircut', duration: 0 }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
-      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
+      expect(error.message).toBe(
+        'Invalid value for field: duration. Value must be greater than 0.'
+      );
     });
 
     it('returns a new entity with updated fields', () => {

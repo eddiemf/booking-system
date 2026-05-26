@@ -29,6 +29,31 @@ describe('EstablishmentEntity', () => {
     });
   });
 
+  describe('update()', () => {
+    const establishment = EstablishmentEntity.reconstruct({
+      id: 'uuid-1',
+      code: 'abc123',
+      name: 'Old Name',
+    });
+
+    it('fails with empty name', () => {
+      const error = establishment.update({ name: '' }).getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: name. Value is required.');
+    });
+
+    it('returns a new entity with the updated name', () => {
+      const updatedEstablishment = establishment.update({ name: 'New Name' }).getData();
+
+      expect(updatedEstablishment.name).toBe('New Name');
+      expect(updatedEstablishment.id).toBe(establishment.id);
+      expect(updatedEstablishment.code).toBe(establishment.code);
+      expect(updatedEstablishment.resources).toEqual(establishment.resources);
+      expect(updatedEstablishment.services).toEqual(establishment.services);
+    });
+  });
+
   describe('reconstruct()', () => {
     it('defaults resources and services to empty arrays', () => {
       const entity = EstablishmentEntity.reconstruct({ id: '1', code: 'abc', name: 'Salon' });

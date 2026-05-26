@@ -9,7 +9,15 @@ describe('UpdateEstablishment', () => {
   const establishmentRepository = mock<EstablishmentRepository>();
   const useCase = new UpdateEstablishment(establishmentRepository);
 
+  const existing = EstablishmentEntity.reconstruct({
+    id: 'uuid-1',
+    code: 'abc123',
+    name: 'Old Name',
+  });
+
   it('returns a validation error if name is empty', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(existing));
+
     const error = await useCase
       .execute({ code: 'abc123', name: '' })
       .then((result) => result.getError());
@@ -18,9 +26,7 @@ describe('UpdateEstablishment', () => {
   });
 
   it('returns a not-found error when the establishment does not exist', async () => {
-    establishmentRepository.update.mockResolvedValue(
-      fail(new NotFoundError('Establishment', 'abc123'))
-    );
+    establishmentRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase
       .execute({ code: 'abc123', name: 'New Name' })
@@ -32,6 +38,7 @@ describe('UpdateEstablishment', () => {
 
   it('returns a storage error when the repository fails', async () => {
     const error = new StorageError('Failed to update establishment.');
+    establishmentRepository.findByCode.mockResolvedValue(ok(existing));
     establishmentRepository.update.mockResolvedValue(fail(error));
 
     const result = await useCase
@@ -42,6 +49,7 @@ describe('UpdateEstablishment', () => {
   });
 
   it('returns the updated establishment DTO on success', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(existing));
     establishmentRepository.update.mockResolvedValue(
       ok(EstablishmentEntity.reconstruct({ id: 'uuid-1', code: 'abc123', name: 'New Name' }))
     );

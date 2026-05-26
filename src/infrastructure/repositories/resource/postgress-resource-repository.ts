@@ -3,7 +3,7 @@ import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { resourcesTable } from '../../db/schema';
+import { establishmentsTable, resourcesTable } from '../../db/schema';
 
 export class PostgressResourceRepository implements ResourceRepository {
   constructor(private readonly db: NodePgDatabase) {}
@@ -14,6 +14,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     try {
       await this.db.insert(resourcesTable).values({
         id: resource.id,
+        code: resource.code,
         name: resource.name,
         type: resource.type,
         establishmentId: resource.establishmentId,
@@ -28,19 +29,30 @@ export class PostgressResourceRepository implements ResourceRepository {
   }
 
   async findAll(
-    establishmentId: string,
+    establishmentCode: string,
     type?: ResourceType
   ): PromiseResult<ResourceEntity[], StorageError> {
     try {
       const condition = type
-        ? and(eq(resourcesTable.establishmentId, establishmentId), eq(resourcesTable.type, type))
-        : eq(resourcesTable.establishmentId, establishmentId);
+        ? and(eq(establishmentsTable.code, establishmentCode), eq(resourcesTable.type, type))
+        : eq(establishmentsTable.code, establishmentCode);
 
-      const rows = await this.db.select().from(resourcesTable).where(condition);
+      const rows = await this.db
+        .select({
+          id: resourcesTable.id,
+          code: resourcesTable.code,
+          name: resourcesTable.name,
+          type: resourcesTable.type,
+          establishmentId: resourcesTable.establishmentId,
+        })
+        .from(resourcesTable)
+        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
+        .where(condition);
       return ok(
         rows.map((row) =>
           ResourceEntity.reconstruct({
             id: row.id,
+            code: row.code,
             name: row.name,
             type: row.type as ResourceType,
             establishmentId: row.establishmentId,
@@ -52,14 +64,15 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findById(id: string): PromiseResult<ResourceEntity | null, StorageError> {
+  async findByCode(code: string): PromiseResult<ResourceEntity | null, StorageError> {
     try {
-      const rows = await this.db.select().from(resourcesTable).where(eq(resourcesTable.id, id));
+      const rows = await this.db.select().from(resourcesTable).where(eq(resourcesTable.code, code));
       if (!rows[0]) return ok(null);
       const row = rows[0];
       return ok(
         ResourceEntity.reconstruct({
           id: row.id,
+          code: row.code,
           name: row.name,
           type: row.type as ResourceType,
           establishmentId: row.establishmentId,
@@ -71,22 +84,27 @@ export class PostgressResourceRepository implements ResourceRepository {
   }
 
   async update(
-    id: string,
+    code: string,
     resource: ResourceEntity
   ): PromiseResult<ResourceEntity, StorageError | NotFoundError> {
     try {
       const rows = await this.db
         .update(resourcesTable)
         .set({ name: resource.name, type: resource.type })
-        .where(eq(resourcesTable.id, id))
-        .returning({ id: resourcesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Resource', id));
+        .where(eq(resourcesTable.code, code))
+        .returning({
+          id: resourcesTable.id,
+          code: resourcesTable.code,
+          establishmentId: resourcesTable.establishmentId,
+        });
+      if (!rows[0]) return fail(new NotFoundError('Resource', code));
       return ok(
         ResourceEntity.reconstruct({
-          id,
+          id: rows[0].id,
+          code: rows[0].code,
           name: resource.name,
           type: resource.type,
-          establishmentId: resource.establishmentId,
+          establishmentId: rows[0].establishmentId,
         })
       );
     } catch (error) {
@@ -94,13 +112,13 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async delete(id: string): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
+  async delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
     try {
       const rows = await this.db
         .delete(resourcesTable)
-        .where(eq(resourcesTable.id, id))
+        .where(eq(resourcesTable.code, code))
         .returning({ id: resourcesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Resource', id));
+      if (!rows[0]) return fail(new NotFoundError('Resource', code));
       return ok(undefined);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23503') {

@@ -5,7 +5,8 @@ import z from 'zod';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ScheduleController extends Controller {
-  private readonly scheduleBodySchema = z.object({
+  private readonly setScheduleSchema = z.object({
+    resourceCode: z.string().min(1),
     entries: z.array(
       z.object({
         dayOfWeek: z.number().int().min(0).max(6),
@@ -21,15 +22,14 @@ export class ScheduleController extends Controller {
 
   async set(req: Request, res: Response<ScheduleDTO[] | ErrorResponse>) {
     try {
-      const validation = this.scheduleBodySchema.safeParse(req.body);
+      const validation = this.setScheduleSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const resourceId = String(req.params.resourceId);
-      const { entries } = validation.data;
+      const { resourceCode, entries } = validation.data;
 
-      const result = await this.setSchedule.execute({ resourceId, entries });
+      const result = await this.setSchedule.execute({ resourceCode, entries });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {

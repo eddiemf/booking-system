@@ -4,7 +4,7 @@ import type { ResourceDTO } from '@app/dtos';
 export class ResourceMapper {
   static toDTO(resource: ResourceEntity): ResourceDTO {
     return {
-      id: resource.id,
+      id: resource.code,
       name: resource.name,
       type: resource.type,
       establishmentId: resource.establishmentId,

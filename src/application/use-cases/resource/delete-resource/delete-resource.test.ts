@@ -10,9 +10,9 @@ describe('DeleteResource', () => {
   const useCase = new DeleteResource(resourceRepository);
 
   it('returns not-found error when resource does not exist', async () => {
-    resourceRepository.delete.mockResolvedValue(fail(new NotFoundError('Resource', '10')));
+    resourceRepository.delete.mockResolvedValue(fail(new NotFoundError('Resource', 'res123')));
 
-    const error = await useCase.execute({ id: '10' }).then((result) => result.getError());
+    const error = await useCase.execute({ code: 'res123' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -22,7 +22,7 @@ describe('DeleteResource', () => {
       fail(new ConflictError('Resource has future bookings.'))
     );
 
-    const error = await useCase.execute({ id: '10' }).then((result) => result.getError());
+    const error = await useCase.execute({ code: 'res123' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ConflictError);
   });
@@ -30,7 +30,7 @@ describe('DeleteResource', () => {
   it('returns storage error when delete fails', async () => {
     resourceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
-    const error = await useCase.execute({ id: '10' }).then((result) => result.getError());
+    const error = await useCase.execute({ code: 'res123' }).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
@@ -38,7 +38,7 @@ describe('DeleteResource', () => {
   it('returns ok on success', async () => {
     resourceRepository.delete.mockResolvedValue(ok(undefined));
 
-    const result = await useCase.execute({ id: '10' });
+    const result = await useCase.execute({ code: 'res123' });
 
     expect(result.isOk).toBe(true);
   });

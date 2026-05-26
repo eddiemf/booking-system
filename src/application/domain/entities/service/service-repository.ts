@@ -4,15 +4,18 @@ import type { ServiceEntity } from './service-entity';
 
 export interface ServiceRepository {
   save(service: ServiceEntity): PromiseResult<ServiceEntity, StorageError | NotFoundError>;
-  findAll(establishmentId: string): PromiseResult<ServiceEntity[], StorageError>;
-  findById(id: string, establishmentId: string): PromiseResult<ServiceEntity | null, StorageError>;
+  findAll(establishmentCode: string): PromiseResult<ServiceEntity[], StorageError>;
+  findByCode(
+    code: string,
+    establishmentCode: string
+  ): PromiseResult<ServiceEntity | null, StorageError>;
   update(
-    id: string,
-    establishmentId: string,
+    code: string,
+    establishmentCode: string,
     service: ServiceEntity
   ): PromiseResult<ServiceEntity, StorageError | NotFoundError>;
   delete(
-    id: string,
-    establishmentId: string
+    code: string,
+    establishmentCode: string
   ): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

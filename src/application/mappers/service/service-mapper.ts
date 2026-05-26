@@ -4,7 +4,7 @@ import type { ServiceDTO } from '@app/dtos';
 export class ServiceMapper {
   static toDTO(service: ServiceEntity): ServiceDTO {
     return {
-      id: service.id,
+      id: service.code,
       name: service.name,
       description: service.description,
       duration: service.duration,

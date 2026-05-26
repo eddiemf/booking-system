@@ -10,19 +10,20 @@ describe('UpdateService', () => {
   const useCase = new UpdateService(serviceRepository);
 
   const validInput = {
-    id: '10',
-    establishmentId: '1',
+    code: 'svc123',
+    establishmentCode: 'est123',
     name: 'Haircut',
     description: 'Updated',
     duration: 45,
   };
 
   const updatedEntity = ServiceEntity.reconstruct({
-    id: '10',
+    id: 'uuid-svc',
+    code: 'svc123',
     name: 'Haircut',
     description: 'Updated',
     duration: 45,
-    establishmentId: '1',
+    establishmentId: 'uuid-est',
   });
 
   it('returns validation error for invalid name', async () => {
@@ -42,7 +43,7 @@ describe('UpdateService', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    serviceRepository.update.mockResolvedValue(fail(new NotFoundError('Service', '10')));
+    serviceRepository.update.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -63,11 +64,11 @@ describe('UpdateService', () => {
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
     expect(data).toEqual({
-      id: '10',
+      id: 'svc123',
       name: 'Haircut',
       description: 'Updated',
       duration: 45,
-      establishmentId: '1',
+      establishmentId: 'uuid-est',
     });
   });
 });

@@ -6,7 +6,20 @@ import z from 'zod';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ResourceController extends Controller {
-  private readonly resourceSchema = z.object({
+  private readonly createResourceSchema = z.object({
+    establishmentCode: z.string().min(1),
+    name: z.string(),
+    type: z.enum(['employee', 'room']),
+  });
+
+  private readonly establishmentParamsSchema = z.object({
+    establishmentCode: z.string().min(1),
+  });
+
+  private readonly resourceParamsSchema = z.object({ code: z.string().min(1) });
+
+  private readonly updateResourceSchema = z.object({
+    code: z.string().min(1),
     name: z.string(),
     type: z.enum(['employee', 'room']),
   });
@@ -22,15 +35,14 @@ export class ResourceController extends Controller {
 
   async create(req: Request, res: Response<ResourceDTO | ErrorResponse>) {
     try {
-      const validation = this.resourceSchema.safeParse(req.body);
+      const validation = this.createResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { name, type } = validation.data;
-      const establishmentId = String(req.params.establishmentId);
+      const { establishmentCode, name, type } = validation.data;
 
-      const result = await this.createResource.execute({ name, type, establishmentId });
+      const result = await this.createResource.execute({ name, type, establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -51,13 +63,17 @@ export class ResourceController extends Controller {
 
   async list(req: Request, res: Response<ResourceDTO[] | ErrorResponse>) {
     try {
-      const establishmentId = String(req.params.establishmentId);
+      const paramsValidation = this.establishmentParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { establishmentCode } = paramsValidation.data;
       const rawType = req.query.type;
       const type =
         rawType === 'employee' || rawType === 'room' ? (rawType as ResourceType) : undefined;
 
       const result = await this.listResources.execute(
-        type ? { establishmentId, type } : { establishmentId }
+        type ? { establishmentCode, type } : { establishmentCode }
       );
 
       if (!result.isOk) {
@@ -76,15 +92,14 @@ export class ResourceController extends Controller {
 
   async update(req: Request, res: Response<ResourceDTO | ErrorResponse>) {
     try {
-      const validation = this.resourceSchema.safeParse(req.body);
+      const validation = this.updateResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { name, type } = validation.data;
-      const id = String(req.params.id);
+      const { code, name, type } = validation.data;
 
-      const result = await this.updateResource.execute({ id, name, type });
+      const result = await this.updateResource.execute({ code, name, type });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -105,9 +120,13 @@ export class ResourceController extends Controller {
 
   async delete(req: Request, res: Response<ErrorResponse | void>) {
     try {
-      const id = String(req.params.id);
+      const paramsValidation = this.resourceParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { code } = paramsValidation.data;
 
-      const result = await this.deleteResource.execute({ id });
+      const result = await this.deleteResource.execute({ code });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {

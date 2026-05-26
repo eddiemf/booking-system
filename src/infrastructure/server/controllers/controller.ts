@@ -12,7 +12,7 @@ export abstract class Controller {
     const [issue] = error.issues;
     if (!issue) throw new Error('Unexpected validation error format');
 
-    const field = String(issue.path[0]);
+    const field = String(issue.path[issue.path.length - 1]);
     const message = issue.message;
     const validationError = new ValidationError(field, message);
 

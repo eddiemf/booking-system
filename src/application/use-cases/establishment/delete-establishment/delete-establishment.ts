@@ -3,13 +3,13 @@ import type { ConflictError, NotFoundError, StorageError } from '@app/domain/err
 import type { PromiseResult } from '@shared/result';
 
 type Input = {
-  id: string;
+  code: string;
 };
 
 export class DeleteEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
 
-  execute({ id }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
-    return this.establishmentRepository.delete(id);
+  execute({ code }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
+    return this.establishmentRepository.delete(code);
   }
 }

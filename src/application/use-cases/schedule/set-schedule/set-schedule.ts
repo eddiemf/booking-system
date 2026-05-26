@@ -15,7 +15,7 @@ interface EntryInput {
 }
 
 interface Input {
-  resourceId: string;
+  resourceCode: string;
   entries: EntryInput[];
 }
 
@@ -27,20 +27,21 @@ export class SetSchedule {
     private readonly scheduleRepository: ScheduleRepository
   ) {}
 
-  async execute({ resourceId, entries }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
-    const findResult = await this.resourceRepository.findById(resourceId);
+  async execute({ resourceCode, entries }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
+    const findResult = await this.resourceRepository.findByCode(resourceCode);
     if (!findResult.isOk) return findResult;
-    if (!findResult.data) return fail(new NotFoundError('Resource', resourceId));
+    if (!findResult.data) return fail(new NotFoundError('Resource', resourceCode));
 
+    const resource = findResult.data;
     const fullSchedule: ScheduleEntity[] = [];
     for (const entry of entries) {
-      const scheduleResult = ScheduleEntity.create({ ...entry, resourceId });
+      const scheduleResult = ScheduleEntity.create({ ...entry, resourceId: resource.id });
       if (!scheduleResult.isOk) return scheduleResult;
 
       fullSchedule.push(scheduleResult.data);
     }
 
-    const replaceResult = await this.scheduleRepository.replaceAll(resourceId, fullSchedule);
+    const replaceResult = await this.scheduleRepository.replaceAll(resource.id, fullSchedule);
     if (!replaceResult.isOk) return replaceResult;
 
     return ok(replaceResult.data.map(ScheduleMapper.toDTO));

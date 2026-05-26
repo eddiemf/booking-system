@@ -3,7 +3,7 @@ import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { servicesTable } from '../../db/schema';
+import { establishmentsTable, servicesTable } from '../../db/schema';
 
 export class PostgressServiceRepository implements ServiceRepository {
   constructor(private readonly db: NodePgDatabase) {}
@@ -12,6 +12,7 @@ export class PostgressServiceRepository implements ServiceRepository {
     try {
       await this.db.insert(servicesTable).values({
         id: service.id,
+        code: service.code,
         name: service.name,
         description: service.description,
         duration: service.duration,
@@ -26,16 +27,25 @@ export class PostgressServiceRepository implements ServiceRepository {
     }
   }
 
-  async findAll(establishmentId: string): PromiseResult<ServiceEntity[], StorageError> {
+  async findAll(establishmentCode: string): PromiseResult<ServiceEntity[], StorageError> {
     try {
       const rows = await this.db
-        .select()
+        .select({
+          id: servicesTable.id,
+          code: servicesTable.code,
+          name: servicesTable.name,
+          description: servicesTable.description,
+          duration: servicesTable.duration,
+          establishmentId: servicesTable.establishmentId,
+        })
         .from(servicesTable)
-        .where(eq(servicesTable.establishmentId, establishmentId));
+        .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
+        .where(eq(establishmentsTable.code, establishmentCode));
       return ok(
         rows.map((row) =>
           ServiceEntity.reconstruct({
             id: row.id,
+            code: row.code,
             name: row.name,
             description: row.description ?? '',
             duration: row.duration,
@@ -48,20 +58,29 @@ export class PostgressServiceRepository implements ServiceRepository {
     }
   }
 
-  async findById(
-    id: string,
-    establishmentId: string
+  async findByCode(
+    code: string,
+    establishmentCode: string
   ): PromiseResult<ServiceEntity | null, StorageError> {
     try {
       const rows = await this.db
-        .select()
+        .select({
+          id: servicesTable.id,
+          code: servicesTable.code,
+          name: servicesTable.name,
+          description: servicesTable.description,
+          duration: servicesTable.duration,
+          establishmentId: servicesTable.establishmentId,
+        })
         .from(servicesTable)
-        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)));
+        .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
+        .where(and(eq(servicesTable.code, code), eq(establishmentsTable.code, establishmentCode)));
       if (!rows[0]) return ok(null);
       const row = rows[0];
       return ok(
         ServiceEntity.reconstruct({
           id: row.id,
+          code: row.code,
           name: row.name,
           description: row.description ?? '',
           duration: row.duration,
@@ -74,24 +93,39 @@ export class PostgressServiceRepository implements ServiceRepository {
   }
 
   async update(
-    id: string,
-    establishmentId: string,
+    code: string,
+    establishmentCode: string,
     service: ServiceEntity
   ): PromiseResult<ServiceEntity, StorageError | NotFoundError> {
     try {
+      const establishmentSubquery = this.db
+        .select({ id: establishmentsTable.id })
+        .from(establishmentsTable)
+        .where(eq(establishmentsTable.code, establishmentCode));
+
       const rows = await this.db
         .update(servicesTable)
         .set({ name: service.name, description: service.description, duration: service.duration })
-        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)))
-        .returning({ id: servicesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Service', id));
+        .where(
+          and(
+            eq(servicesTable.code, code),
+            eq(servicesTable.establishmentId, establishmentSubquery)
+          )
+        )
+        .returning({
+          id: servicesTable.id,
+          code: servicesTable.code,
+          establishmentId: servicesTable.establishmentId,
+        });
+      if (!rows[0]) return fail(new NotFoundError('Service', code));
       return ok(
         ServiceEntity.reconstruct({
-          id,
+          id: rows[0].id,
+          code: rows[0].code,
           name: service.name,
           description: service.description,
           duration: service.duration,
-          establishmentId,
+          establishmentId: rows[0].establishmentId,
         })
       );
     } catch (error) {
@@ -100,15 +134,25 @@ export class PostgressServiceRepository implements ServiceRepository {
   }
 
   async delete(
-    id: string,
-    establishmentId: string
+    code: string,
+    establishmentCode: string
   ): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
     try {
+      const establishmentSubquery = this.db
+        .select({ id: establishmentsTable.id })
+        .from(establishmentsTable)
+        .where(eq(establishmentsTable.code, establishmentCode));
+
       const rows = await this.db
         .delete(servicesTable)
-        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)))
+        .where(
+          and(
+            eq(servicesTable.code, code),
+            eq(servicesTable.establishmentId, establishmentSubquery)
+          )
+        )
         .returning({ id: servicesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Service', id));
+      if (!rows[0]) return fail(new NotFoundError('Service', code));
       return ok(undefined);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23503') {

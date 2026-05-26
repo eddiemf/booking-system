@@ -10,22 +10,24 @@ describe('UpdateEstablishment', () => {
   const useCase = new UpdateEstablishment(establishmentRepository);
 
   it('returns a validation error if name is empty', async () => {
-    const error = await useCase.execute({ id: '1', name: '' }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ code: 'abc123', name: '' })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
 
   it('returns a not-found error when the establishment does not exist', async () => {
     establishmentRepository.update.mockResolvedValue(
-      fail(new NotFoundError('Establishment', '99'))
+      fail(new NotFoundError('Establishment', 'abc123'))
     );
 
     const error = await useCase
-      .execute({ id: '99', name: 'New Name' })
+      .execute({ code: 'abc123', name: 'New Name' })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
-    expect(error.message).toBe('Establishment with id 99 was not found.');
+    expect(error.message).toBe('Establishment with id abc123 was not found.');
   });
 
   it('returns a storage error when the repository fails', async () => {
@@ -33,7 +35,7 @@ describe('UpdateEstablishment', () => {
     establishmentRepository.update.mockResolvedValue(fail(error));
 
     const result = await useCase
-      .execute({ id: '1', name: 'New Name' })
+      .execute({ code: 'abc123', name: 'New Name' })
       .then((result) => result.getError());
 
     expect(result).toBe(error);
@@ -41,13 +43,13 @@ describe('UpdateEstablishment', () => {
 
   it('returns the updated establishment DTO on success', async () => {
     establishmentRepository.update.mockResolvedValue(
-      ok(EstablishmentEntity.reconstruct({ id: '1', name: 'New Name' }))
+      ok(EstablishmentEntity.reconstruct({ id: 'uuid-1', code: 'abc123', name: 'New Name' }))
     );
 
     const data = await useCase
-      .execute({ id: '1', name: 'New Name' })
+      .execute({ code: 'abc123', name: 'New Name' })
       .then((result) => result.getData());
 
-    expect(data).toEqual({ id: '1', name: 'New Name' });
+    expect(data).toEqual({ id: 'abc123', name: 'New Name' });
   });
 });

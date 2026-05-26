@@ -32,11 +32,11 @@ describe('CreateEstablishment', () => {
 
   it('returns an establishment DTO when creation was successful', async () => {
     establishmentRepository.save.mockResolvedValue(
-      ok(EstablishmentEntity.reconstruct({ id: '42', name: 'My Salon' }))
+      ok(EstablishmentEntity.reconstruct({ id: 'uuid-42', code: 'est123', name: 'My Salon' }))
     );
 
     const data = await useCase.execute({ name: 'My Salon' }).then((result) => result.getData());
 
-    expect(data).toEqual({ id: '42', name: 'My Salon' });
+    expect(data).toEqual({ id: 'est123', name: 'My Salon' });
   });
 });

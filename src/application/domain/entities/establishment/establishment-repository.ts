@@ -3,11 +3,11 @@ import type { PromiseResult } from '@shared/result';
 import type { EstablishmentEntity } from './establishment-entity';
 
 export interface EstablishmentRepository {
-  findById(id: string): PromiseResult<EstablishmentEntity | null, StorageError>;
+  findByCode(code: string): PromiseResult<EstablishmentEntity | null, StorageError>;
   save(establishment: EstablishmentEntity): PromiseResult<EstablishmentEntity, StorageError>;
   update(
-    id: string,
+    code: string,
     establishment: EstablishmentEntity
   ): PromiseResult<EstablishmentEntity, StorageError | NotFoundError>;
-  delete(id: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
+  delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

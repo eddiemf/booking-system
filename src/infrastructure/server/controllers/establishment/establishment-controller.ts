@@ -14,6 +14,13 @@ export class EstablishmentController extends Controller {
     name: z.string(),
   });
 
+  private readonly codeParamsSchema = z.object({ code: z.string().min(1) });
+
+  private readonly updateEstablishmentSchema = z.object({
+    code: z.string().min(1),
+    name: z.string(),
+  });
+
   constructor(
     private readonly createEstablishment: CreateEstablishment,
     private readonly findEstablishment: FindEstablishment,
@@ -50,9 +57,13 @@ export class EstablishmentController extends Controller {
 
   async findById(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
     try {
-      const id = String(req.params.id);
+      const paramsValidation = this.codeParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { code } = paramsValidation.data;
 
-      const result = await this.findEstablishment.execute({ id });
+      const result = await this.findEstablishment.execute({ code });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -70,16 +81,14 @@ export class EstablishmentController extends Controller {
 
   async update(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
     try {
-      const id = String(req.params.id);
-
-      const validation = this.establishmentSchema.safeParse(req.body);
+      const validation = this.updateEstablishmentSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { name } = validation.data;
+      const { code, name } = validation.data;
 
-      const result = await this.updateEstablishment.execute({ id, name });
+      const result = await this.updateEstablishment.execute({ code, name });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -100,9 +109,13 @@ export class EstablishmentController extends Controller {
 
   async delete(req: Request, res: Response<ErrorResponse | void>) {
     try {
-      const id = String(req.params.id);
+      const paramsValidation = this.codeParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { code } = paramsValidation.data;
 
-      const result = await this.deleteEstablishment.execute({ id });
+      const result = await this.deleteEstablishment.execute({ code });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {

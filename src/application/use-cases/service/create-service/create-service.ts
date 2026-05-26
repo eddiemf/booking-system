@@ -1,10 +1,11 @@
 import {
+  type EstablishmentRepository,
   type ServiceCreationError,
   ServiceEntity,
   type ServiceRepository,
 } from '@app/domain/entities';
-import type { NotFoundError, StorageError } from '@app/domain/errors';
-import { ok, type PromiseResult } from '@shared/result';
+import { NotFoundError, type StorageError } from '@app/domain/errors';
+import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
 
@@ -12,24 +13,35 @@ type Input = {
   name: string;
   description?: string | undefined;
   duration: number;
-  establishmentId: string;
+  establishmentCode: string;
 };
 
 export class CreateService {
-  constructor(private readonly serviceRepository: ServiceRepository) {}
+  constructor(
+    private readonly establishmentRepository: EstablishmentRepository,
+    private readonly serviceRepository: ServiceRepository
+  ) {}
 
   async execute({
     name,
     description,
     duration,
-    establishmentId,
+    establishmentCode,
   }: Input): PromiseResult<ServiceDTO, ServiceCreationError | StorageError | NotFoundError> {
-    const serviceResult = ServiceEntity.create({ name, description, duration, establishmentId });
+    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    if (!establishmentResult.isOk) return establishmentResult;
+    if (!establishmentResult.data)
+      return fail(new NotFoundError('Establishment', establishmentCode));
+
+    const serviceResult = ServiceEntity.create({
+      name,
+      description,
+      duration,
+      establishmentId: establishmentResult.data.id,
+    });
     if (!serviceResult.isOk) return serviceResult;
 
-    const entity = serviceResult.data;
-
-    const saveResult = await this.serviceRepository.save(entity);
+    const saveResult = await this.serviceRepository.save(serviceResult.data);
     if (!saveResult.isOk) return saveResult;
 
     return ok(ServiceMapper.toDTO(saveResult.data));

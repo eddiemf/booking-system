@@ -9,6 +9,7 @@ export const usersTable = pgTable('users', {
 
 export const establishmentsTable = pgTable('establishments', {
   id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   ...timestamps,
   userId: uuid('user_id').references(() => usersTable.id),
@@ -16,6 +17,7 @@ export const establishmentsTable = pgTable('establishments', {
 
 export const servicesTable = pgTable('services', {
   id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   description: varchar({ length: 255 }),
   duration: integer().notNull(),
@@ -27,6 +29,7 @@ export const servicesTable = pgTable('services', {
 
 export const resourcesTable = pgTable('resources', {
   id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   type: varchar({ length: 50 }).notNull(),
   ...timestamps,

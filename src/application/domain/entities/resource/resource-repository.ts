@@ -5,13 +5,13 @@ import type { ResourceEntity, ResourceType } from './resource-entity';
 export interface ResourceRepository {
   save(resource: ResourceEntity): PromiseResult<ResourceEntity, StorageError | NotFoundError>;
   findAll(
-    establishmentId: string,
+    establishmentCode: string,
     type?: ResourceType
   ): PromiseResult<ResourceEntity[], StorageError>;
-  findById(id: string): PromiseResult<ResourceEntity | null, StorageError>;
+  findByCode(code: string): PromiseResult<ResourceEntity | null, StorageError>;
   update(
-    id: string,
+    code: string,
     resource: ResourceEntity
   ): PromiseResult<ResourceEntity, StorageError | NotFoundError>;
-  delete(id: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
+  delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

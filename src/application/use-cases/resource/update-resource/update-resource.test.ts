@@ -9,12 +9,13 @@ describe('UpdateResource', () => {
   const resourceRepository = mock<ResourceRepository>();
   const useCase = new UpdateResource(resourceRepository);
 
-  const validInput = { id: '10', name: 'Room A', type: 'room' as const };
+  const validInput = { code: 'res123', name: 'Room A', type: 'room' as const };
   const updatedEntity = ResourceEntity.reconstruct({
-    id: '10',
+    id: 'uuid-res',
+    code: 'res123',
     name: 'Room A',
     type: 'room',
-    establishmentId: '1',
+    establishmentId: 'uuid-est',
   });
 
   it('returns validation error for empty name', async () => {
@@ -26,7 +27,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    resourceRepository.update.mockResolvedValue(fail(new NotFoundError('Resource', '10')));
+    resourceRepository.update.mockResolvedValue(fail(new NotFoundError('Resource', 'res123')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -46,6 +47,11 @@ describe('UpdateResource', () => {
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
-    expect(data).toEqual({ id: '10', name: 'Room A', type: 'room', establishmentId: '1' });
+    expect(data).toEqual({
+      id: 'res123',
+      name: 'Room A',
+      type: 'room',
+      establishmentId: 'uuid-est',
+    });
   });
 });

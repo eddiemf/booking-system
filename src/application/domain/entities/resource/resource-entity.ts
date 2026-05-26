@@ -1,5 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
+import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
 
 export type ResourceType = 'employee' | 'room';
@@ -14,6 +15,7 @@ interface Props {
 
 interface ReconstructProps {
   id: string;
+  code: string;
   name: string;
   type: ResourceType;
   establishmentId: string;
@@ -22,6 +24,7 @@ interface ReconstructProps {
 export class ResourceEntity {
   private constructor(
     private _id: string,
+    private _code: string,
     private _name: string,
     private _type: ResourceType,
     private _establishmentId: string
@@ -29,6 +32,10 @@ export class ResourceEntity {
 
   get id(): string {
     return this._id;
+  }
+
+  get code(): string {
+    return this._code;
   }
 
   get name(): string {
@@ -53,10 +60,10 @@ export class ResourceEntity {
       return fail(new ValidationError('type', 'Must be employee or room.'));
     }
 
-    return ok(new ResourceEntity(v7(), name, type, establishmentId));
+    return ok(new ResourceEntity(v7(), nanoid(10), name, type, establishmentId));
   }
 
-  static reconstruct({ id, name, type, establishmentId }: ReconstructProps): ResourceEntity {
-    return new ResourceEntity(id, name, type, establishmentId);
+  static reconstruct({ id, code, name, type, establishmentId }: ReconstructProps): ResourceEntity {
+    return new ResourceEntity(id, code, name, type, establishmentId);
   }
 }

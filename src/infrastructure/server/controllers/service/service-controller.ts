@@ -11,7 +11,25 @@ import z from 'zod';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ServiceController extends Controller {
-  private readonly serviceSchema = z.object({
+  private readonly createServiceSchema = z.object({
+    establishmentCode: z.string().min(1),
+    name: z.string(),
+    description: z.string().optional(),
+    duration: z.coerce.number(),
+  });
+
+  private readonly establishmentParamsSchema = z.object({
+    establishmentCode: z.string().min(1),
+  });
+
+  private readonly serviceParamsSchema = z.object({
+    code: z.string().min(1),
+    establishmentCode: z.string().min(1),
+  });
+
+  private readonly updateServiceSchema = z.object({
+    code: z.string().min(1),
+    establishmentCode: z.string().min(1),
     name: z.string(),
     description: z.string().optional(),
     duration: z.coerce.number(),
@@ -29,19 +47,18 @@ export class ServiceController extends Controller {
 
   async create(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
     try {
-      const validation = this.serviceSchema.safeParse(req.body);
+      const validation = this.createServiceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { name, description, duration } = validation.data;
-      const establishmentId = String(req.params.establishmentId);
+      const { establishmentCode, name, description, duration } = validation.data;
 
       const result = await this.createService.execute({
         name,
         description,
         duration,
-        establishmentId,
+        establishmentCode,
       });
 
       if (!result.isOk) {
@@ -63,9 +80,13 @@ export class ServiceController extends Controller {
 
   async list(req: Request, res: Response<ServiceDTO[] | ErrorResponse>) {
     try {
-      const establishmentId = String(req.params.establishmentId);
+      const paramsValidation = this.establishmentParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { establishmentCode } = paramsValidation.data;
 
-      const result = await this.listServices.execute({ establishmentId });
+      const result = await this.listServices.execute({ establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -83,10 +104,13 @@ export class ServiceController extends Controller {
 
   async findById(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
     try {
-      const id = String(req.params.id);
-      const establishmentId = String(req.params.establishmentId);
+      const paramsValidation = this.serviceParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { code, establishmentCode } = paramsValidation.data;
 
-      const result = await this.findService.execute({ id, establishmentId });
+      const result = await this.findService.execute({ code, establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -104,18 +128,16 @@ export class ServiceController extends Controller {
 
   async update(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
     try {
-      const validation = this.serviceSchema.safeParse(req.body);
+      const validation = this.updateServiceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { name, description, duration } = validation.data;
-      const id = String(req.params.id);
-      const establishmentId = String(req.params.establishmentId);
+      const { code, establishmentCode, name, description, duration } = validation.data;
 
       const result = await this.updateService.execute({
-        id,
-        establishmentId,
+        code,
+        establishmentCode,
         name,
         description,
         duration,
@@ -140,10 +162,13 @@ export class ServiceController extends Controller {
 
   async delete(req: Request, res: Response<ErrorResponse | void>) {
     try {
-      const id = String(req.params.id);
-      const establishmentId = String(req.params.establishmentId);
+      const paramsValidation = this.serviceParamsSchema.safeParse(req.params);
+      if (!paramsValidation.success) {
+        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+      }
+      const { code, establishmentCode } = paramsValidation.data;
 
-      const result = await this.deleteService.execute({ id, establishmentId });
+      const result = await this.deleteService.execute({ code, establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {

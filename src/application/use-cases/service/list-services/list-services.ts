@@ -4,7 +4,7 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
 
-type Input = { establishmentId: string };
+type Input = { establishmentCode: string };
 
 export class ListServices {
   constructor(
@@ -13,13 +13,14 @@ export class ListServices {
   ) {}
 
   async execute({
-    establishmentId,
+    establishmentCode,
   }: Input): PromiseResult<ServiceDTO[], StorageError | NotFoundError> {
-    const establishmentResult = await this.establishmentRepository.findById(establishmentId);
+    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data) return fail(new NotFoundError('Establishment', establishmentId));
+    if (!establishmentResult.data)
+      return fail(new NotFoundError('Establishment', establishmentCode));
 
-    const servicesResult = await this.serviceRepository.findAll(establishmentId);
+    const servicesResult = await this.serviceRepository.findAll(establishmentCode);
     if (!servicesResult.isOk) return servicesResult;
 
     return ok(servicesResult.data.map(ServiceMapper.toDTO));

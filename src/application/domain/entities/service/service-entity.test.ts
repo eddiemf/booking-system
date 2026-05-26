@@ -94,6 +94,7 @@ describe('ServiceEntity', () => {
     it('restores all properties from the given data', () => {
       const service = ServiceEntity.reconstruct({
         id: 'id',
+        code: 'svc123',
         name: 'massage',
         description: 'Haircut',
         duration: 90,
@@ -102,6 +103,7 @@ describe('ServiceEntity', () => {
 
       expect(service).toBeInstanceOf(ServiceEntity);
       expect(service.id).toBe('id');
+      expect(service.code).toBe('svc123');
       expect(service.name).toBe('massage');
       expect(service.description).toBe('Haircut');
       expect(service.duration).toBe(90);

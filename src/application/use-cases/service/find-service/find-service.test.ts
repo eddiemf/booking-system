@@ -9,47 +9,50 @@ describe('FindService', () => {
   const serviceRepository = mock<ServiceRepository>();
   const useCase = new FindService(serviceRepository);
 
-  const establishmentId = '1';
-  const id = '10';
+  const establishmentCode = 'est123';
+  const code = 'svc123';
   const mockService = ServiceEntity.reconstruct({
-    id,
+    id: 'uuid-svc',
+    code,
     name: 'Haircut',
     description: 'A haircut',
     duration: 30,
-    establishmentId,
+    establishmentId: 'uuid-est',
   });
 
   it('returns not-found error when service does not exist', async () => {
-    serviceRepository.findById.mockResolvedValue(ok(null));
+    serviceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase
-      .execute({ id, establishmentId })
+      .execute({ code, establishmentCode })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
 
   it('returns storage error when lookup fails', async () => {
-    serviceRepository.findById.mockResolvedValue(fail(new StorageError('DB error')));
+    serviceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
-      .execute({ id, establishmentId })
+      .execute({ code, establishmentCode })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
 
   it('returns service DTO on success', async () => {
-    serviceRepository.findById.mockResolvedValue(ok(mockService));
+    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
 
-    const data = await useCase.execute({ id, establishmentId }).then((result) => result.getData());
+    const data = await useCase
+      .execute({ code, establishmentCode })
+      .then((result) => result.getData());
 
     expect(data).toEqual({
-      id,
+      id: code,
       name: 'Haircut',
       description: 'A haircut',
       duration: 30,
-      establishmentId,
+      establishmentId: 'uuid-est',
     });
   });
 });

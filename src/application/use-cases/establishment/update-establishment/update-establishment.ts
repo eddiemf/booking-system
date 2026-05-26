@@ -9,7 +9,7 @@ import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
 type Input = {
-  id: string;
+  code: string;
   name: string;
 };
 
@@ -17,7 +17,7 @@ export class UpdateEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
 
   async execute({
-    id,
+    code,
     name,
   }: Input): PromiseResult<
     EstablishmentDTO,
@@ -26,7 +26,7 @@ export class UpdateEstablishment {
     const entityResult = EstablishmentEntity.create({ name });
     if (!entityResult.isOk) return entityResult;
 
-    const updateResult = await this.establishmentRepository.update(id, entityResult.data);
+    const updateResult = await this.establishmentRepository.update(code, entityResult.data);
     if (!updateResult.isOk) return updateResult;
 
     return ok(EstablishmentMapper.toDTO(updateResult.data));

@@ -5,12 +5,16 @@ import { EstablishmentMapper } from './establishment-mapper';
 describe('EstablishmentMapper', () => {
   describe('toDTO()', () => {
     it('maps from entity to DTO', () => {
-      const entity = EstablishmentEntity.reconstruct({ id: '1', name: 'My Salon' });
+      const entity = EstablishmentEntity.reconstruct({
+        id: 'uuid-1',
+        code: 'abc123',
+        name: 'My Salon',
+      });
 
       const dto = EstablishmentMapper.toDTO(entity);
 
       expect(dto).not.toBeInstanceOf(EstablishmentEntity);
-      expect(dto).toEqual({ id: '1', name: 'My Salon' });
+      expect(dto).toEqual({ id: 'abc123', name: 'My Salon' });
     });
   });
 });

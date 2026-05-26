@@ -6,22 +6,23 @@ describe('ServiceMapper', () => {
   describe('toDTO()', () => {
     it('maps from entity to DTO', () => {
       const entity = ServiceEntity.reconstruct({
-        id: '123',
+        id: 'uuid-123',
+        code: 'svc123',
         name: 'service',
         description: 'description',
         duration: 60,
-        establishmentId: '1',
+        establishmentId: 'uuid-est',
       });
 
       const dto = ServiceMapper.toDTO(entity);
 
       expect(dto).not.toBeInstanceOf(ServiceEntity);
       expect(dto).toEqual({
-        id: '123',
+        id: 'svc123',
         name: 'service',
         duration: 60,
         description: 'description',
-        establishmentId: '1',
+        establishmentId: 'uuid-est',
       });
     });
   });

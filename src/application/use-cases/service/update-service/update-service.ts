@@ -5,8 +5,8 @@ import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
 
 type Input = {
-  id: string;
-  establishmentId: string;
+  code: string;
+  establishmentCode: string;
   name: string;
   description?: string | undefined;
   duration: number;
@@ -16,18 +16,18 @@ export class UpdateService {
   constructor(private readonly serviceRepository: ServiceRepository) {}
 
   async execute({
-    id,
-    establishmentId,
+    code,
+    establishmentCode,
     name,
     description,
     duration,
   }: Input): PromiseResult<ServiceDTO, StorageError | NotFoundError | ValidationError> {
-    const entityResult = ServiceEntity.create({ name, description, duration, establishmentId });
+    const entityResult = ServiceEntity.create({ name, description, duration, establishmentId: '' });
     if (!entityResult.isOk) return entityResult;
 
     const updateResult = await this.serviceRepository.update(
-      id,
-      establishmentId,
+      code,
+      establishmentCode,
       entityResult.data
     );
     if (!updateResult.isOk) return updateResult;

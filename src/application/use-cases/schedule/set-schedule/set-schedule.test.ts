@@ -15,12 +15,13 @@ describe('SetSchedule', () => {
   const scheduleRepository = mock<ScheduleRepository>();
   const useCase = new SetSchedule(resourceRepository, scheduleRepository);
 
-  const resourceId = '10';
+  const resourceCode = 'res123';
   const existingResource = ResourceEntity.reconstruct({
-    id: resourceId,
+    id: 'uuid-res',
+    code: resourceCode,
     name: 'Alice',
     type: 'employee',
-    establishmentId: '1',
+    establishmentId: 'uuid-est',
   });
 
   const validEntries = [{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }];
@@ -28,7 +29,7 @@ describe('SetSchedule', () => {
   const savedEntities = [
     ScheduleEntity.reconstruct({
       id: '1',
-      resourceId,
+      resourceId: 'uuid-res',
       dayOfWeek: 1,
       startTime: '09:00',
       endTime: '17:00',
@@ -36,65 +37,65 @@ describe('SetSchedule', () => {
   ];
 
   it('returns not-found error when resource does not exist', async () => {
-    resourceRepository.findById.mockResolvedValue(ok(null));
+    resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase
-      .execute({ resourceId, entries: validEntries })
+      .execute({ resourceCode, entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
 
-  it('returns storage error when findById fails', async () => {
-    resourceRepository.findById.mockResolvedValue(fail(new StorageError('DB error')));
+  it('returns storage error when findByCode fails', async () => {
+    resourceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
-      .execute({ resourceId, entries: validEntries })
+      .execute({ resourceCode, entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
 
   it('returns validation error for invalid entry', async () => {
-    resourceRepository.findById.mockResolvedValue(ok(existingResource));
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
-      .execute({ resourceId, entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] })
+      .execute({ resourceCode, entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
 
   it('returns storage error when replaceAll fails', async () => {
-    resourceRepository.findById.mockResolvedValue(ok(existingResource));
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
-      .execute({ resourceId, entries: validEntries })
+      .execute({ resourceCode, entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });
 
   it('returns schedule DTOs on success', async () => {
-    resourceRepository.findById.mockResolvedValue(ok(existingResource));
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok(savedEntities));
 
     const data = await useCase
-      .execute({ resourceId, entries: validEntries })
+      .execute({ resourceCode, entries: validEntries })
       .then((result) => result.getData());
 
     expect(data).toEqual([
-      { id: '1', resourceId, dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
+      { id: '1', resourceId: 'uuid-res', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
     ]);
   });
 
   it('returns empty array when entries is empty', async () => {
-    resourceRepository.findById.mockResolvedValue(ok(existingResource));
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok([]));
 
     const data = await useCase
-      .execute({ resourceId, entries: [] })
+      .execute({ resourceCode, entries: [] })
       .then((result) => result.getData());
 
     expect(data).toEqual([]);

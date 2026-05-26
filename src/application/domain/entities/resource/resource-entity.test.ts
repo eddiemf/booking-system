@@ -65,12 +65,14 @@ describe('ResourceEntity', () => {
     it('restores all properties', () => {
       const entity = ResourceEntity.reconstruct({
         id: '42',
+        code: 'res123',
         name: 'Room B',
         type: 'room',
         establishmentId: '5',
       });
 
       expect(entity.id).toBe('42');
+      expect(entity.code).toBe('res123');
       expect(entity.name).toBe('Room B');
       expect(entity.type).toBe('room');
       expect(entity.establishmentId).toBe('5');

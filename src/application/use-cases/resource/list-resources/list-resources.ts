@@ -8,7 +8,7 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
 
-type Input = { establishmentId: string; type?: ResourceType };
+type Input = { establishmentCode: string; type?: ResourceType };
 
 export class ListResources {
   constructor(
@@ -17,14 +17,15 @@ export class ListResources {
   ) {}
 
   async execute({
-    establishmentId,
+    establishmentCode,
     type,
   }: Input): PromiseResult<ResourceDTO[], StorageError | NotFoundError> {
-    const establishmentResult = await this.establishmentRepository.findById(establishmentId);
+    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data) return fail(new NotFoundError('Establishment', establishmentId));
+    if (!establishmentResult.data)
+      return fail(new NotFoundError('Establishment', establishmentCode));
 
-    const resourcesResult = await this.resourceRepository.findAll(establishmentId, type);
+    const resourcesResult = await this.resourceRepository.findAll(establishmentCode, type);
     if (!resourcesResult.isOk) return resourcesResult;
 
     return ok(resourcesResult.data.map(ResourceMapper.toDTO));

@@ -9,10 +9,10 @@ describe('DeleteService', () => {
   const serviceRepository = mock<ServiceRepository>();
   const useCase = new DeleteService(serviceRepository);
 
-  const input = { id: '10', establishmentId: '1' };
+  const input = { code: 'svc123', establishmentCode: 'est123' };
 
   it('returns not-found error when service does not exist', async () => {
-    serviceRepository.delete.mockResolvedValue(fail(new NotFoundError('Service', '10')));
+    serviceRepository.delete.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
 
     const error = await useCase.execute(input).then((result) => result.getError());
 

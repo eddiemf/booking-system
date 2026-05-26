@@ -24,11 +24,10 @@ export class UpdateEstablishment {
     if (!findResult.data) return fail(new NotFoundError('Establishment', code));
 
     const establishment = findResult.data;
-    const editedEstablishmentResult = establishment.update({ name });
-    if (!editedEstablishmentResult.isOk) return editedEstablishmentResult;
+    const updateValidation = establishment.update({ name });
+    if (!updateValidation.isOk) return updateValidation;
 
-    const editedEstablishment = editedEstablishmentResult.data;
-    const updateResult = await this.establishmentRepository.update(code, editedEstablishment);
+    const updateResult = await this.establishmentRepository.update(code, establishment);
     if (!updateResult.isOk) return updateResult;
 
     return ok(EstablishmentMapper.toDTO(updateResult.data));

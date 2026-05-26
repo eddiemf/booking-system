@@ -59,7 +59,9 @@ export class EstablishmentEntity {
     const nameError = EstablishmentEntity.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new EstablishmentEntity(this._id, this._code, name, this._resources, this._services));
+    this._name = name;
+
+    return ok(this);
   }
 
   private static requireName(name: string): ValidationError | null {

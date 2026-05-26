@@ -85,9 +85,11 @@ export class ServiceEntity {
     const durationError = ServiceEntity.requirePositiveDuration(duration);
     if (durationError) return fail(durationError);
 
-    return ok(
-      new ServiceEntity(this._id, this._code, name, description, duration, this._establishmentId)
-    );
+    this._name = name;
+    this._description = description;
+    this._duration = duration;
+
+    return ok(this);
   }
 
   static reconstruct({ id, code, name, duration, description, establishmentId }: ReconstructProps) {

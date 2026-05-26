@@ -27,15 +27,10 @@ export class UpdateService {
     if (!serviceResult.data) return fail(new NotFoundError('Service', code));
 
     const service = serviceResult.data;
-    const editedServiceResult = service.update({ name, description, duration });
-    if (!editedServiceResult.isOk) return editedServiceResult;
+    const updateValidation = service.update({ name, description, duration });
+    if (!updateValidation.isOk) return updateValidation;
 
-    const editedService = editedServiceResult.data;
-    const updateResult = await this.serviceRepository.update(
-      code,
-      establishmentCode,
-      editedService
-    );
+    const updateResult = await this.serviceRepository.update(code, establishmentCode, service);
     if (!updateResult.isOk) return updateResult;
 
     return ok(ServiceMapper.toDTO(updateResult.data));

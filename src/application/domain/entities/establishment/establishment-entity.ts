@@ -2,6 +2,8 @@ import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
 import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
+import type { ResourceEntity } from '../resource/resource-entity';
+import type { ServiceEntity } from '../service/service-entity';
 
 export type EstablishmentCreationError = ValidationError;
 
@@ -13,13 +15,17 @@ interface ReconstructProps {
   id: string;
   code: string;
   name: string;
+  resources?: ResourceEntity[];
+  services?: ServiceEntity[];
 }
 
 export class EstablishmentEntity {
   private constructor(
     private _id: string,
     private _code: string,
-    private _name: string
+    private _name: string,
+    private _resources: ResourceEntity[],
+    private _services: ServiceEntity[]
   ) {}
 
   get id(): string {
@@ -34,13 +40,27 @@ export class EstablishmentEntity {
     return this._name;
   }
 
+  get resources(): ResourceEntity[] {
+    return this._resources;
+  }
+
+  get services(): ServiceEntity[] {
+    return this._services;
+  }
+
   static create({ name }: Props): Result<EstablishmentEntity, EstablishmentCreationError> {
     if (!name) return fail(new ValidationError('name', 'Value is required.'));
 
-    return ok(new EstablishmentEntity(v7(), nanoid(10), name));
+    return ok(new EstablishmentEntity(v7(), nanoid(10), name, [], []));
   }
 
-  static reconstruct({ id, code, name }: ReconstructProps): EstablishmentEntity {
-    return new EstablishmentEntity(id, code, name);
+  static reconstruct({
+    id,
+    code,
+    name,
+    resources = [],
+    services = [],
+  }: ReconstructProps): EstablishmentEntity {
+    return new EstablishmentEntity(id, code, name, resources, services);
   }
 }

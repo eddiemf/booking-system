@@ -12,6 +12,7 @@ describe('ServiceMapper', () => {
         description: 'description',
         duration: 60,
         establishmentId: 'uuid-est',
+        establishmentCode: 'est123',
       });
 
       const dto = ServiceMapper.toDTO(entity);
@@ -22,7 +23,7 @@ describe('ServiceMapper', () => {
         name: 'service',
         duration: 60,
         description: 'description',
-        establishmentId: 'uuid-est',
+        establishmentCode: 'est123',
       });
     });
   });

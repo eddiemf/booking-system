@@ -10,7 +10,9 @@ type ResourceRow = {
   code: string;
   name: string;
   establishmentId: string;
+  establishmentCode: string;
   scheduleId: string | null;
+  scheduleCode: string | null;
   scheduleDayOfWeek: number | null;
   scheduleStartTime: string | null;
   scheduleEndTime: string | null;
@@ -47,7 +49,9 @@ export class PostgressResourceRepository implements ResourceRepository {
           code: resourcesTable.code,
           name: resourcesTable.name,
           establishmentId: resourcesTable.establishmentId,
+          establishmentCode: establishmentsTable.code,
           scheduleId: schedulesTable.id,
+          scheduleCode: schedulesTable.code,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
           scheduleStartTime: schedulesTable.startTime,
           scheduleEndTime: schedulesTable.endTime,
@@ -72,13 +76,16 @@ export class PostgressResourceRepository implements ResourceRepository {
           code: resourcesTable.code,
           name: resourcesTable.name,
           establishmentId: resourcesTable.establishmentId,
+          establishmentCode: establishmentsTable.code,
           scheduleId: schedulesTable.id,
+          scheduleCode: schedulesTable.code,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
           scheduleStartTime: schedulesTable.startTime,
           scheduleEndTime: schedulesTable.endTime,
           scheduleResourceId: schedulesTable.resourceId,
         })
         .from(resourcesTable)
+        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
         .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
         .where(eq(resourcesTable.code, code));
 
@@ -111,6 +118,7 @@ export class PostgressResourceRepository implements ResourceRepository {
           code: rows[0].code,
           name: resource.name,
           establishmentId: rows[0].establishmentId,
+          establishmentCode: resource.establishmentCode,
         })
       );
     } catch (error) {
@@ -150,9 +158,11 @@ export class PostgressResourceRepository implements ResourceRepository {
         code: meta.code,
         name: meta.name,
         establishmentId: meta.establishmentId,
+        establishmentCode: meta.establishmentCode,
         schedules: scheduleRows.map((scheduleRow) =>
           ScheduleEntity.reconstruct({
             id: scheduleRow.scheduleId as string,
+            code: scheduleRow.scheduleCode as string,
             resourceId: scheduleRow.scheduleResourceId as string,
             dayOfWeek: scheduleRow.scheduleDayOfWeek as number,
             startTime: scheduleRow.scheduleStartTime as string,

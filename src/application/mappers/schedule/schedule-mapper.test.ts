@@ -6,6 +6,7 @@ describe('ScheduleMapper', () => {
   it('maps a ScheduleEntity to a ScheduleDTO', () => {
     const entity = ScheduleEntity.reconstruct({
       id: '5',
+      code: 'sch123',
       resourceId: '1',
       dayOfWeek: 2,
       startTime: '09:00',
@@ -15,7 +16,7 @@ describe('ScheduleMapper', () => {
     const dto = ScheduleMapper.toDTO(entity);
 
     expect(dto).toEqual({
-      id: '5',
+      id: 'sch123',
       resourceId: '1',
       dayOfWeek: 2,
       startTime: '09:00',

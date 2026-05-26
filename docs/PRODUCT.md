@@ -48,7 +48,7 @@ These decisions are fixed for the current phase of development and inform how fe
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| **Entity IDs** | DB-assigned integer, returned as string in APIs | Keeps the ID source of truth in one place. No UUID generation in the domain layer. |
+| **Entity IDs** | Two-field identity: internal UUID (`id`, UUIDv7 generated in domain) + short alphanumeric public code (`code`, nanoid(10) generated in domain). APIs expose only the `code` as the public `id`. | Keeps public IDs opaque and stable; internal UUIDs never surface in API responses. |
 | **Scoping** | Services, Resources, and Schedules belong to an Establishment | All reads and writes must be scoped to an `establishmentId`. |
 | **API route nesting** | `GET /establishments/:id/services`, not `GET /services` | Prevents cross-establishment data leakage and aligns with the ownership model. |
 | **Domain ↔ DB mapping** | `ServiceEntity.create()` for new (unperisted) entities; `reconstruct()` for DB-sourced ones | Keeps UUIDs and DB IDs from ever getting mixed up. |

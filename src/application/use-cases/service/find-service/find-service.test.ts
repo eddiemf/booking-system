@@ -18,6 +18,7 @@ describe('FindService', () => {
     description: 'A haircut',
     duration: 30,
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns not-found error when service does not exist', async () => {
@@ -52,7 +53,7 @@ describe('FindService', () => {
       name: 'Haircut',
       description: 'A haircut',
       duration: 30,
-      establishmentId: 'uuid-est',
+      establishmentCode: 'est123',
     });
   });
 });

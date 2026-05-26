@@ -21,6 +21,7 @@ describe('ListServices', () => {
     description: 'A haircut',
     duration: 30,
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns not-found error when establishment does not exist', async () => {
@@ -59,7 +60,7 @@ describe('ListServices', () => {
         name: 'Haircut',
         description: 'A haircut',
         duration: 30,
-        establishmentId: 'uuid-est',
+        establishmentCode: 'est123',
       },
     ]);
   });

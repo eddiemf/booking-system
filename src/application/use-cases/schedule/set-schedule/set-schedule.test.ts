@@ -21,6 +21,7 @@ describe('SetSchedule', () => {
     code: resourceCode,
     name: 'Alice',
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   const validEntries = [{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }];
@@ -28,6 +29,7 @@ describe('SetSchedule', () => {
   const savedEntities = [
     ScheduleEntity.reconstruct({
       id: '1',
+      code: 'sch1',
       resourceId: 'uuid-res',
       dayOfWeek: 1,
       startTime: '09:00',
@@ -85,7 +87,7 @@ describe('SetSchedule', () => {
       .then((result) => result.getData());
 
     expect(data).toEqual([
-      { id: '1', resourceId: 'uuid-res', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
+      { id: 'sch1', resourceId: 'uuid-res', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
     ]);
   });
 

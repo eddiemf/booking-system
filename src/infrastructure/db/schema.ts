@@ -39,6 +39,7 @@ export const resourcesTable = pgTable('resources', {
 
 export const schedulesTable = pgTable('schedules', {
   id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
   dayOfWeek: integer('day_of_week').notNull(),
   startTime: varchar('start_time', { length: 5 }).notNull(),
   endTime: varchar('end_time', { length: 5 }).notNull(),

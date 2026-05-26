@@ -24,6 +24,7 @@ describe('UpdateService', () => {
     description: 'Updated',
     duration: 45,
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns validation error for invalid name', async () => {
@@ -74,7 +75,7 @@ describe('UpdateService', () => {
       name: 'Haircut',
       description: 'Updated',
       duration: 45,
-      establishmentId: 'uuid-est',
+      establishmentCode: 'est123',
     });
   });
 });

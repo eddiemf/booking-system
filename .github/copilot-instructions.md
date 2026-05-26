@@ -85,6 +85,72 @@ This project follows strict Clean Architecture. Layer boundaries are non-negotia
 
 If a design forces you to violate a layer boundary, add a bypass factory, or import infrastructure into the domain — **that is a signal the design is wrong**, not a reason to bend the rule. Stop, explain the tension, and propose a proper fix.
 
+## Domain Patterns
+
+Apply your DDD and Clean Architecture knowledge. If something feels off (e.g. an entity enforcing rules that belong to another aggregate, business logic leaking into infrastructure, fat use cases), name the concern before writing code.
+
+### Entity identity
+
+Every entity has two identity fields:
+- `_id` — internal UUID (UUIDv7), generated via `EntityId.generate()`, never exposed in API responses.
+- `_code` — short public identifier (nanoid(10)), generated via `EntityCode.generate()`, exposed as the public `id` in all DTOs.
+
+Mappers always use `entity.code` as the DTO's `id`. Never use `entity.id` in a DTO.
+
+### Entity lifecycle methods
+
+Every entity follows this pattern:
+- `static create(props)` — for new (unpersisted) entities. Generates `id` and `code`. Validates. Returns `Result`.
+- `static reconstruct(props)` — for DB-sourced data. Skips validation. Takes raw primitives and wraps them in VOs.
+- `update(props)` — mutates the entity in place after validating. Returns `Result<this, ValidationError>`.
+
+### Value Objects
+
+VOs live in their own subdirectory named after the VO, inside the entity folder they belong to.  
+Each VO has its own test file in the same folder.
+
+```
+entities/schedule/
+  time-of-day/
+    time-of-day.ts
+    time-of-day.test.ts
+```
+
+VO pattern:
+- Private constructor. Immutable (all fields `readonly`).
+- `static create(value, field): Result<VO, ValidationError>` — for user input. `field` is the name used in the error message.
+- `static from(value): VO` — for trusted reconstruction from DB. No validation.
+- Domain methods (`equals()`, `isAfter()`, `toMinutes()`, etc.) — behaviour lives here, not in the entity.
+
+Entity getters expose VOs, not raw primitives. Mappers and repositories unwrap to primitives at their boundary.
+
+### Aggregates
+
+`ResourceEntity` is the aggregate root for scheduling. `ScheduleEntity` instances are only created/replaced through `resource.setSchedule(entries)`. Never construct `ScheduleEntity` directly in use cases.
+
+`EstablishmentEntity` owns `ResourceEntity[]` and `ServiceEntity[]` as read-only children (for queries). Mutations to resources or services go through their own use cases and repositories.
+
+### Mappers
+
+Mappers translate between domain entities and DTOs (application layer boundary). They are pure static classes.
+- `toDTO(entity)` — entity → DTO. Must use `entity.code` as the public `id`. Never expose `entity.id`.
+- Every mapper must have a corresponding `.test.ts` file.
+
+### Use cases
+
+Each use case is a class with a single `execute(input)` method returning `PromiseResult<OutputDTO, Errors>`. They:
+- Accept primitive inputs (no domain types in the input).
+- Return DTOs (not entities).
+- Use the `Result` pattern — never throw for expected failures.
+- Do not construct entities directly from user input without calling `Entity.create()`.
+
+### Testing conventions
+
+- Every entity, VO, mapper, use case, and controller must have a test file.
+- Use `result.getData()` / `result.getError()` in tests only (never in production code).
+- Use `vitest-mock-extended` (`mock<Interface>()`) for faking dependencies in use-case tests.
+- Use `vitest-mock-express` for controller tests.
+
 ## Dependency Injection
 
 - Use Awilix for dependency injection.

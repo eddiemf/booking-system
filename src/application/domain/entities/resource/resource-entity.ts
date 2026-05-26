@@ -9,6 +9,7 @@ export type ResourceValidationError = ValidationError;
 interface Props {
   name: string;
   establishmentId: string;
+  establishmentCode: string;
 }
 
 interface ReconstructProps {
@@ -16,6 +17,7 @@ interface ReconstructProps {
   code: string;
   name: string;
   establishmentId: string;
+  establishmentCode: string;
   schedules?: ScheduleEntity[];
 }
 
@@ -25,6 +27,7 @@ export class ResourceEntity {
     private _code: string,
     private _name: string,
     private _establishmentId: string,
+    private _establishmentCode: string,
     private _schedules: ScheduleEntity[]
   ) {}
 
@@ -42,6 +45,10 @@ export class ResourceEntity {
 
   get establishmentId(): string {
     return this._establishmentId;
+  }
+
+  get establishmentCode(): string {
+    return this._establishmentCode;
   }
 
   get schedules(): ScheduleEntity[] {
@@ -78,12 +85,23 @@ export class ResourceEntity {
     return ok(this);
   }
 
-  static create({ name, establishmentId }: Props): Result<ResourceEntity, ResourceValidationError> {
+  static create({
+    name,
+    establishmentId,
+    establishmentCode,
+  }: Props): Result<ResourceEntity, ResourceValidationError> {
     const nameError = ResourceEntity.requireName(name);
     if (nameError) return fail(nameError);
 
     return ok(
-      new ResourceEntity(EntityId.generate(), EntityCode.generate(), name, establishmentId, [])
+      new ResourceEntity(
+        EntityId.generate(),
+        EntityCode.generate(),
+        name,
+        establishmentId,
+        establishmentCode,
+        []
+      )
     );
   }
 
@@ -92,9 +110,10 @@ export class ResourceEntity {
     code,
     name,
     establishmentId,
+    establishmentCode,
     schedules = [],
   }: ReconstructProps): ResourceEntity {
-    return new ResourceEntity(id, code, name, establishmentId, schedules);
+    return new ResourceEntity(id, code, name, establishmentId, establishmentCode, schedules);
   }
 
   private static requireName(name: string): ValidationError | null {

@@ -15,7 +15,7 @@ describe('ResourceController', () => {
   const resourceDTO: ResourceDTO = {
     id: resourceCode,
     name: 'Alice',
-    establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   };
 
   const createResourceMock = mock<CreateResource>();

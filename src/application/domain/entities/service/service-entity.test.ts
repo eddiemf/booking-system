@@ -11,6 +11,7 @@ describe('ServiceEntity', () => {
         name: '',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
@@ -22,6 +23,7 @@ describe('ServiceEntity', () => {
         name: 'service',
         duration: -1,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
@@ -35,6 +37,7 @@ describe('ServiceEntity', () => {
         name: 'service',
         duration: 0,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
@@ -48,6 +51,7 @@ describe('ServiceEntity', () => {
         name: 'service',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(service).toBeInstanceOf(ServiceEntity);
@@ -60,6 +64,7 @@ describe('ServiceEntity', () => {
         description: 'A basic haircut',
         duration: 30,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(service.name).toBe('haircut');
@@ -73,6 +78,7 @@ describe('ServiceEntity', () => {
         name: 'service',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(service.id).toMatch(UUID_V7_REGEX);
@@ -83,11 +89,13 @@ describe('ServiceEntity', () => {
         name: 'service',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
       const b = ServiceEntity.create({
         name: 'service',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(a.id).not.toBe(b.id);
@@ -103,6 +111,7 @@ describe('ServiceEntity', () => {
         description: 'Haircut',
         duration: 90,
         establishmentId: '1',
+        establishmentCode: 'est123',
       });
 
       expect(service).toBeInstanceOf(ServiceEntity);
@@ -123,6 +132,7 @@ describe('ServiceEntity', () => {
       description: 'Old description',
       duration: 30,
       establishmentId: '5',
+      establishmentCode: 'est123',
     });
 
     it('fails with empty name', () => {

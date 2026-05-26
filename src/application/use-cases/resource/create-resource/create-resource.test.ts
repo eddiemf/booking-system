@@ -20,6 +20,7 @@ describe('CreateResource', () => {
     code: 'res123',
     name: 'Alice',
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns validation error for empty name', async () => {
@@ -64,7 +65,7 @@ describe('CreateResource', () => {
     expect(data).toEqual({
       id: 'res123',
       name: 'Alice',
-      establishmentId: 'uuid-est',
+      establishmentCode: 'est123',
     });
   });
 });

@@ -67,6 +67,7 @@ describe('CreateService', () => {
           description: 'Test Service',
           duration: 60,
           establishmentId: 'uuid-1',
+          establishmentCode: 'est123',
         })
       )
     );
@@ -78,7 +79,7 @@ describe('CreateService', () => {
       name: 'Service',
       description: 'Test Service',
       duration: 60,
-      establishmentId: 'uuid-1',
+      establishmentCode: 'est123',
     });
   });
 });

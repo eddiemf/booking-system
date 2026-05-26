@@ -68,6 +68,7 @@ describe('EstablishmentEntity', () => {
         code: 'res1',
         name: 'Alice',
         establishmentId: '1',
+        establishmentCode: 'est123',
       });
       const service = ServiceEntity.reconstruct({
         id: 's1',
@@ -76,6 +77,7 @@ describe('EstablishmentEntity', () => {
         description: '',
         duration: 60,
         establishmentId: '1',
+        establishmentCode: 'est123',
       });
       const entity = EstablishmentEntity.reconstruct({
         id: '1',

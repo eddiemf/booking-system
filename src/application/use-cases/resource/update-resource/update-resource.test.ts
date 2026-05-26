@@ -15,6 +15,7 @@ describe('UpdateResource', () => {
     code: 'res123',
     name: 'Room A',
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns validation error for empty name', async () => {
@@ -53,7 +54,7 @@ describe('UpdateResource', () => {
     expect(data).toEqual({
       id: 'res123',
       name: 'Room A',
-      establishmentId: 'uuid-est',
+      establishmentCode: 'est123',
     });
   });
 });

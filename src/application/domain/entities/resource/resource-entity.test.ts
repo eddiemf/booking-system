@@ -11,6 +11,7 @@ describe('ResourceEntity', () => {
       const error = ResourceEntity.create({
         name: '',
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
@@ -21,6 +22,7 @@ describe('ResourceEntity', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(entity).toBeInstanceOf(ResourceEntity);
@@ -31,6 +33,7 @@ describe('ResourceEntity', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(entity.id).toMatch(UUID_V7_REGEX);
@@ -40,6 +43,7 @@ describe('ResourceEntity', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
         establishmentId: '1',
+        establishmentCode: 'est123',
       }).getData();
 
       expect(entity.schedules).toEqual([]);
@@ -53,6 +57,7 @@ describe('ResourceEntity', () => {
         code: 'res123',
         name: 'Room B',
         establishmentId: '5',
+        establishmentCode: 'est123',
       });
 
       expect(entity.id).toBe('42');
@@ -65,6 +70,7 @@ describe('ResourceEntity', () => {
     it('restores schedules when provided', () => {
       const schedule = ScheduleEntity.reconstruct({
         id: 'sched-1',
+        code: 'sch1',
         resourceId: '42',
         dayOfWeek: 1,
         startTime: '09:00',
@@ -75,6 +81,7 @@ describe('ResourceEntity', () => {
         code: 'res123',
         name: 'Room B',
         establishmentId: '5',
+        establishmentCode: 'est123',
         schedules: [schedule],
       });
 
@@ -89,6 +96,7 @@ describe('ResourceEntity', () => {
       code: 'res123',
       name: 'Old Name',
       establishmentId: '5',
+      establishmentCode: 'est123',
     });
 
     it('fails with empty name', () => {
@@ -115,6 +123,7 @@ describe('ResourceEntity', () => {
       code: 'res123',
       name: 'Room A',
       establishmentId: '5',
+      establishmentCode: 'est123',
     });
 
     it('fails with an invalid entry', () => {
@@ -144,9 +153,11 @@ describe('ResourceEntity', () => {
         code: 'res123',
         name: 'Room A',
         establishmentId: '5',
+        establishmentCode: 'est123',
         schedules: [
           ScheduleEntity.reconstruct({
             id: '1',
+            code: 'sch1',
             resourceId: '42',
             dayOfWeek: 0,
             startTime: '08:00',

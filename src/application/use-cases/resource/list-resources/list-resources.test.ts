@@ -19,6 +19,7 @@ describe('ListResources', () => {
     code: 'res123',
     name: 'Alice',
     establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   });
 
   it('returns not-found error when establishment does not exist', async () => {
@@ -51,7 +52,7 @@ describe('ListResources', () => {
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
-    expect(data).toEqual([{ id: 'res123', name: 'Alice', establishmentId: 'uuid-est' }]);
+    expect(data).toEqual([{ id: 'res123', name: 'Alice', establishmentCode: 'est123' }]);
   });
 
   it('returns an empty array when establishment has no resources', async () => {

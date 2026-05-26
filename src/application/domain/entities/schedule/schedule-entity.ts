@@ -1,4 +1,5 @@
 import type { ValidationError } from '@app/domain/errors';
+import { EntityCode } from '@app/domain/identity/entity-code';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { ok, type Result } from '@shared/result';
 import { DayOfWeek } from './day-of-week/day-of-week';
@@ -15,6 +16,7 @@ interface Props {
 
 interface ReconstructProps {
   id: string;
+  code: string;
   resourceId: string;
   dayOfWeek: number;
   startTime: string;
@@ -24,6 +26,7 @@ interface ReconstructProps {
 export class ScheduleEntity {
   private constructor(
     private _id: string,
+    private _code: string,
     private _resourceId: string,
     private _dayOfWeek: DayOfWeek,
     private _timeRange: TimeRange
@@ -31,6 +34,10 @@ export class ScheduleEntity {
 
   get id(): string {
     return this._id;
+  }
+
+  get code(): string {
+    return this._code;
   }
 
   get resourceId(): string {
@@ -60,6 +67,7 @@ export class ScheduleEntity {
     return ok(
       new ScheduleEntity(
         EntityId.generate(),
+        EntityCode.generate(),
         resourceId,
         dayOfWeekResult.data,
         timeRangeResult.data
@@ -69,6 +77,7 @@ export class ScheduleEntity {
 
   static reconstruct({
     id,
+    code,
     resourceId,
     dayOfWeek,
     startTime,
@@ -76,6 +85,7 @@ export class ScheduleEntity {
   }: ReconstructProps): ScheduleEntity {
     return new ScheduleEntity(
       id,
+      code,
       resourceId,
       DayOfWeek.from(dayOfWeek),
       TimeRange.from(startTime, endTime)

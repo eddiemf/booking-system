@@ -102,10 +102,11 @@ describe('ScheduleEntity', () => {
   });
 
   describe('reconstruct()', () => {
-    it('reconstructs with the given id', () => {
-      const entity = ScheduleEntity.reconstruct({ id: '5', ...validProps });
+    it('reconstructs with the given id and code', () => {
+      const entity = ScheduleEntity.reconstruct({ id: '5', code: 'sch123', ...validProps });
 
       expect(entity.id).toBe('5');
+      expect(entity.code).toBe('sch123');
       expect(entity.resourceId).toBe('1');
     });
   });

@@ -37,6 +37,7 @@ export class PostgressServiceRepository implements ServiceRepository {
           description: servicesTable.description,
           duration: servicesTable.duration,
           establishmentId: servicesTable.establishmentId,
+          establishmentCode: establishmentsTable.code,
         })
         .from(servicesTable)
         .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
@@ -50,6 +51,7 @@ export class PostgressServiceRepository implements ServiceRepository {
             description: row.description ?? '',
             duration: row.duration,
             establishmentId: row.establishmentId,
+            establishmentCode: row.establishmentCode,
           })
         )
       );
@@ -71,6 +73,7 @@ export class PostgressServiceRepository implements ServiceRepository {
           description: servicesTable.description,
           duration: servicesTable.duration,
           establishmentId: servicesTable.establishmentId,
+          establishmentCode: establishmentsTable.code,
         })
         .from(servicesTable)
         .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
@@ -85,6 +88,7 @@ export class PostgressServiceRepository implements ServiceRepository {
           description: row.description ?? '',
           duration: row.duration,
           establishmentId: row.establishmentId,
+          establishmentCode: row.establishmentCode,
         })
       );
     } catch (error) {
@@ -130,6 +134,7 @@ export class PostgressServiceRepository implements ServiceRepository {
           description: service.description,
           duration: service.duration.toMinutes(),
           establishmentId: rows[0].establishmentId,
+          establishmentCode: service.establishmentCode,
         })
       );
     } catch (error) {

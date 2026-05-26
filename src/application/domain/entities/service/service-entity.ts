@@ -11,6 +11,7 @@ interface Props {
   description?: string | undefined;
   duration: number;
   establishmentId: string;
+  establishmentCode: string;
 }
 
 interface ReconstructProps {
@@ -20,6 +21,7 @@ interface ReconstructProps {
   description: string;
   duration: number;
   establishmentId: string;
+  establishmentCode: string;
 }
 
 export class ServiceEntity {
@@ -29,7 +31,8 @@ export class ServiceEntity {
     private _name: string,
     private _description: string,
     private _duration: Duration,
-    private _establishmentId: string
+    private _establishmentId: string,
+    private _establishmentCode: string
   ) {}
 
   get id(): string {
@@ -56,11 +59,16 @@ export class ServiceEntity {
     return this._establishmentId;
   }
 
+  get establishmentCode(): string {
+    return this._establishmentCode;
+  }
+
   static create({
     name,
     duration,
     description = '',
     establishmentId,
+    establishmentCode,
   }: Props): Result<ServiceEntity, ServiceValidationError> {
     const nameError = ServiceEntity.requireName(name);
     if (nameError) return fail(nameError);
@@ -75,7 +83,8 @@ export class ServiceEntity {
         name,
         description,
         durationResult.data,
-        establishmentId
+        establishmentId,
+        establishmentCode
       )
     );
   }
@@ -102,8 +111,24 @@ export class ServiceEntity {
     return ok(this);
   }
 
-  static reconstruct({ id, code, name, duration, description, establishmentId }: ReconstructProps) {
-    return new ServiceEntity(id, code, name, description, Duration.from(duration), establishmentId);
+  static reconstruct({
+    id,
+    code,
+    name,
+    duration,
+    description,
+    establishmentId,
+    establishmentCode,
+  }: ReconstructProps) {
+    return new ServiceEntity(
+      id,
+      code,
+      name,
+      description,
+      Duration.from(duration),
+      establishmentId,
+      establishmentCode
+    );
   }
 
   private static requireName(name: string): ValidationError | null {

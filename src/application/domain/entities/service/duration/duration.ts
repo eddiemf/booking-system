@@ -4,10 +4,6 @@ import { fail, ok, type Result } from '@shared/result';
 export class Duration {
   private constructor(private readonly _minutes: number) {}
 
-  get value(): number {
-    return this._minutes;
-  }
-
   toMinutes(): number {
     return this._minutes;
   }

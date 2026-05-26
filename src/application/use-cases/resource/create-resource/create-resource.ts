@@ -32,6 +32,7 @@ export class CreateResource {
     const entityResult = ResourceEntity.create({
       name,
       establishmentId: establishmentResult.data.id,
+      establishmentCode: establishmentResult.data.code,
     });
     if (!entityResult.isOk) return entityResult;
 

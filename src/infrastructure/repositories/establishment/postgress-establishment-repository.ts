@@ -24,6 +24,7 @@ type EstablishmentRow = {
   resourceCode: string | null;
   resourceName: string | null;
   scheduleId: string | null;
+  scheduleCode: string | null;
   scheduleDayOfWeek: number | null;
   scheduleStartTime: string | null;
   scheduleEndTime: string | null;
@@ -44,6 +45,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           resourceCode: resourcesTable.code,
           resourceName: resourcesTable.name,
           scheduleId: schedulesTable.id,
+          scheduleCode: schedulesTable.code,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
           scheduleStartTime: schedulesTable.startTime,
           scheduleEndTime: schedulesTable.endTime,
@@ -70,7 +72,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
         .from(servicesTable)
         .where(eq(servicesTable.establishmentId, id));
 
-      const resources = this.buildResources(id, estRows);
+      const resources = this.buildResources(id, code, estRows);
       const services = serviceRows.map((row) =>
         ServiceEntity.reconstruct({
           id: row.id,
@@ -79,6 +81,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           description: row.description ?? '',
           duration: row.duration,
           establishmentId: row.establishmentId,
+          establishmentCode: code,
         })
       );
 
@@ -140,7 +143,11 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
     }
   }
 
-  private buildResources(establishmentId: string, rows: EstablishmentRow[]): ResourceEntity[] {
+  private buildResources(
+    establishmentId: string,
+    establishmentCode: string,
+    rows: EstablishmentRow[]
+  ): ResourceEntity[] {
     const map = new Map<string, { meta: EstablishmentRow; scheduleRows: EstablishmentRow[] }>();
     for (const row of rows) {
       if (!row.resourceId) continue;
@@ -157,9 +164,11 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
         code: meta.resourceCode as string,
         name: meta.resourceName as string,
         establishmentId,
+        establishmentCode: establishmentCode,
         schedules: scheduleRows.map((scheduleRow) =>
           ScheduleEntity.reconstruct({
             id: scheduleRow.scheduleId as string,
+            code: scheduleRow.scheduleCode as string,
             resourceId: scheduleRow.scheduleResourceId as string,
             dayOfWeek: scheduleRow.scheduleDayOfWeek as number,
             startTime: scheduleRow.scheduleStartTime as string,

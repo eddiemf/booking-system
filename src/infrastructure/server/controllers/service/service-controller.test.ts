@@ -26,7 +26,7 @@ describe('ServiceController', () => {
     name: 'Haircut',
     description: 'A haircut',
     duration: 30,
-    establishmentId: 'uuid-est',
+    establishmentCode: 'est123',
   };
 
   const createServiceMock = mock<CreateService>();

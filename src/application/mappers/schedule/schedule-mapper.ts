@@ -4,7 +4,7 @@ import type { ScheduleDTO } from '@app/dtos';
 export class ScheduleMapper {
   static toDTO(entity: ScheduleEntity): ScheduleDTO {
     return {
-      id: entity.id,
+      id: entity.code,
       resourceId: entity.resourceId,
       dayOfWeek: entity.dayOfWeek.value,
       startTime: entity.timeRange.start.value,

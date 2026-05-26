@@ -39,6 +39,7 @@ export class CreateService {
       description,
       duration,
       establishmentId,
+      establishmentCode,
     });
     if (!serviceResult.isOk) return serviceResult;
 

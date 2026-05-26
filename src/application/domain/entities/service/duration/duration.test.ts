@@ -28,7 +28,7 @@ describe('Duration', () => {
     it('creates with a positive value', () => {
       const duration = Duration.create(30, 'duration').getData();
 
-      expect(duration.value).toBe(30);
+      expect(duration.toMinutes()).toBe(30);
     });
   });
 
@@ -36,7 +36,7 @@ describe('Duration', () => {
     it('constructs from a number without validation', () => {
       const duration = Duration.from(90);
 
-      expect(duration.value).toBe(90);
+      expect(duration.toMinutes()).toBe(90);
     });
   });
 

@@ -1,6 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
-import { TimeOfDay } from './time-of-day';
+import { TimeOfDay } from '../time-of-day/time-of-day';
 
 export class TimeRange {
   private constructor(

@@ -1,6 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
-import { TimeOfDay } from './time-of-day';
+import { TimeOfDay } from '../time-of-day/time-of-day';
 import { TimeRange } from './time-range';
 
 describe('TimeRange', () => {

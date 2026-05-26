@@ -2,7 +2,7 @@ import { ValidationError } from '@app/domain/errors';
 import { EntityCode } from '@app/domain/identity/entity-code';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import { Duration } from './duration';
+import { Duration } from './duration/duration';
 
 export type ServiceValidationError = ValidationError;
 

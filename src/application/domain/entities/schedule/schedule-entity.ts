@@ -1,8 +1,8 @@
 import type { ValidationError } from '@app/domain/errors';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { ok, type Result } from '@shared/result';
-import { DayOfWeek } from './day-of-week';
-import { TimeRange } from './time-range';
+import { DayOfWeek } from './day-of-week/day-of-week';
+import { TimeRange } from './time-range/time-range';
 
 export type ScheduleCreationError = ValidationError;
 

@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import { ConflictError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import type { ResourceDTO } from '@app/dtos';
 import type { CreateResource, DeleteResource, ListResources, UpdateResource } from '@app/use-cases';
 import { fail, ok } from '@shared/result';
@@ -92,6 +92,30 @@ describe('ResourceController', () => {
       expect(res.json).toHaveBeenCalledWith(resourceDTO);
     });
 
+    it('returns 400 when createResource returns a validation error', async () => {
+      createResourceMock.execute.mockResolvedValue(
+        fail(new ValidationError('name', 'Value is required.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.create(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 500 when createResource returns a storage error', async () => {
+      createResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.create(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when createResource throws', async () => {
       createResourceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -167,6 +191,17 @@ describe('ResourceController', () => {
       });
     });
 
+    it('returns 500 when listResources returns a storage error', async () => {
+      listResourcesMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when listResources throws', async () => {
       listResourcesMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -218,6 +253,30 @@ describe('ResourceController', () => {
       expect(res.json).toHaveBeenCalledWith(resourceDTO);
     });
 
+    it('returns 400 when updateResource returns a validation error', async () => {
+      updateResourceMock.execute.mockResolvedValue(
+        fail(new ValidationError('name', 'Value is required.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { code: resourceCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 500 when updateResource returns a storage error', async () => {
+      updateResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { code: resourceCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when updateResource throws', async () => {
       updateResourceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -266,6 +325,17 @@ describe('ResourceController', () => {
       await controller.delete(req, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
+    });
+
+    it('returns 500 when deleteResource returns a storage error', async () => {
+      deleteResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { code: resourceCode } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
 
     it('returns 500 when deleteResource throws', async () => {

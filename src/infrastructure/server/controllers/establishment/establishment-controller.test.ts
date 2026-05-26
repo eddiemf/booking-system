@@ -225,6 +225,23 @@ describe('EstablishmentController', () => {
       });
     });
 
+    it('returns 400 when updateEstablishment use case returns a validation error', async () => {
+      updateEstablishmentMock.execute.mockResolvedValue(
+        fail(new ValidationError('name', 'Value is required.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { code }, body: mockedValidInput });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Invalid value for field: name. Value is required.',
+        code: 'ValidationError',
+      });
+    });
+
     it('returns 500 if updateEstablishment returns a storage error', async () => {
       updateEstablishmentMock.execute.mockResolvedValue(
         fail(new StorageError('Failed to update establishment.'))

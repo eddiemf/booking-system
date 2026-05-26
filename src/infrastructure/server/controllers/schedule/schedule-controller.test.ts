@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from '@app/domain/errors';
+import { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import type { ScheduleDTO } from '@app/dtos';
 import type { SetSchedule } from '@app/use-cases';
 import { fail, ok } from '@shared/result';
@@ -107,6 +107,17 @@ describe('ScheduleController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith([]);
+    });
+
+    it('returns 500 when setSchedule returns a storage error', async () => {
+      setScheduleMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { resourceCode }, body: { entries: validEntries } });
+
+      // @ts-expect-error
+      await controller.set(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
 
     it('returns 500 when setSchedule throws', async () => {

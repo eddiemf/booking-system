@@ -110,6 +110,17 @@ describe('ServiceController', () => {
       expect(res.json).toHaveBeenCalledWith(serviceDTO);
     });
 
+    it('returns 500 when createService returns a storage error', async () => {
+      createServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.create(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when createService throws', async () => {
       createServiceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -160,6 +171,17 @@ describe('ServiceController', () => {
       expect(res.json).toHaveBeenCalledWith([]);
     });
 
+    it('returns 500 when listServices returns a storage error', async () => {
+      listServicesMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when listServices throws', async () => {
       listServicesMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -194,6 +216,17 @@ describe('ServiceController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(serviceDTO);
+    });
+
+    it('returns 500 when findService returns a storage error', async () => {
+      findServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+
+      // @ts-expect-error
+      await controller.find(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
 
     it('returns 500 when findService throws', async () => {
@@ -245,6 +278,30 @@ describe('ServiceController', () => {
       expect(res.json).toHaveBeenCalledWith(serviceDTO);
     });
 
+    it('returns 400 when updateService returns a validation error', async () => {
+      updateServiceMock.execute.mockResolvedValue(
+        fail(new ValidationError('name', 'Value is required.'))
+      );
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 500 when updateService returns a storage error', async () => {
+      updateServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+
+      // @ts-expect-error
+      await controller.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
     it('returns 500 when updateService throws', async () => {
       updateServiceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
@@ -291,6 +348,17 @@ describe('ServiceController', () => {
       await controller.delete(req, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
+    });
+
+    it('returns 500 when deleteService returns a storage error', async () => {
+      deleteServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+
+      // @ts-expect-error
+      await controller.delete(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
 
     it('returns 500 when deleteService throws', async () => {

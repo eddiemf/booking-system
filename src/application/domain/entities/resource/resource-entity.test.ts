@@ -131,7 +131,7 @@ describe('ResourceEntity', () => {
         .getData();
 
       expect(updatedResource.schedules).toHaveLength(1);
-      expect(updatedResource.schedules[0]?.dayOfWeek).toBe(1);
+      expect(updatedResource.schedules[0]?.dayOfWeek.value).toBe(1);
       expect(updatedResource.schedules[0]?.startTime.value).toBe('09:00');
       expect(updatedResource.schedules[0]?.endTime.value).toBe('17:00');
       expect(updatedResource.id).toBe(resource.id);

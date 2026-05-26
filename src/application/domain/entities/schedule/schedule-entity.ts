@@ -1,6 +1,7 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
 import { v7 } from 'uuid';
+import { DayOfWeek } from './day-of-week';
 import { TimeOfDay } from './time-of-day';
 
 export type ScheduleCreationError = ValidationError;
@@ -24,7 +25,7 @@ export class ScheduleEntity {
   private constructor(
     private _id: string,
     private _resourceId: string,
-    private _dayOfWeek: number,
+    private _dayOfWeek: DayOfWeek,
     private _startTime: TimeOfDay,
     private _endTime: TimeOfDay
   ) {}
@@ -37,7 +38,7 @@ export class ScheduleEntity {
     return this._resourceId;
   }
 
-  get dayOfWeek(): number {
+  get dayOfWeek(): DayOfWeek {
     return this._dayOfWeek;
   }
 
@@ -55,9 +56,8 @@ export class ScheduleEntity {
     startTime,
     endTime,
   }: Props): Result<ScheduleEntity, ScheduleCreationError> {
-    if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
-      return fail(new ValidationError('dayOfWeek', 'Must be an integer between 0 and 6.'));
-    }
+    const dayOfWeekResult = DayOfWeek.create(dayOfWeek, 'dayOfWeek');
+    if (!dayOfWeekResult.isOk) return dayOfWeekResult;
 
     const startResult = TimeOfDay.create(startTime, 'startTime');
     if (!startResult.isOk) return startResult;
@@ -69,7 +69,9 @@ export class ScheduleEntity {
       return fail(new ValidationError('endTime', 'Must be after startTime.'));
     }
 
-    return ok(new ScheduleEntity(v7(), resourceId, dayOfWeek, startResult.data, endResult.data));
+    return ok(
+      new ScheduleEntity(v7(), resourceId, dayOfWeekResult.data, startResult.data, endResult.data)
+    );
   }
 
   static reconstruct({
@@ -82,7 +84,7 @@ export class ScheduleEntity {
     return new ScheduleEntity(
       id,
       resourceId,
-      dayOfWeek,
+      DayOfWeek.from(dayOfWeek),
       TimeOfDay.from(startTime),
       TimeOfDay.from(endTime)
     );

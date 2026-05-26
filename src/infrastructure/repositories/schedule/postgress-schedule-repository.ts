@@ -20,7 +20,7 @@ export class PostgressScheduleRepository implements ScheduleRepository {
           await tx.insert(schedulesTable).values(
             entries.map((entry) => ({
               id: entry.id,
-              dayOfWeek: entry.dayOfWeek,
+              dayOfWeek: entry.dayOfWeek.value,
               startTime: entry.startTime.value,
               endTime: entry.endTime.value,
               resourceId,

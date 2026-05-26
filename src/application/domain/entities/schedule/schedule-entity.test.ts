@@ -77,7 +77,7 @@ describe('ScheduleEntity', () => {
 
       expect(entity).toBeInstanceOf(ScheduleEntity);
       expect(entity.resourceId).toBe('1');
-      expect(entity.dayOfWeek).toBe(1);
+      expect(entity.dayOfWeek.value).toBe(1);
       expect(entity.startTime.value).toBe('09:00');
       expect(entity.endTime.value).toBe('17:00');
     });
@@ -91,13 +91,13 @@ describe('ScheduleEntity', () => {
     it('accepts dayOfWeek 0 (Sunday)', () => {
       const entity = ScheduleEntity.create({ ...validProps, dayOfWeek: 0 }).getData();
 
-      expect(entity.dayOfWeek).toBe(0);
+      expect(entity.dayOfWeek.value).toBe(0);
     });
 
     it('accepts dayOfWeek 6 (Saturday)', () => {
       const entity = ScheduleEntity.create({ ...validProps, dayOfWeek: 6 }).getData();
 
-      expect(entity.dayOfWeek).toBe(6);
+      expect(entity.dayOfWeek.value).toBe(6);
     });
   });
 

@@ -78,8 +78,8 @@ describe('ScheduleEntity', () => {
       expect(entity).toBeInstanceOf(ScheduleEntity);
       expect(entity.resourceId).toBe('1');
       expect(entity.dayOfWeek.value).toBe(1);
-      expect(entity.startTime.value).toBe('09:00');
-      expect(entity.endTime.value).toBe('17:00');
+      expect(entity.timeRange.start.value).toBe('09:00');
+      expect(entity.timeRange.end.value).toBe('17:00');
     });
 
     it('generates a UUIDv7 id', () => {

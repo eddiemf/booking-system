@@ -21,8 +21,8 @@ export class PostgressScheduleRepository implements ScheduleRepository {
             entries.map((entry) => ({
               id: entry.id,
               dayOfWeek: entry.dayOfWeek.value,
-              startTime: entry.startTime.value,
-              endTime: entry.endTime.value,
+              startTime: entry.timeRange.start.value,
+              endTime: entry.timeRange.end.value,
               resourceId,
             }))
           );

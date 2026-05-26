@@ -1,8 +1,8 @@
-import { ValidationError } from '@app/domain/errors';
-import { fail, ok, type Result } from '@shared/result';
+import type { ValidationError } from '@app/domain/errors';
+import { ok, type Result } from '@shared/result';
 import { v7 } from 'uuid';
 import { DayOfWeek } from './day-of-week';
-import { TimeOfDay } from './time-of-day';
+import { TimeRange } from './time-range';
 
 export type ScheduleCreationError = ValidationError;
 
@@ -26,8 +26,7 @@ export class ScheduleEntity {
     private _id: string,
     private _resourceId: string,
     private _dayOfWeek: DayOfWeek,
-    private _startTime: TimeOfDay,
-    private _endTime: TimeOfDay
+    private _timeRange: TimeRange
   ) {}
 
   get id(): string {
@@ -42,12 +41,8 @@ export class ScheduleEntity {
     return this._dayOfWeek;
   }
 
-  get startTime(): TimeOfDay {
-    return this._startTime;
-  }
-
-  get endTime(): TimeOfDay {
-    return this._endTime;
+  get timeRange(): TimeRange {
+    return this._timeRange;
   }
 
   static create({
@@ -59,19 +54,10 @@ export class ScheduleEntity {
     const dayOfWeekResult = DayOfWeek.create(dayOfWeek, 'dayOfWeek');
     if (!dayOfWeekResult.isOk) return dayOfWeekResult;
 
-    const startResult = TimeOfDay.create(startTime, 'startTime');
-    if (!startResult.isOk) return startResult;
+    const timeRangeResult = TimeRange.create(startTime, endTime);
+    if (!timeRangeResult.isOk) return timeRangeResult;
 
-    const endResult = TimeOfDay.create(endTime, 'endTime');
-    if (!endResult.isOk) return endResult;
-
-    if (!endResult.data.isAfter(startResult.data)) {
-      return fail(new ValidationError('endTime', 'Must be after startTime.'));
-    }
-
-    return ok(
-      new ScheduleEntity(v7(), resourceId, dayOfWeekResult.data, startResult.data, endResult.data)
-    );
+    return ok(new ScheduleEntity(v7(), resourceId, dayOfWeekResult.data, timeRangeResult.data));
   }
 
   static reconstruct({
@@ -85,8 +71,7 @@ export class ScheduleEntity {
       id,
       resourceId,
       DayOfWeek.from(dayOfWeek),
-      TimeOfDay.from(startTime),
-      TimeOfDay.from(endTime)
+      TimeRange.from(startTime, endTime)
     );
   }
 }

@@ -141,7 +141,7 @@ describe('ServiceEntity', () => {
       );
     });
 
-    it('returns a new entity with updated fields', () => {
+    it('mutates the entity in place and returns it with updated fields', () => {
       const updatedService = service
         .update({
           name: 'Haircut',

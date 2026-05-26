@@ -98,7 +98,7 @@ describe('ResourceEntity', () => {
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
-    it('returns a new entity with the updated name', () => {
+    it('mutates the entity in place and returns it', () => {
       const updatedResource = resource.update({ name: 'New Name' }).getData();
 
       expect(updatedResource.name).toBe('New Name');
@@ -125,7 +125,7 @@ describe('ResourceEntity', () => {
       expect(error).toBeInstanceOf(ValidationError);
     });
 
-    it('returns a new entity with schedules set', () => {
+    it('mutates the entity schedules in place and returns it', () => {
       const updatedResource = resource
         .setSchedule([{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }])
         .getData();

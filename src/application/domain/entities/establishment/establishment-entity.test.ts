@@ -43,7 +43,7 @@ describe('EstablishmentEntity', () => {
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
-    it('returns a new entity with the updated name', () => {
+    it('mutates the entity in place and returns it', () => {
       const updatedEstablishment = establishment.update({ name: 'New Name' }).getData();
 
       expect(updatedEstablishment.name).toBe('New Name');

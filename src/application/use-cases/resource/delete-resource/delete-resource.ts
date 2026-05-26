@@ -1,6 +1,6 @@
 import type { ResourceRepository } from '@app/domain/entities';
 import type { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
-import { ok, type PromiseResult } from '@shared/result';
+import type { PromiseResult } from '@shared/result';
 
 type Input = { code: string };
 

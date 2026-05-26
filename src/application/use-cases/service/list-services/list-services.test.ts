@@ -1,7 +1,7 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ServiceEntity,
-  type ServiceRepository,
 } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
@@ -11,8 +11,7 @@ import { ListServices } from './list-services';
 
 describe('ListServices', () => {
   const establishmentRepository = mock<EstablishmentRepository>();
-  const serviceRepository = mock<ServiceRepository>();
-  const useCase = new ListServices(establishmentRepository, serviceRepository);
+  const useCase = new ListServices(establishmentRepository);
 
   const establishmentCode = 'est123';
   const mockService = ServiceEntity.reconstruct({
@@ -40,22 +39,17 @@ describe('ListServices', () => {
     expect(error).toBeInstanceOf(StorageError);
   });
 
-  it('returns storage error when service listing fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
-    );
-    serviceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
-
-    const error = await useCase.execute({ establishmentCode }).then((result) => result.getError());
-
-    expect(error).toBeInstanceOf(StorageError);
-  });
-
   it('returns a list of service DTOs on success', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
+      ok(
+        EstablishmentEntity.reconstruct({
+          id: 'uuid-est',
+          code: establishmentCode,
+          name: 'Salon',
+          services: [mockService],
+        })
+      )
     );
-    serviceRepository.findAll.mockResolvedValue(ok([mockService]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
@@ -72,9 +66,10 @@ describe('ListServices', () => {
 
   it('returns an empty array when establishment has no services', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
+      ok(
+        EstablishmentEntity.reconstruct({ id: 'uuid-est', code: establishmentCode, name: 'Salon' })
+      )
     );
-    serviceRepository.findAll.mockResolvedValue(ok([]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 

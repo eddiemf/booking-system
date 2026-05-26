@@ -9,12 +9,11 @@ describe('UpdateResource', () => {
   const resourceRepository = mock<ResourceRepository>();
   const useCase = new UpdateResource(resourceRepository);
 
-  const validInput = { code: 'res123', name: 'Room A', type: 'room' as const };
+  const validInput = { code: 'res123', name: 'Room A' };
   const updatedEntity = ResourceEntity.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Room A',
-    type: 'room',
     establishmentId: 'uuid-est',
   });
 
@@ -54,7 +53,6 @@ describe('UpdateResource', () => {
     expect(data).toEqual({
       id: 'res123',
       name: 'Room A',
-      type: 'room',
       establishmentId: 'uuid-est',
     });
   });

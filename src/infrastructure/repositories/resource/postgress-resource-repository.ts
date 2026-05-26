@@ -1,12 +1,7 @@
-import {
-  ResourceEntity,
-  type ResourceRepository,
-  type ResourceType,
-  ScheduleEntity,
-} from '@app/domain/entities';
+import { ResourceEntity, type ResourceRepository, ScheduleEntity } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { establishmentsTable, resourcesTable, schedulesTable } from '../../db/schema';
 
@@ -14,7 +9,6 @@ type ResourceRow = {
   id: string;
   code: string;
   name: string;
-  type: string;
   establishmentId: string;
   scheduleId: string | null;
   scheduleDayOfWeek: number | null;
@@ -34,7 +28,6 @@ export class PostgressResourceRepository implements ResourceRepository {
         id: resource.id,
         code: resource.code,
         name: resource.name,
-        type: resource.type,
         establishmentId: resource.establishmentId,
       });
       return ok(resource);
@@ -46,21 +39,13 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findAll(
-    establishmentCode: string,
-    type?: ResourceType
-  ): PromiseResult<ResourceEntity[], StorageError> {
+  async findAll(establishmentCode: string): PromiseResult<ResourceEntity[], StorageError> {
     try {
-      const condition = type
-        ? and(eq(establishmentsTable.code, establishmentCode), eq(resourcesTable.type, type))
-        : eq(establishmentsTable.code, establishmentCode);
-
       const rows = await this.db
         .select({
           id: resourcesTable.id,
           code: resourcesTable.code,
           name: resourcesTable.name,
-          type: resourcesTable.type,
           establishmentId: resourcesTable.establishmentId,
           scheduleId: schedulesTable.id,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
@@ -71,7 +56,7 @@ export class PostgressResourceRepository implements ResourceRepository {
         .from(resourcesTable)
         .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
         .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
-        .where(condition);
+        .where(eq(establishmentsTable.code, establishmentCode));
 
       return ok(this.groupResourceRows(rows));
     } catch (error) {
@@ -86,7 +71,6 @@ export class PostgressResourceRepository implements ResourceRepository {
           id: resourcesTable.id,
           code: resourcesTable.code,
           name: resourcesTable.name,
-          type: resourcesTable.type,
           establishmentId: resourcesTable.establishmentId,
           scheduleId: schedulesTable.id,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
@@ -113,7 +97,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     try {
       const rows = await this.db
         .update(resourcesTable)
-        .set({ name: resource.name, type: resource.type })
+        .set({ name: resource.name })
         .where(eq(resourcesTable.code, code))
         .returning({
           id: resourcesTable.id,
@@ -126,7 +110,6 @@ export class PostgressResourceRepository implements ResourceRepository {
           id: rows[0].id,
           code: rows[0].code,
           name: resource.name,
-          type: resource.type,
           establishmentId: rows[0].establishmentId,
         })
       );
@@ -166,7 +149,6 @@ export class PostgressResourceRepository implements ResourceRepository {
         id: meta.id,
         code: meta.code,
         name: meta.name,
-        type: meta.type as ResourceType,
         establishmentId: meta.establishmentId,
         schedules: scheduleRows.map((scheduleRow) =>
           ScheduleEntity.reconstruct({

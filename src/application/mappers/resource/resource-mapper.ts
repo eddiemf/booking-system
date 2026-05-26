@@ -6,7 +6,6 @@ export class ResourceMapper {
     return {
       id: resource.code,
       name: resource.name,
-      type: resource.type,
       establishmentId: resource.establishmentId,
     };
   }

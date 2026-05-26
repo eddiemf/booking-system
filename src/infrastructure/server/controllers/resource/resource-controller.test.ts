@@ -11,11 +11,10 @@ describe('ResourceController', () => {
   const establishmentCode = 'est123';
   const resourceCode = 'res123';
 
-  const validBody = { name: 'Alice', type: 'employee' };
+  const validBody = { name: 'Alice' };
   const resourceDTO: ResourceDTO = {
     id: resourceCode,
     name: 'Alice',
-    type: 'employee',
     establishmentId: 'uuid-est',
   };
 
@@ -46,19 +45,6 @@ describe('ResourceController', () => {
       const req = getMockReq({
         params: { establishmentCode },
         body: { ...validBody, name: undefined },
-      });
-
-      // @ts-expect-error
-      await controller.create(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('returns 400 when type is invalid', async () => {
-      const { res } = getMockRes();
-      const req = getMockReq({
-        params: { establishmentCode },
-        body: { ...validBody, type: 'invalid' },
       });
 
       // @ts-expect-error
@@ -166,31 +152,6 @@ describe('ResourceController', () => {
       expect(res.json).toHaveBeenCalledWith([]);
     });
 
-    it('passes type filter when provided', async () => {
-      listResourcesMock.execute.mockResolvedValue(ok([]));
-      const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, query: { type: 'room' } });
-
-      // @ts-expect-error
-      await controller.list(req, res);
-
-      expect(listResourcesMock.execute).toHaveBeenCalledWith({ establishmentCode, type: 'room' });
-    });
-
-    it('ignores invalid type filter', async () => {
-      listResourcesMock.execute.mockResolvedValue(ok([]));
-      const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, query: { type: 'invalid' } });
-
-      // @ts-expect-error
-      await controller.list(req, res);
-
-      expect(listResourcesMock.execute).toHaveBeenCalledWith({
-        establishmentCode,
-        type: undefined,
-      });
-    });
-
     it('returns 500 when listResources returns a storage error', async () => {
       listResourcesMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
@@ -218,8 +179,8 @@ describe('ResourceController', () => {
     it('returns 400 when body is invalid', async () => {
       const { res } = getMockRes();
       const req = getMockReq({
-        params: { code: resourceCode },
-        body: { ...validBody, type: 'bad' },
+        params: { code: '' },
+        body: { name: 'Room A' },
       });
 
       // @ts-expect-error

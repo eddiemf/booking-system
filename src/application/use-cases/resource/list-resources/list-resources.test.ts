@@ -1,7 +1,7 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
-  type ResourceRepository,
 } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
@@ -11,15 +11,13 @@ import { ListResources } from './list-resources';
 
 describe('ListResources', () => {
   const establishmentRepository = mock<EstablishmentRepository>();
-  const resourceRepository = mock<ResourceRepository>();
-  const useCase = new ListResources(establishmentRepository, resourceRepository);
+  const useCase = new ListResources(establishmentRepository);
 
   const establishmentCode = 'est123';
   const mockResource = ResourceEntity.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Alice',
-    type: 'employee',
     establishmentId: 'uuid-est',
   });
 
@@ -39,38 +37,32 @@ describe('ListResources', () => {
     expect(error).toBeInstanceOf(StorageError);
   });
 
-  it('returns storage error when resource listing fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
-    );
-    resourceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
-
-    const error = await useCase.execute({ establishmentCode }).then((result) => result.getError());
-
-    expect(error).toBeInstanceOf(StorageError);
-  });
-
   it('returns list of resource DTOs on success', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
+      ok(
+        EstablishmentEntity.reconstruct({
+          id: 'uuid-est',
+          code: establishmentCode,
+          name: 'Salon',
+          resources: [mockResource],
+        })
+      )
     );
-    resourceRepository.findAll.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
-    expect(data).toEqual([
-      { id: 'res123', name: 'Alice', type: 'employee', establishmentId: 'uuid-est' },
-    ]);
+    expect(data).toEqual([{ id: 'res123', name: 'Alice', establishmentId: 'uuid-est' }]);
   });
 
-  it('passes type filter to the repository', async () => {
+  it('returns an empty array when establishment has no resources', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
-      ok({ id: 'uuid-est', code: establishmentCode, name: 'Salon' } as never)
+      ok(
+        EstablishmentEntity.reconstruct({ id: 'uuid-est', code: establishmentCode, name: 'Salon' })
+      )
     );
-    resourceRepository.findAll.mockResolvedValue(ok([]));
 
-    await useCase.execute({ establishmentCode, type: 'room' });
+    const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
-    expect(resourceRepository.findAll).toHaveBeenCalledWith(establishmentCode, 'room');
+    expect(data).toEqual([]);
   });
 });

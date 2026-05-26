@@ -2,7 +2,6 @@ import {
   EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
-  type ResourceType,
   ScheduleEntity,
   ServiceEntity,
 } from '@app/domain/entities';
@@ -24,7 +23,6 @@ type EstablishmentRow = {
   resourceId: string | null;
   resourceCode: string | null;
   resourceName: string | null;
-  resourceType: string | null;
   scheduleId: string | null;
   scheduleDayOfWeek: number | null;
   scheduleStartTime: string | null;
@@ -45,7 +43,6 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           resourceId: resourcesTable.id,
           resourceCode: resourcesTable.code,
           resourceName: resourcesTable.name,
-          resourceType: resourcesTable.type,
           scheduleId: schedulesTable.id,
           scheduleDayOfWeek: schedulesTable.dayOfWeek,
           scheduleStartTime: schedulesTable.startTime,
@@ -159,7 +156,6 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
         id: meta.resourceId as string,
         code: meta.resourceCode as string,
         name: meta.resourceName as string,
-        type: meta.resourceType as ResourceType,
         establishmentId,
         schedules: scheduleRows.map((scheduleRow) =>
           ScheduleEntity.reconstruct({

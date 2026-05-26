@@ -14,12 +14,11 @@ describe('CreateResource', () => {
   const resourceRepository = mock<ResourceRepository>();
   const useCase = new CreateResource(establishmentRepository, resourceRepository);
 
-  const validInput = { name: 'Alice', type: 'employee' as const, establishmentCode: 'est123' };
+  const validInput = { name: 'Alice', establishmentCode: 'est123' };
   const savedEntity = ResourceEntity.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Alice',
-    type: 'employee',
     establishmentId: 'uuid-est',
   });
 
@@ -65,7 +64,6 @@ describe('CreateResource', () => {
     expect(data).toEqual({
       id: 'res123',
       name: 'Alice',
-      type: 'employee',
       establishmentId: 'uuid-est',
     });
   });

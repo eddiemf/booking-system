@@ -1,4 +1,3 @@
-import type { ResourceType } from '@app/domain/entities';
 import type { ResourceDTO } from '@app/dtos';
 import type { CreateResource, DeleteResource, ListResources, UpdateResource } from '@app/use-cases';
 import type { Request, Response } from 'express';
@@ -9,7 +8,6 @@ export class ResourceController extends Controller {
   private readonly createResourceSchema = z.object({
     establishmentCode: z.string().min(1),
     name: z.string(),
-    type: z.enum(['employee', 'room']),
   });
 
   private readonly establishmentParamsSchema = z.object({
@@ -21,7 +19,6 @@ export class ResourceController extends Controller {
   private readonly updateResourceSchema = z.object({
     code: z.string().min(1),
     name: z.string(),
-    type: z.enum(['employee', 'room']),
   });
 
   constructor(
@@ -40,9 +37,9 @@ export class ResourceController extends Controller {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { establishmentCode, name, type } = validation.data;
+      const { establishmentCode, name } = validation.data;
 
-      const result = await this.createResource.execute({ name, type, establishmentCode });
+      const result = await this.createResource.execute({ name, establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -68,13 +65,8 @@ export class ResourceController extends Controller {
         return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
       }
       const { establishmentCode } = paramsValidation.data;
-      const rawType = req.query.type;
-      const type =
-        rawType === 'employee' || rawType === 'room' ? (rawType as ResourceType) : undefined;
 
-      const result = await this.listResources.execute(
-        type ? { establishmentCode, type } : { establishmentCode }
-      );
+      const result = await this.listResources.execute({ establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -97,9 +89,9 @@ export class ResourceController extends Controller {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { code, name, type } = validation.data;
+      const { code, name } = validation.data;
 
-      const result = await this.updateResource.execute({ code, name, type });
+      const result = await this.updateResource.execute({ code, name });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {

@@ -42,7 +42,6 @@ describe('EstablishmentEntity', () => {
         id: 'r1',
         code: 'res1',
         name: 'Alice',
-        type: 'employee',
         establishmentId: '1',
       });
       const service = ServiceEntity.reconstruct({

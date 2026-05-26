@@ -1,13 +1,10 @@
 import type { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import type { PromiseResult } from '@shared/result';
-import type { ResourceEntity, ResourceType } from './resource-entity';
+import type { ResourceEntity } from './resource-entity';
 
 export interface ResourceRepository {
   save(resource: ResourceEntity): PromiseResult<ResourceEntity, StorageError | NotFoundError>;
-  findAll(
-    establishmentCode: string,
-    type?: ResourceType
-  ): PromiseResult<ResourceEntity[], StorageError>;
+  findAll(establishmentCode: string): PromiseResult<ResourceEntity[], StorageError>;
   findByCode(code: string): PromiseResult<ResourceEntity | null, StorageError>;
   update(
     code: string,

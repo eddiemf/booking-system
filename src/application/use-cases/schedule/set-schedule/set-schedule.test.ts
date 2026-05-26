@@ -20,7 +20,6 @@ describe('SetSchedule', () => {
     id: 'uuid-res',
     code: resourceCode,
     name: 'Alice',
-    type: 'employee',
     establishmentId: 'uuid-est',
   });
 

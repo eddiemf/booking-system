@@ -31,7 +31,6 @@ export const resourcesTable = pgTable('resources', {
   id: uuid().primaryKey(),
   code: varchar({ length: 10 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
-  type: varchar({ length: 50 }).notNull(),
   ...timestamps,
   establishmentId: uuid('establishment_id')
     .notNull()

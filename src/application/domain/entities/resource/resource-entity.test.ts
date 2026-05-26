@@ -10,7 +10,6 @@ describe('ResourceEntity', () => {
     it('fails with empty name', () => {
       const error = ResourceEntity.create({
         name: '',
-        type: 'employee',
         establishmentId: '1',
       }).getError();
 
@@ -18,43 +17,19 @@ describe('ResourceEntity', () => {
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
-    it('fails with invalid type', () => {
-      const error = ResourceEntity.create({
-        name: 'Room A',
-        type: 'invalid' as never,
-        establishmentId: '1',
-      }).getError();
-
-      expect(error).toBeInstanceOf(ValidationError);
-      expect(error.message).toBe('Invalid value for field: type. Must be employee or room.');
-    });
-
-    it('creates with type employee', () => {
+    it('creates a resource successfully', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
-        type: 'employee',
         establishmentId: '1',
       }).getData();
 
       expect(entity).toBeInstanceOf(ResourceEntity);
-      expect(entity.type).toBe('employee');
       expect(entity.establishmentId).toBe('1');
-    });
-
-    it('creates with type room', () => {
-      const entity = ResourceEntity.create({
-        name: 'Room A',
-        type: 'room',
-        establishmentId: '1',
-      }).getData();
-
-      expect(entity.type).toBe('room');
     });
 
     it('generates a UUIDv7 id', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
-        type: 'employee',
         establishmentId: '1',
       }).getData();
 
@@ -64,7 +39,6 @@ describe('ResourceEntity', () => {
     it('starts with an empty schedules list', () => {
       const entity = ResourceEntity.create({
         name: 'Alice',
-        type: 'employee',
         establishmentId: '1',
       }).getData();
 
@@ -78,14 +52,12 @@ describe('ResourceEntity', () => {
         id: '42',
         code: 'res123',
         name: 'Room B',
-        type: 'room',
         establishmentId: '5',
       });
 
       expect(entity.id).toBe('42');
       expect(entity.code).toBe('res123');
       expect(entity.name).toBe('Room B');
-      expect(entity.type).toBe('room');
       expect(entity.establishmentId).toBe('5');
       expect(entity.schedules).toEqual([]);
     });
@@ -102,7 +74,6 @@ describe('ResourceEntity', () => {
         id: '42',
         code: 'res123',
         name: 'Room B',
-        type: 'room',
         establishmentId: '5',
         schedules: [schedule],
       });

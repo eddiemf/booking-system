@@ -179,7 +179,7 @@ describe('ServiceController', () => {
       const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
     });
@@ -190,7 +190,7 @@ describe('ServiceController', () => {
       const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(serviceDTO);
@@ -202,7 +202,7 @@ describe('ServiceController', () => {
       const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
     });

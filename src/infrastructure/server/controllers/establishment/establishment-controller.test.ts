@@ -111,7 +111,7 @@ describe('EstablishmentController', () => {
       const req = getMockReq({ params: { code: '' } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
     });
@@ -122,7 +122,7 @@ describe('EstablishmentController', () => {
       const req = getMockReq({ params: { code } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(findEstablishmentMock.execute).toHaveBeenCalledWith({ code });
       expect(res.status).toHaveBeenCalledWith(200);
@@ -137,7 +137,7 @@ describe('EstablishmentController', () => {
       const req = getMockReq({ params: { code } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
@@ -154,7 +154,7 @@ describe('EstablishmentController', () => {
       const req = getMockReq({ params: { code } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -169,7 +169,7 @@ describe('EstablishmentController', () => {
       const req = getMockReq({ params: { code } });
 
       // @ts-expect-error
-      await controller.findById(req, res);
+      await controller.find(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

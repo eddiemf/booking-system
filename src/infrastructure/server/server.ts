@@ -14,7 +14,7 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   app.post('/establishments', (req, res) => establishmentController.create(req, res));
-  app.get('/establishments/:code', (req, res) => establishmentController.findById(req, res));
+  app.get('/establishments/:code', (req, res) => establishmentController.find(req, res));
   app.put('/establishments/:code', (req, res) => establishmentController.update(req, res));
   app.delete('/establishments/:code', (req, res) => establishmentController.delete(req, res));
   app.post('/establishments/:establishmentCode/resources', (req, res) =>
@@ -33,7 +33,7 @@ export function createServer() {
     serviceController.list(req, res)
   );
   app.get('/establishments/:establishmentCode/services/:code', (req, res) =>
-    serviceController.findById(req, res)
+    serviceController.find(req, res)
   );
   app.put('/establishments/:establishmentCode/services/:code', (req, res) =>
     serviceController.update(req, res)

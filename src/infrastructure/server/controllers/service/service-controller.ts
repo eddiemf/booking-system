@@ -102,7 +102,7 @@ export class ServiceController extends Controller {
     }
   }
 
-  async findById(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
+  async find(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
     try {
       const paramsValidation = this.serviceParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {

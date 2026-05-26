@@ -55,7 +55,7 @@ export class EstablishmentController extends Controller {
     }
   }
 
-  async findById(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
+  async find(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
     try {
       const paramsValidation = this.codeParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {

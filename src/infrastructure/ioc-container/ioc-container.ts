@@ -9,6 +9,7 @@ import {
   FindService,
   ListResources,
   ListServices,
+  SetSchedule,
   UpdateEstablishment,
   UpdateResource,
   UpdateService,
@@ -19,11 +20,13 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import {
   PostgressEstablishmentRepository,
   PostgressResourceRepository,
+  PostgressScheduleRepository,
   PostgressServiceRepository,
 } from '../repositories';
 import {
   EstablishmentController,
   ResourceController,
+  ScheduleController,
   ServiceController,
 } from '../server/controllers';
 
@@ -36,6 +39,7 @@ export const createIocContainer = () => {
     // Controllers
     establishmentController: asClass(EstablishmentController).singleton(),
     resourceController: asClass(ResourceController).singleton(),
+    scheduleController: asClass(ScheduleController).singleton(),
     serviceController: asClass(ServiceController).singleton(),
 
     // Use cases
@@ -47,6 +51,7 @@ export const createIocContainer = () => {
     deleteResource: asClass(DeleteResource).singleton(),
     listResources: asClass(ListResources).singleton(),
     updateResource: asClass(UpdateResource).singleton(),
+    setSchedule: asClass(SetSchedule).singleton(),
     createService: asClass(CreateService).singleton(),
     deleteService: asClass(DeleteService).singleton(),
     findService: asClass(FindService).singleton(),
@@ -56,6 +61,7 @@ export const createIocContainer = () => {
     // Repositories
     establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),
     resourceRepository: asClass(PostgressResourceRepository).singleton(),
+    scheduleRepository: asClass(PostgressScheduleRepository).singleton(),
     serviceRepository: asClass(PostgressServiceRepository).singleton(),
 
     // Database

@@ -31,3 +31,12 @@ export const resourcesTable = pgTable('resources', {
   ...timestamps,
   establishmentId: integer('establishment_id').references(() => establishmentsTable.id),
 });
+
+export const schedulesTable = pgTable('schedules', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  dayOfWeek: integer('day_of_week').notNull(),
+  startTime: varchar('start_time', { length: 5 }).notNull(),
+  endTime: varchar('end_time', { length: 5 }).notNull(),
+  ...timestamps,
+  resourceId: integer('resource_id').references(() => resourcesTable.id),
+});

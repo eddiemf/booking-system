@@ -18,7 +18,9 @@ describe('UpdateResource', () => {
   });
 
   it('returns validation error for empty name', async () => {
-    const error = await useCase.execute({ ...validInput, name: '' }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ ...validInput, name: '' })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });

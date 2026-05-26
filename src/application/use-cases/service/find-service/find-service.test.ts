@@ -22,7 +22,9 @@ describe('FindService', () => {
   it('returns not-found error when service does not exist', async () => {
     serviceRepository.findById.mockResolvedValue(ok(null));
 
-    const error = await useCase.execute({ id, establishmentId }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ id, establishmentId })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
@@ -30,7 +32,9 @@ describe('FindService', () => {
   it('returns storage error when lookup fails', async () => {
     serviceRepository.findById.mockResolvedValue(fail(new StorageError('DB error')));
 
-    const error = await useCase.execute({ id, establishmentId }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ id, establishmentId })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
   });

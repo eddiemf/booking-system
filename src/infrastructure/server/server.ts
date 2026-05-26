@@ -7,6 +7,7 @@ export function createServer() {
 
   const establishmentController = container.resolve('establishmentController');
   const resourceController = container.resolve('resourceController');
+  const scheduleController = container.resolve('scheduleController');
   const serviceController = container.resolve('serviceController');
 
   app.use(express.json());
@@ -24,6 +25,7 @@ export function createServer() {
   );
   app.put('/resources/:id', (req, res) => resourceController.update(req, res));
   app.delete('/resources/:id', (req, res) => resourceController.delete(req, res));
+  app.put('/resources/:resourceId/schedule', (req, res) => scheduleController.set(req, res));
   app.post('/establishments/:establishmentId/services', (req, res) =>
     serviceController.create(req, res)
   );

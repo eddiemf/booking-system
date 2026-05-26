@@ -26,13 +26,17 @@ describe('UpdateService', () => {
   });
 
   it('returns validation error for invalid name', async () => {
-    const error = await useCase.execute({ ...validInput, name: '' }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ ...validInput, name: '' })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });
 
   it('returns validation error for invalid duration', async () => {
-    const error = await useCase.execute({ ...validInput, duration: 0 }).then((result) => result.getError());
+    const error = await useCase
+      .execute({ ...validInput, duration: 0 })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
   });

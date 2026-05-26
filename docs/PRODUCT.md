@@ -212,7 +212,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Resources publish their regular working hours.
 
-#### Feature 4.1 — Set Schedule for a Resource `[planned]`
+#### Feature 4.1 — Set Schedule for a Resource `[done]`
 
 - **Endpoint:** `PUT /resources/:resourceId/schedule`
 - **Acceptance criteria:**

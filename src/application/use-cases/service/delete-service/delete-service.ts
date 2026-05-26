@@ -7,7 +7,7 @@ type Input = { code: string; establishmentCode: string };
 export class DeleteService {
   constructor(private readonly serviceRepository: ServiceRepository) {}
 
-  async execute({
+  execute({
     code,
     establishmentCode,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {

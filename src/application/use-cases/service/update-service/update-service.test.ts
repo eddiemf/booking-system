@@ -27,6 +27,8 @@ describe('UpdateService', () => {
   });
 
   it('returns validation error for invalid name', async () => {
+    serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
+
     const error = await useCase
       .execute({ ...validInput, name: '' })
       .then((result) => result.getError());
@@ -35,6 +37,8 @@ describe('UpdateService', () => {
   });
 
   it('returns validation error for invalid duration', async () => {
+    serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
+
     const error = await useCase
       .execute({ ...validInput, duration: 0 })
       .then((result) => result.getError());
@@ -43,7 +47,7 @@ describe('UpdateService', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    serviceRepository.update.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
+    serviceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -51,6 +55,7 @@ describe('UpdateService', () => {
   });
 
   it('returns storage error when update fails', async () => {
+    serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     serviceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -59,6 +64,7 @@ describe('UpdateService', () => {
   });
 
   it('returns updated service DTO on success', async () => {
+    serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     serviceRepository.update.mockResolvedValue(ok(updatedEntity));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());

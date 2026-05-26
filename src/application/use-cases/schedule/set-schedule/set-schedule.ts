@@ -1,8 +1,4 @@
-import {
-  type ResourceRepository,
-  ScheduleEntity,
-  type ScheduleRepository,
-} from '@app/domain/entities';
+import type { ResourceRepository, ScheduleRepository } from '@app/domain/entities';
 import { NotFoundError, type StorageError, type ValidationError } from '@app/domain/errors';
 import type { ScheduleDTO } from '@app/dtos';
 import { ScheduleMapper } from '@app/mappers';
@@ -33,15 +29,10 @@ export class SetSchedule {
     if (!findResult.data) return fail(new NotFoundError('Resource', resourceCode));
 
     const resource = findResult.data;
-    const fullSchedule: ScheduleEntity[] = [];
-    for (const entry of entries) {
-      const scheduleResult = ScheduleEntity.create({ ...entry, resourceId: resource.id });
-      if (!scheduleResult.isOk) return scheduleResult;
+    const scheduleResult = resource.setSchedule(entries);
+    if (!scheduleResult.isOk) return scheduleResult;
 
-      fullSchedule.push(scheduleResult.data);
-    }
-
-    const replaceResult = await this.scheduleRepository.replaceAll(resource.id, fullSchedule);
+    const replaceResult = await this.scheduleRepository.replaceAll(resource.id, resource.schedules);
     if (!replaceResult.isOk) return replaceResult;
 
     return ok(replaceResult.data.map(ScheduleMapper.toDTO));

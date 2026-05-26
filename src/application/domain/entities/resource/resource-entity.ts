@@ -2,7 +2,7 @@ import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
 import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
-import type { ScheduleEntity } from '../schedule/schedule-entity';
+import { ScheduleEntity } from '../schedule/schedule-entity';
 
 export type ResourceValidationError = ValidationError;
 
@@ -48,20 +48,41 @@ export class ResourceEntity {
     return this._schedules;
   }
 
+  update({ name }: { name: string }): Result<ResourceEntity, ResourceValidationError> {
+    const nameError = ResourceEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
+    this._name = name;
+
+    return ok(this);
+  }
+
+  setSchedule(
+    entries: {
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+    }[]
+  ): Result<ResourceEntity, ValidationError> {
+    const schedules: ScheduleEntity[] = [];
+
+    for (const entry of entries) {
+      const scheduleResult = ScheduleEntity.create({ ...entry, resourceId: this._id });
+      if (!scheduleResult.isOk) return scheduleResult;
+
+      schedules.push(scheduleResult.data);
+    }
+
+    this._schedules = schedules;
+
+    return ok(this);
+  }
+
   static create({ name, establishmentId }: Props): Result<ResourceEntity, ResourceValidationError> {
     const nameError = ResourceEntity.requireName(name);
     if (nameError) return fail(nameError);
 
     return ok(new ResourceEntity(v7(), nanoid(10), name, establishmentId, []));
-  }
-
-  update({ name }: { name: string }): Result<ResourceEntity, ResourceValidationError> {
-    const nameError = ResourceEntity.requireName(name);
-    if (nameError) return fail(nameError);
-
-    return ok(
-      new ResourceEntity(this._id, this._code, name, this._establishmentId, this._schedules)
-    );
   }
 
   static reconstruct({

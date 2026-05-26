@@ -108,4 +108,56 @@ describe('ResourceEntity', () => {
       expect(updatedResource.schedules).toEqual(resource.schedules);
     });
   });
+
+  describe('setSchedule()', () => {
+    const resource = ResourceEntity.reconstruct({
+      id: '42',
+      code: 'res123',
+      name: 'Room A',
+      establishmentId: '5',
+    });
+
+    it('fails with an invalid entry', () => {
+      const error = resource
+        .setSchedule([{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }])
+        .getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+    });
+
+    it('returns a new entity with schedules set', () => {
+      const updatedResource = resource
+        .setSchedule([{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }])
+        .getData();
+
+      expect(updatedResource.schedules).toHaveLength(1);
+      expect(updatedResource.schedules[0]?.dayOfWeek).toBe(1);
+      expect(updatedResource.schedules[0]?.startTime).toBe('09:00');
+      expect(updatedResource.schedules[0]?.endTime).toBe('17:00');
+      expect(updatedResource.id).toBe(resource.id);
+      expect(updatedResource.name).toBe(resource.name);
+    });
+
+    it('replaces existing schedules', () => {
+      const resourceWithSchedules = ResourceEntity.reconstruct({
+        id: '42',
+        code: 'res123',
+        name: 'Room A',
+        establishmentId: '5',
+        schedules: [
+          ScheduleEntity.reconstruct({
+            id: '1',
+            resourceId: '42',
+            dayOfWeek: 0,
+            startTime: '08:00',
+            endTime: '18:00',
+          }),
+        ],
+      });
+
+      const updatedResource = resourceWithSchedules.setSchedule([]).getData();
+
+      expect(updatedResource.schedules).toHaveLength(0);
+    });
+  });
 });

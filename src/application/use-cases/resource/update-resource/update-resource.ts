@@ -4,7 +4,10 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
 
-type Input = { code: string; name: string };
+interface Input {
+  code: string;
+  name: string;
+}
 
 export class UpdateResource {
   constructor(private readonly resourceRepository: ResourceRepository) {}
@@ -18,11 +21,10 @@ export class UpdateResource {
     if (!resourceResult.data) return fail(new NotFoundError('Resource', code));
 
     const resource = resourceResult.data;
-    const editedResourceResult = resource.update({ name });
-    if (!editedResourceResult.isOk) return editedResourceResult;
+    const updateValidation = resource.update({ name });
+    if (!updateValidation.isOk) return updateValidation;
 
-    const editedResource = editedResourceResult.data;
-    const updateResult = await this.resourceRepository.update(code, editedResource);
+    const updateResult = await this.resourceRepository.update(code, resource);
     if (!updateResult.isOk) return updateResult;
 
     return ok(ResourceMapper.toDTO(updateResult.data));

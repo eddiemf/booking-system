@@ -10,25 +10,14 @@ export class PostgressServiceRepository implements ServiceRepository {
 
   async save(service: ServiceEntity): PromiseResult<ServiceEntity, StorageError | NotFoundError> {
     try {
-      const rows = await this.db
-        .insert(servicesTable)
-        .values({
-          name: service.name,
-          description: service.description,
-          duration: service.duration,
-          establishmentId: Number(service.establishmentId),
-        })
-        .returning({ id: servicesTable.id });
-      if (!rows[0]) return fail(new StorageError('Failed to save service.'));
-      return ok(
-        ServiceEntity.reconstruct({
-          id: String(rows[0].id),
-          name: service.name,
-          description: service.description,
-          duration: service.duration,
-          establishmentId: service.establishmentId,
-        })
-      );
+      await this.db.insert(servicesTable).values({
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        duration: service.duration,
+        establishmentId: service.establishmentId,
+      });
+      return ok(service);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23503') {
         return fail(new NotFoundError('Establishment', service.establishmentId));
@@ -42,15 +31,15 @@ export class PostgressServiceRepository implements ServiceRepository {
       const rows = await this.db
         .select()
         .from(servicesTable)
-        .where(eq(servicesTable.establishmentId, Number(establishmentId)));
+        .where(eq(servicesTable.establishmentId, establishmentId));
       return ok(
         rows.map((row) =>
           ServiceEntity.reconstruct({
-            id: String(row.id),
+            id: row.id,
             name: row.name,
             description: row.description ?? '',
             duration: row.duration,
-            establishmentId: String(row.establishmentId),
+            establishmentId: row.establishmentId,
           })
         )
       );
@@ -67,21 +56,16 @@ export class PostgressServiceRepository implements ServiceRepository {
       const rows = await this.db
         .select()
         .from(servicesTable)
-        .where(
-          and(
-            eq(servicesTable.id, Number(id)),
-            eq(servicesTable.establishmentId, Number(establishmentId))
-          )
-        );
+        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)));
       if (!rows[0]) return ok(null);
       const row = rows[0];
       return ok(
         ServiceEntity.reconstruct({
-          id: String(row.id),
+          id: row.id,
           name: row.name,
           description: row.description ?? '',
           duration: row.duration,
-          establishmentId: String(row.establishmentId),
+          establishmentId: row.establishmentId,
         })
       );
     } catch (error) {
@@ -98,17 +82,12 @@ export class PostgressServiceRepository implements ServiceRepository {
       const rows = await this.db
         .update(servicesTable)
         .set({ name: service.name, description: service.description, duration: service.duration })
-        .where(
-          and(
-            eq(servicesTable.id, Number(id)),
-            eq(servicesTable.establishmentId, Number(establishmentId))
-          )
-        )
+        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)))
         .returning({ id: servicesTable.id });
       if (!rows[0]) return fail(new NotFoundError('Service', id));
       return ok(
         ServiceEntity.reconstruct({
-          id: String(rows[0].id),
+          id,
           name: service.name,
           description: service.description,
           duration: service.duration,
@@ -127,12 +106,7 @@ export class PostgressServiceRepository implements ServiceRepository {
     try {
       const rows = await this.db
         .delete(servicesTable)
-        .where(
-          and(
-            eq(servicesTable.id, Number(id)),
-            eq(servicesTable.establishmentId, Number(establishmentId))
-          )
-        )
+        .where(and(eq(servicesTable.id, id), eq(servicesTable.establishmentId, establishmentId)))
         .returning({ id: servicesTable.id });
       if (!rows[0]) return fail(new NotFoundError('Service', id));
       return ok(undefined);

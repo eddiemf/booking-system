@@ -1,4 +1,4 @@
-import { ScheduleEntity, type ScheduleRepository } from '@app/domain/entities';
+import type { ScheduleEntity, ScheduleRepository } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
@@ -14,36 +14,22 @@ export class PostgressScheduleRepository implements ScheduleRepository {
   ): PromiseResult<ScheduleEntity[], StorageError | NotFoundError> {
     try {
       await this.db.transaction(async (tx) => {
-        await tx.delete(schedulesTable).where(eq(schedulesTable.resourceId, Number(resourceId)));
+        await tx.delete(schedulesTable).where(eq(schedulesTable.resourceId, resourceId));
 
         if (entries.length > 0) {
           await tx.insert(schedulesTable).values(
             entries.map((entry) => ({
+              id: entry.id,
               dayOfWeek: entry.dayOfWeek,
               startTime: entry.startTime,
               endTime: entry.endTime,
-              resourceId: Number(resourceId),
+              resourceId,
             }))
           );
         }
       });
 
-      const rows = await this.db
-        .select()
-        .from(schedulesTable)
-        .where(eq(schedulesTable.resourceId, Number(resourceId)));
-
-      return ok(
-        rows.map((row) =>
-          ScheduleEntity.reconstruct({
-            id: String(row.id),
-            resourceId: String(row.resourceId),
-            dayOfWeek: row.dayOfWeek,
-            startTime: row.startTime,
-            endTime: row.endTime,
-          })
-        )
-      );
+      return ok(entries);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23503') {
         return fail(new NotFoundError('Resource', resourceId));

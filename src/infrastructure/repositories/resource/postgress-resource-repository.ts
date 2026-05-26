@@ -12,23 +12,13 @@ export class PostgressResourceRepository implements ResourceRepository {
     resource: ResourceEntity
   ): PromiseResult<ResourceEntity, StorageError | NotFoundError> {
     try {
-      const rows = await this.db
-        .insert(resourcesTable)
-        .values({
-          name: resource.name,
-          type: resource.type,
-          establishmentId: Number(resource.establishmentId),
-        })
-        .returning({ id: resourcesTable.id });
-      if (!rows[0]) return fail(new StorageError('Failed to save resource.'));
-      return ok(
-        ResourceEntity.reconstruct({
-          id: String(rows[0].id),
-          name: resource.name,
-          type: resource.type,
-          establishmentId: resource.establishmentId,
-        })
-      );
+      await this.db.insert(resourcesTable).values({
+        id: resource.id,
+        name: resource.name,
+        type: resource.type,
+        establishmentId: resource.establishmentId,
+      });
+      return ok(resource);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23503') {
         return fail(new NotFoundError('Establishment', resource.establishmentId));
@@ -43,20 +33,17 @@ export class PostgressResourceRepository implements ResourceRepository {
   ): PromiseResult<ResourceEntity[], StorageError> {
     try {
       const condition = type
-        ? and(
-            eq(resourcesTable.establishmentId, Number(establishmentId)),
-            eq(resourcesTable.type, type)
-          )
-        : eq(resourcesTable.establishmentId, Number(establishmentId));
+        ? and(eq(resourcesTable.establishmentId, establishmentId), eq(resourcesTable.type, type))
+        : eq(resourcesTable.establishmentId, establishmentId);
 
       const rows = await this.db.select().from(resourcesTable).where(condition);
       return ok(
         rows.map((row) =>
           ResourceEntity.reconstruct({
-            id: String(row.id),
+            id: row.id,
             name: row.name,
             type: row.type as ResourceType,
-            establishmentId: String(row.establishmentId),
+            establishmentId: row.establishmentId,
           })
         )
       );
@@ -67,18 +54,15 @@ export class PostgressResourceRepository implements ResourceRepository {
 
   async findById(id: string): PromiseResult<ResourceEntity | null, StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(resourcesTable)
-        .where(eq(resourcesTable.id, Number(id)));
+      const rows = await this.db.select().from(resourcesTable).where(eq(resourcesTable.id, id));
       if (!rows[0]) return ok(null);
       const row = rows[0];
       return ok(
         ResourceEntity.reconstruct({
-          id: String(row.id),
+          id: row.id,
           name: row.name,
           type: row.type as ResourceType,
-          establishmentId: String(row.establishmentId),
+          establishmentId: row.establishmentId,
         })
       );
     } catch (error) {
@@ -94,15 +78,15 @@ export class PostgressResourceRepository implements ResourceRepository {
       const rows = await this.db
         .update(resourcesTable)
         .set({ name: resource.name, type: resource.type })
-        .where(eq(resourcesTable.id, Number(id)))
-        .returning({ id: resourcesTable.id, establishmentId: resourcesTable.establishmentId });
+        .where(eq(resourcesTable.id, id))
+        .returning({ id: resourcesTable.id });
       if (!rows[0]) return fail(new NotFoundError('Resource', id));
       return ok(
         ResourceEntity.reconstruct({
-          id: String(rows[0].id),
+          id,
           name: resource.name,
           type: resource.type,
-          establishmentId: String(rows[0].establishmentId),
+          establishmentId: resource.establishmentId,
         })
       );
     } catch (error) {
@@ -114,7 +98,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     try {
       const rows = await this.db
         .delete(resourcesTable)
-        .where(eq(resourcesTable.id, Number(id)))
+        .where(eq(resourcesTable.id, id))
         .returning({ id: resourcesTable.id });
       if (!rows[0]) return fail(new NotFoundError('Resource', id));
       return ok(undefined);

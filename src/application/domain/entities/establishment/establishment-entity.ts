@@ -1,7 +1,7 @@
 import { ValidationError } from '@app/domain/errors';
+import { EntityCode } from '@app/domain/identity/entity-code';
+import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import { nanoid } from 'nanoid';
-import { v7 } from 'uuid';
 import type { ResourceEntity } from '../resource/resource-entity';
 import type { ServiceEntity } from '../service/service-entity';
 
@@ -52,7 +52,7 @@ export class EstablishmentEntity {
     const nameError = EstablishmentEntity.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new EstablishmentEntity(v7(), nanoid(10), name, [], []));
+    return ok(new EstablishmentEntity(EntityId.generate(), EntityCode.generate(), name, [], []));
   }
 
   update({ name }: { name: string }): Result<EstablishmentEntity, ValidationError> {

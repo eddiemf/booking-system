@@ -1,7 +1,7 @@
 import { ValidationError } from '@app/domain/errors';
+import { EntityCode } from '@app/domain/identity/entity-code';
+import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import { nanoid } from 'nanoid';
-import { v7 } from 'uuid';
 import { Duration } from './duration';
 
 export type ServiceValidationError = ValidationError;
@@ -69,7 +69,14 @@ export class ServiceEntity {
     if (!durationResult.isOk) return durationResult;
 
     return ok(
-      new ServiceEntity(v7(), nanoid(10), name, description, durationResult.data, establishmentId)
+      new ServiceEntity(
+        EntityId.generate(),
+        EntityCode.generate(),
+        name,
+        description,
+        durationResult.data,
+        establishmentId
+      )
     );
   }
 

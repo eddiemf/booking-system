@@ -1,6 +1,6 @@
 import type { ValidationError } from '@app/domain/errors';
+import { EntityId } from '@app/domain/identity/entity-id';
 import { ok, type Result } from '@shared/result';
-import { v7 } from 'uuid';
 import { DayOfWeek } from './day-of-week';
 import { TimeRange } from './time-range';
 
@@ -57,7 +57,14 @@ export class ScheduleEntity {
     const timeRangeResult = TimeRange.create(startTime, endTime);
     if (!timeRangeResult.isOk) return timeRangeResult;
 
-    return ok(new ScheduleEntity(v7(), resourceId, dayOfWeekResult.data, timeRangeResult.data));
+    return ok(
+      new ScheduleEntity(
+        EntityId.generate(),
+        resourceId,
+        dayOfWeekResult.data,
+        timeRangeResult.data
+      )
+    );
   }
 
   static reconstruct({

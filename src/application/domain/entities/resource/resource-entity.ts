@@ -1,7 +1,7 @@
 import { ValidationError } from '@app/domain/errors';
+import { EntityCode } from '@app/domain/identity/entity-code';
+import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import { nanoid } from 'nanoid';
-import { v7 } from 'uuid';
 import { ScheduleEntity } from '../schedule/schedule-entity';
 
 export type ResourceValidationError = ValidationError;
@@ -82,7 +82,9 @@ export class ResourceEntity {
     const nameError = ResourceEntity.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new ResourceEntity(v7(), nanoid(10), name, establishmentId, []));
+    return ok(
+      new ResourceEntity(EntityId.generate(), EntityCode.generate(), name, establishmentId, [])
+    );
   }
 
   static reconstruct({

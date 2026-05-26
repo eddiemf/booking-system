@@ -2,6 +2,7 @@ import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
 import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
+import type { ScheduleEntity } from '../schedule/schedule-entity';
 
 export type ResourceType = 'employee' | 'room';
 
@@ -19,6 +20,7 @@ interface ReconstructProps {
   name: string;
   type: ResourceType;
   establishmentId: string;
+  schedules?: ScheduleEntity[];
 }
 
 export class ResourceEntity {
@@ -27,7 +29,8 @@ export class ResourceEntity {
     private _code: string,
     private _name: string,
     private _type: ResourceType,
-    private _establishmentId: string
+    private _establishmentId: string,
+    private _schedules: ScheduleEntity[]
   ) {}
 
   get id(): string {
@@ -50,6 +53,10 @@ export class ResourceEntity {
     return this._establishmentId;
   }
 
+  get schedules(): ScheduleEntity[] {
+    return this._schedules;
+  }
+
   static create({
     name,
     type,
@@ -60,10 +67,17 @@ export class ResourceEntity {
       return fail(new ValidationError('type', 'Must be employee or room.'));
     }
 
-    return ok(new ResourceEntity(v7(), nanoid(10), name, type, establishmentId));
+    return ok(new ResourceEntity(v7(), nanoid(10), name, type, establishmentId, []));
   }
 
-  static reconstruct({ id, code, name, type, establishmentId }: ReconstructProps): ResourceEntity {
-    return new ResourceEntity(id, code, name, type, establishmentId);
+  static reconstruct({
+    id,
+    code,
+    name,
+    type,
+    establishmentId,
+    schedules = [],
+  }: ReconstructProps): ResourceEntity {
+    return new ResourceEntity(id, code, name, type, establishmentId, schedules);
   }
 }

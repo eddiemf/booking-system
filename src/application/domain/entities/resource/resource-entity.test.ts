@@ -1,5 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
+import { ScheduleEntity } from '../schedule/schedule-entity';
 import { ResourceEntity } from './resource-entity';
 
 const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -59,6 +60,16 @@ describe('ResourceEntity', () => {
 
       expect(entity.id).toMatch(UUID_V7_REGEX);
     });
+
+    it('starts with an empty schedules list', () => {
+      const entity = ResourceEntity.create({
+        name: 'Alice',
+        type: 'employee',
+        establishmentId: '1',
+      }).getData();
+
+      expect(entity.schedules).toEqual([]);
+    });
   });
 
   describe('reconstruct()', () => {
@@ -76,6 +87,28 @@ describe('ResourceEntity', () => {
       expect(entity.name).toBe('Room B');
       expect(entity.type).toBe('room');
       expect(entity.establishmentId).toBe('5');
+      expect(entity.schedules).toEqual([]);
+    });
+
+    it('restores schedules when provided', () => {
+      const schedule = ScheduleEntity.reconstruct({
+        id: 'sched-1',
+        resourceId: '42',
+        dayOfWeek: 1,
+        startTime: '09:00',
+        endTime: '17:00',
+      });
+      const entity = ResourceEntity.reconstruct({
+        id: '42',
+        code: 'res123',
+        name: 'Room B',
+        type: 'room',
+        establishmentId: '5',
+        schedules: [schedule],
+      });
+
+      expect(entity.schedules).toHaveLength(1);
+      expect(entity.schedules[0]).toBe(schedule);
     });
   });
 });

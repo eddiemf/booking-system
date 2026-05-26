@@ -1,4 +1,4 @@
-import { ServiceEntity, type ServiceRepository } from '@app/domain/entities';
+import type { ServiceRepository } from '@app/domain/entities';
 import { NotFoundError, type StorageError, type ValidationError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
@@ -26,12 +26,8 @@ export class UpdateService {
     if (!serviceResult.isOk) return serviceResult;
     if (!serviceResult.data) return fail(new NotFoundError('Service', code));
 
-    const editedServiceResult = ServiceEntity.create({
-      name,
-      description,
-      duration,
-      establishmentId: serviceResult.data.establishmentId,
-    });
+    const service = serviceResult.data;
+    const editedServiceResult = service.update({ name, description, duration });
     if (!editedServiceResult.isOk) return editedServiceResult;
 
     const editedService = editedServiceResult.data;

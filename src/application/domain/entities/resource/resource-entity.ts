@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
 import type { ScheduleEntity } from '../schedule/schedule-entity';
 
-export type ResourceCreationError = ValidationError;
+export type ResourceValidationError = ValidationError;
 
 interface Props {
   name: string;
@@ -48,9 +48,20 @@ export class ResourceEntity {
     return this._schedules;
   }
 
-  static create({ name, establishmentId }: Props): Result<ResourceEntity, ResourceCreationError> {
-    if (!name) return fail(new ValidationError('name', 'Value is required.'));
+  static create({ name, establishmentId }: Props): Result<ResourceEntity, ResourceValidationError> {
+    const nameError = ResourceEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
     return ok(new ResourceEntity(v7(), nanoid(10), name, establishmentId, []));
+  }
+
+  update({ name }: { name: string }): Result<ResourceEntity, ResourceValidationError> {
+    const nameError = ResourceEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
+    return ok(
+      new ResourceEntity(this._id, this._code, name, this._establishmentId, this._schedules)
+    );
   }
 
   static reconstruct({
@@ -61,5 +72,9 @@ export class ResourceEntity {
     schedules = [],
   }: ReconstructProps): ResourceEntity {
     return new ResourceEntity(id, code, name, establishmentId, schedules);
+  }
+
+  private static requireName(name: string): ValidationError | null {
+    return name ? null : new ValidationError('name', 'Value is required.');
   }
 }

@@ -1,9 +1,5 @@
-import {
-  type ResourceCreationError,
-  ResourceEntity,
-  type ResourceRepository,
-} from '@app/domain/entities';
-import { NotFoundError, type StorageError } from '@app/domain/errors';
+import type { ResourceRepository } from '@app/domain/entities';
+import { NotFoundError, type StorageError, type ValidationError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
@@ -16,13 +12,13 @@ export class UpdateResource {
   async execute({
     code,
     name,
-  }: Input): PromiseResult<ResourceDTO, ResourceCreationError | StorageError | NotFoundError> {
+  }: Input): PromiseResult<ResourceDTO, ValidationError | StorageError | NotFoundError> {
     const resourceResult = await this.resourceRepository.findByCode(code);
     if (!resourceResult.isOk) return resourceResult;
     if (!resourceResult.data) return fail(new NotFoundError('Resource', code));
 
-    const establishmentId = resourceResult.data.establishmentId;
-    const editedResourceResult = ResourceEntity.create({ name, establishmentId });
+    const resource = resourceResult.data;
+    const editedResourceResult = resource.update({ name });
     if (!editedResourceResult.isOk) return editedResourceResult;
 
     const editedResource = editedResourceResult.data;

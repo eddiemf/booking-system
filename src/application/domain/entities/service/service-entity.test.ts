@@ -110,4 +110,46 @@ describe('ServiceEntity', () => {
       expect(service.establishmentId).toBe('1');
     });
   });
+
+  describe('update()', () => {
+    const service = ServiceEntity.reconstruct({
+      id: 'uuid-svc',
+      code: 'svc123',
+      name: 'Old Name',
+      description: 'Old description',
+      duration: 30,
+      establishmentId: '5',
+    });
+
+    it('fails with empty name', () => {
+      const error = service.update({ name: '', duration: 30 }).getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: name. Value is required.');
+    });
+
+    it('fails with invalid duration', () => {
+      const error = service.update({ name: 'Haircut', duration: 0 }).getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: duration. Value is required.');
+    });
+
+    it('returns a new entity with updated fields', () => {
+      const updatedService = service
+        .update({
+          name: 'Haircut',
+          description: 'Updated',
+          duration: 60,
+        })
+        .getData();
+
+      expect(updatedService.name).toBe('Haircut');
+      expect(updatedService.description).toBe('Updated');
+      expect(updatedService.duration).toBe(60);
+      expect(updatedService.id).toBe(service.id);
+      expect(updatedService.code).toBe(service.code);
+      expect(updatedService.establishmentId).toBe(service.establishmentId);
+    });
+  });
 });

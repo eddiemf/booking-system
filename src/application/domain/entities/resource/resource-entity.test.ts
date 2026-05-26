@@ -82,4 +82,30 @@ describe('ResourceEntity', () => {
       expect(entity.schedules[0]).toBe(schedule);
     });
   });
+
+  describe('update()', () => {
+    const resource = ResourceEntity.reconstruct({
+      id: '42',
+      code: 'res123',
+      name: 'Old Name',
+      establishmentId: '5',
+    });
+
+    it('fails with empty name', () => {
+      const error = resource.update({ name: '' }).getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe('Invalid value for field: name. Value is required.');
+    });
+
+    it('returns a new entity with the updated name', () => {
+      const updatedResource = resource.update({ name: 'New Name' }).getData();
+
+      expect(updatedResource.name).toBe('New Name');
+      expect(updatedResource.id).toBe(resource.id);
+      expect(updatedResource.code).toBe(resource.code);
+      expect(updatedResource.establishmentId).toBe(resource.establishmentId);
+      expect(updatedResource.schedules).toEqual(resource.schedules);
+    });
+  });
 });

@@ -1,8 +1,8 @@
 import {
   type EstablishmentRepository,
-  type ServiceCreationError,
   ServiceEntity,
   type ServiceRepository,
+  type ServiceValidationError,
 } from '@app/domain/entities';
 import { NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
@@ -27,21 +27,23 @@ export class CreateService {
     description,
     duration,
     establishmentCode,
-  }: Input): PromiseResult<ServiceDTO, ServiceCreationError | StorageError | NotFoundError> {
+  }: Input): PromiseResult<ServiceDTO, ServiceValidationError | StorageError | NotFoundError> {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
     if (!establishmentResult.data)
       return fail(new NotFoundError('Establishment', establishmentCode));
 
+    const establishmentId = establishmentResult.data.id;
     const serviceResult = ServiceEntity.create({
       name,
       description,
       duration,
-      establishmentId: establishmentResult.data.id,
+      establishmentId,
     });
     if (!serviceResult.isOk) return serviceResult;
 
-    const saveResult = await this.serviceRepository.save(serviceResult.data);
+    const service = serviceResult.data;
+    const saveResult = await this.serviceRepository.save(service);
     if (!saveResult.isOk) return saveResult;
 
     return ok(ServiceMapper.toDTO(saveResult.data));

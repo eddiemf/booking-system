@@ -1,8 +1,8 @@
 import {
   type EstablishmentRepository,
-  type ResourceCreationError,
   ResourceEntity,
   type ResourceRepository,
+  type ResourceValidationError,
 } from '@app/domain/entities';
 import { NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
@@ -23,7 +23,7 @@ export class CreateResource {
   async execute({
     name,
     establishmentCode,
-  }: Input): PromiseResult<ResourceDTO, ResourceCreationError | StorageError | NotFoundError> {
+  }: Input): PromiseResult<ResourceDTO, ResourceValidationError | StorageError | NotFoundError> {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
     if (!establishmentResult.data)

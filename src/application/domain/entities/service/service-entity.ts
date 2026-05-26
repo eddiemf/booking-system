@@ -3,7 +3,7 @@ import { fail, ok, type Result } from '@shared/result';
 import { nanoid } from 'nanoid';
 import { v7 } from 'uuid';
 
-export type ServiceCreationError = ValidationError;
+export type ServiceValidationError = ValidationError;
 
 interface Props {
   name: string;
@@ -60,14 +60,45 @@ export class ServiceEntity {
     duration,
     description = '',
     establishmentId,
-  }: Props): Result<ServiceEntity, ServiceCreationError> {
-    if (!name) return fail(new ValidationError('name', 'Value is required.'));
-    if (duration <= 0) return fail(new ValidationError('duration', 'Value is required.'));
+  }: Props): Result<ServiceEntity, ServiceValidationError> {
+    const nameError = ServiceEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
+    const durationError = ServiceEntity.requirePositiveDuration(duration);
+    if (durationError) return fail(durationError);
 
     return ok(new ServiceEntity(v7(), nanoid(10), name, description, duration, establishmentId));
   }
 
+  update({
+    name,
+    description = '',
+    duration,
+  }: {
+    name: string;
+    description?: string | undefined;
+    duration: number;
+  }): Result<ServiceEntity, ServiceValidationError> {
+    const nameError = ServiceEntity.requireName(name);
+    if (nameError) return fail(nameError);
+
+    const durationError = ServiceEntity.requirePositiveDuration(duration);
+    if (durationError) return fail(durationError);
+
+    return ok(
+      new ServiceEntity(this._id, this._code, name, description, duration, this._establishmentId)
+    );
+  }
+
   static reconstruct({ id, code, name, duration, description, establishmentId }: ReconstructProps) {
     return new ServiceEntity(id, code, name, description, duration, establishmentId);
+  }
+
+  private static requireName(name: string): ValidationError | null {
+    return name ? null : new ValidationError('name', 'Value is required.');
+  }
+
+  private static requirePositiveDuration(duration: number): ValidationError | null {
+    return duration > 0 ? null : new ValidationError('duration', 'Value must be greater than 0.');
   }
 }

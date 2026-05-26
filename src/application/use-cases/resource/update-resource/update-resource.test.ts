@@ -19,6 +19,8 @@ describe('UpdateResource', () => {
   });
 
   it('returns validation error for empty name', async () => {
+    resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
+
     const error = await useCase
       .execute({ ...validInput, name: '' })
       .then((result) => result.getError());
@@ -27,7 +29,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    resourceRepository.update.mockResolvedValue(fail(new NotFoundError('Resource', 'res123')));
+    resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -35,6 +37,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns storage error when update fails', async () => {
+    resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     resourceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -43,6 +46,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns updated resource DTO on success', async () => {
+    resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     resourceRepository.update.mockResolvedValue(ok(updatedEntity));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());

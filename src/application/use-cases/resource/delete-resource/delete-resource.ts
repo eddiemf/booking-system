@@ -7,9 +7,7 @@ type Input = { code: string };
 export class DeleteResource {
   constructor(private readonly resourceRepository: ResourceRepository) {}
 
-  async execute({
-    code,
-  }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
+  execute({ code }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
     return this.resourceRepository.delete(code);
   }
 }

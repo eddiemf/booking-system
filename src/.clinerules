@@ -1,0 +1,310 @@
+# bookler — Cline Workspace Rules
+
+Apply these rules when generating or editing code in this repository. These reflect project conventions, not preferences.
+
+---
+
+## 1. Architecture & Layer Boundaries
+
+Strict Clean Architecture. Three layers, one direction:
+
+| Layer | Path | May Import From |
+|---|---|---|
+| Domain | `src/application/domain` | Nothing outside domain. No Express, Drizzle, Zod, Awilix, or any framework. |
+| Application | `src/application` | Domain contracts only. No infrastructure imports. |
+| Infrastructure | `src/infrastructure` | Anything. Implements domain contracts. |
+
+Repository **interfaces** live in domain. Repository **implementations** live in infrastructure — they are the only place that knows about Drizzle, SQL, or table schemas.
+
+If a design forces a layer boundary violation → stop. The design is wrong, not the rule.
+
+---
+
+## 2. Result Pattern (Never Throw for Expected Failures)
+
+Every function that can fail returns `Result<T, E>` (sync) or `PromiseResult<T, E>` (async).
+
+```typescript
+// Domain entity creation
+static create(props): Result<Entity, ValidationError>
+
+// Repository methods
+findByCode(code): PromiseResult<Entity | null, StorageError>
+save(entity): PromiseResult<Entity, StorageError | NotFoundError>
+
+// Use cases
+execute(input): PromiseResult<OutputDTO, ErrorType1 | ErrorType2>
+```
+
+**Rules:**
+
+- Never `throw` for expected domain/application failures
+- Callers check `result.isOk`, never use try/catch for expected errors
+- `.getData()` / `.getError()` — only in test files, never in production code
+- `ok(data)` for success, `fail(error)` for failure
+
+**Only exception:** startup-time config loading (`src/config/config.ts` throws `ConfigError` because failure is unrecoverable).
+
+---
+
+## 3. Entity Lifecycle
+
+Every entity follows this exact pattern:
+
+```typescript
+// 1. Create — for new (unpersisted) entities
+//    Generates id + code. Validates input. Returns Result.
+static create(props): Result<Entity, ValidationError>
+
+// 2. Reconstruct — for DB-sourced data
+//    Skips validation. Takes raw primitives, wraps in VOs.
+static reconstruct(props): Entity
+
+// 3. Update — mutates in place after validation
+//    Returns Result<this, ValidationError>
+update(props): Result<this, ValidationError>
+```
+
+- Private constructor
+- Getters for all fields (never expose internal `_` fields directly)
+- No public setters — mutation goes through `create`/`update`
+
+---
+
+## 4. Value Objects
+
+- Subdirectory per VO inside the entity folder it belongs to
+
+  ```
+  entities/service/duration/duration.ts
+  entities/schedule/time-of-day/time-of-day.ts
+  ```
+
+- Private constructor, immutable (all fields `readonly`)
+- `static create(value, field): Result<VO, ValidationError>` — for user input. `field` is the name used in the error message (e.g., `'startTime'`, `'duration'`).
+- `static from(value): VO` — trusted reconstruction from DB. No validation.
+- Domain methods (`equals()`, `isAfter()`, `contains()`, `overlapsWith()`, `toMinutes()`) — behaviour lives on VO, not the entity.
+- Entity getters expose VOs, not raw primitives. Mappers/repositories unwrap VOs to primitives at their boundary.
+
+---
+
+## 5. Entity Identity
+
+Every entity has two identity fields:
+
+- `_id` — internal UUID (UUIDv7, generated via `EntityId.generate()`)
+- `_code` — short public identifier (nanoid(10), generated via `EntityCode.generate()`)
+
+**Rules:**
+
+- `entity.id` is NEVER exposed in API responses
+- DTOs use `entity.code` as the public `id`
+- Mappers: `id: entity.code` (never `id: entity.id`)
+
+---
+
+## 6. Use Cases
+
+```typescript
+class SomeUseCase {
+  constructor(private readonly dependency: SomeDependency) {}
+
+  async execute(input: Input): PromiseResult<OutputDTO, ErrorTypes> {
+    // 1. Fetch dependencies (if needed)
+    // 2. Validate via Entity.create()
+    // 3. Mutate via repository
+    // 4. Return DTO via mapper
+  }
+}
+```
+
+**Rules:**
+
+- Single public `execute(input)` method
+- Can have private methods in order to encapsulate complex logic and make code more readable
+- Input is a plain object (never domain types) and should be defined as an interface, not type
+- Returns DTOs, not entities
+- Never constructs entities without calling `Entity.create()` or `Entity.reconstruct()`
+- Propagates errors via Result — never throws for expected failures
+
+---
+
+## 7. DTOs & Mappers
+
+**DTOs** (`src/application/dtos/`):
+
+- Plain interfaces. One file per entity.
+- Example: `{ id: string; name: string; establishmentCode: string }`
+- `id` field = entity code (public identifier)
+
+**Mappers** (`src/application/mappers/`):
+
+- Pure static class with `toDTO(entity)` method or other static methods as necessary when mapping gets complicated
+- `entity.code` → DTO `id`
+- Every mapper has a corresponding `.test.ts` file
+- Mapper never exposes `entity.id`
+
+---
+
+## 8. Repository Contracts (Domain Interfaces)
+
+```typescript
+interface SomeRepository {
+  findByCode(code: string): PromiseResult<Entity | null, StorageError>;
+  findAll(scope: string): PromiseResult<Entity[], StorageError>;
+  save(entity: Entity): PromiseResult<Entity, StorageError | NotFoundError>;
+  update(code: string, entity: Entity): PromiseResult<Entity, StorageError | NotFoundError>;
+  delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
+}
+```
+
+**Rules:**
+
+- `findByCode` returns `Entity | null` — caller converts null to domain error
+- `save`, `update` return the entity (may include DB-generated fields)
+- `delete` returns `void` on success
+- Only domain types in signatures. No DTOs, no ORM types.
+
+---
+
+## 9. Controllers
+
+```typescript
+class SomeController extends Controller {
+  async action(req: Request, res: Response<DTO | ErrorResponse>) {
+    try {
+      // 1. Validate with Zod schema
+      const validation = schema.safeParse({ ...req.params, ...req.body });
+      if (!validation.success) return res.status(400).json(this.mapZodValidationError(validation.error));
+
+      // 2. Execute use case
+      const result = await useCase.execute(validation.data);
+
+      // 3. Map result to HTTP response
+      if (!result.isOk) {
+        if (result.error.code === 'ValidationError') return res.status(400).json(this.mapErrorFromResult(result));
+        if (result.error.code === 'NotFoundError') return res.status(404).json(this.mapErrorFromResult(result));
+        if (result.error.code === 'ConflictError') return res.status(409).json(this.mapErrorFromResult(result));
+        return res.status(500).json(this.getInternalServerError());
+      }
+
+      return res.status(201).json(result.data);
+    } catch {
+      return res.status(500).json(this.getInternalServerError());
+    }
+  }
+}
+```
+
+**Rules:**
+
+- Extend `Controller` base class
+- Zod schemas for request validation — `safeParse()` only (never `parse()`)
+- Always wrap handler body in try/catch → 500 on unexpected errors
+- Map Result errors by `error.code` to HTTP status codes
+- `mapErrorFromResult(result)` for error responses
+- `getInternalServerError()` for 500 responses
+
+**HTTP status mapping:**
+
+| Error Code | HTTP Status |
+|---|---|
+| `ValidationError` | 400 |
+| `NotFoundError` | 404 |
+| `ConflictError` | 409 |
+| `AuthenticationError` | 401 |
+| Unhandled / StorageError | 500 |
+
+---
+
+## 10. Domain Errors
+
+```typescript
+class ValidationError extends AppError<'ValidationError'> {
+  constructor(field: string, message: string)  // "Invalid value for field: {field}. {message}"
+}
+class NotFoundError extends AppError<'NotFoundError'> {
+  constructor(resource: string, id: string)      // "{resource} with id {id} was not found."
+}
+class ConflictError extends AppError<'ConflictError'> {
+  constructor(message: string)
+}
+class StorageError extends AppError<'StorageError'> {
+  constructor(message: string)
+}
+class AuthenticationError extends AppError<'AuthenticationError'> {
+  constructor(message: string)
+}
+```
+
+All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never create new error types without extending `AppError`.
+
+---
+
+## 11. Aggregates
+
+- `ResourceEntity` is aggregate root for scheduling
+- `ScheduleEntity` instances are **only** created through `resource.setSchedule(entries)` — never construct `ScheduleEntity` directly in use cases
+- `EstablishmentEntity` owns `ResourceEntity[]` and `ServiceEntity[]` as read-only children (for queries only)
+- Mutations to resources or services go through their own use cases and repositories
+
+---
+
+## 12. Testing Conventions
+
+- Test files: `.test.ts` alongside the implementation file
+- Every entity, VO, mapper, use case, and controller must have a test file
+- `result.getData()` / `result.getError()` — **only in test files** (never in production code)
+- Use `vitest-mock-extended` (`mock<Interface>()`) for faking dependencies in use-case tests
+- Use `vitest-mock-express` (`getMockReq()`, `getMockRes()`) for controller tests
+- vitest config: `clearMocks: true, mockReset: true`
+
+---
+
+## 13. Imports & Aliases
+
+```typescript
+@app/*        → src/application/*
+@shared/*     → src/shared/*
+@config/*     → src/config/*
+```
+
+- Always use `import type` for type-only imports (enforced by Biome)
+- Barrel exports via `index.ts` in every directory
+- Path aliases from tsconfig — never use relative imports that traverse layers
+
+---
+
+## 14. DI / IoC Container
+
+- Awilix with `InjectionMode.CLASSIC`
+- Constructor parameter names = container registration names (they must match)
+- Repositories, use cases, controllers registered as `.singleton()`
+- DB instance registered as `.asValue(drizzle(...))`
+
+When changing constructor parameter names → update container registrations accordingly.
+
+---
+
+## 15. Code Style (from biome.json & tsconfig)
+
+- Single quotes, semicolons always, trailing commas es5
+- 100 line width, space indentation (2 spaces)
+- `noUncheckedIndexedAccess: true` → array access returns `| undefined`
+- `exactOptionalPropertyTypes: true`
+- Use Biome for formatting and import organization
+
+---
+
+## 16. What NOT To Do
+
+- Do not add features beyond what was asked
+- Do not add "flexibility" or "configurability" that wasn't requested
+- Do not add error handling for impossible scenarios
+- Do not refactor adjacent code "while you're there" — touch only what the task requires
+- Do not add TODO comments
+- Do not add console.log in final code
+- Do not remove pre-existing dead code unless the task explicitly asks
+- Do not edit generated output in `dist/`
+- Do not introduce new libraries when existing utilities cover the need
+- Do not use `throw` for expected failures — use Result pattern

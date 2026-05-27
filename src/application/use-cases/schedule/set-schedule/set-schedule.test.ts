@@ -37,11 +37,23 @@ describe('SetSchedule', () => {
     }),
   ];
 
+  const establishmentCode = 'est123';
+
   it('returns not-found error when resource does not exist', async () => {
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase
-      .execute({ resourceCode, entries: validEntries })
+      .execute({ resourceCode, establishmentCode, entries: validEntries })
+      .then((result) => result.getError());
+
+    expect(error).toBeInstanceOf(NotFoundError);
+  });
+
+  it('returns not-found error when resource belongs to another establishment', async () => {
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+
+    const error = await useCase
+      .execute({ resourceCode, establishmentCode: 'other-est', entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
@@ -51,7 +63,7 @@ describe('SetSchedule', () => {
     resourceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
-      .execute({ resourceCode, entries: validEntries })
+      .execute({ resourceCode, establishmentCode, entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
@@ -61,7 +73,11 @@ describe('SetSchedule', () => {
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
-      .execute({ resourceCode, entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] })
+      .execute({
+        resourceCode,
+        establishmentCode,
+        entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }],
+      })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(ValidationError);
@@ -72,7 +88,7 @@ describe('SetSchedule', () => {
     scheduleRepository.replaceAll.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
-      .execute({ resourceCode, entries: validEntries })
+      .execute({ resourceCode, establishmentCode, entries: validEntries })
       .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(StorageError);
@@ -83,7 +99,7 @@ describe('SetSchedule', () => {
     scheduleRepository.replaceAll.mockResolvedValue(ok(savedEntities));
 
     const data = await useCase
-      .execute({ resourceCode, entries: validEntries })
+      .execute({ resourceCode, establishmentCode, entries: validEntries })
       .then((result) => result.getData());
 
     expect(data).toEqual([
@@ -96,7 +112,7 @@ describe('SetSchedule', () => {
     scheduleRepository.replaceAll.mockResolvedValue(ok([]));
 
     const data = await useCase
-      .execute({ resourceCode, entries: [] })
+      .execute({ resourceCode, establishmentCode, entries: [] })
       .then((result) => result.getData());
 
     expect(data).toEqual([]);

@@ -6,6 +6,7 @@ import { Controller, type ErrorResponse } from '../controller';
 
 export class ScheduleController extends Controller {
   private readonly setScheduleSchema = z.object({
+    establishmentCode: z.string().min(1),
     resourceCode: z.string().min(1),
     entries: z.array(
       z.object({
@@ -27,9 +28,13 @@ export class ScheduleController extends Controller {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { resourceCode, entries } = validation.data;
+      const { resourceCode, establishmentCode, entries } = validation.data;
 
-      const result = await this.setSchedule.execute({ resourceCode, entries });
+      const result = await this.setSchedule.execute({
+        resourceCode,
+        establishmentCode,
+        entries,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {

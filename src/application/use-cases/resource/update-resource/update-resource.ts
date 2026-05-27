@@ -6,6 +6,7 @@ import { ResourceMapper } from '../../../mappers';
 
 interface Input {
   code: string;
+  establishmentCode: string;
   name: string;
 }
 
@@ -14,11 +15,14 @@ export class UpdateResource {
 
   async execute({
     code,
+    establishmentCode,
     name,
   }: Input): PromiseResult<ResourceDTO, ValidationError | StorageError | NotFoundError> {
     const resourceResult = await this.resourceRepository.findByCode(code);
     if (!resourceResult.isOk) return resourceResult;
     if (!resourceResult.data) return fail(new NotFoundError('Resource', code));
+    if (resourceResult.data.establishmentCode !== establishmentCode)
+      return fail(new NotFoundError('Resource', code));
 
     const resource = resourceResult.data;
     const updateValidation = resource.update({ name });

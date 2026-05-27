@@ -9,7 +9,7 @@ describe('UpdateResource', () => {
   const resourceRepository = mock<ResourceRepository>();
   const useCase = new UpdateResource(resourceRepository);
 
-  const validInput = { code: 'res123', name: 'Room A' };
+  const validInput = { code: 'res123', establishmentCode: 'est123', name: 'Room A' };
   const updatedEntity = ResourceEntity.reconstruct({
     id: 'uuid-res',
     code: 'res123',
@@ -32,6 +32,16 @@ describe('UpdateResource', () => {
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
+
+    expect(error).toBeInstanceOf(NotFoundError);
+  });
+
+  it('returns not-found error when resource belongs to another establishment', async () => {
+    resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
+
+    const error = await useCase
+      .execute({ ...validInput, establishmentCode: 'other-est' })
+      .then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });

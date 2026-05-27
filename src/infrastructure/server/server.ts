@@ -23,9 +23,15 @@ export function createServer() {
   app.get('/establishments/:establishmentCode/resources', (req, res) =>
     resourceController.list(req, res)
   );
-  app.put('/resources/:code', (req, res) => resourceController.update(req, res));
-  app.delete('/resources/:code', (req, res) => resourceController.delete(req, res));
-  app.put('/resources/:resourceCode/schedule', (req, res) => scheduleController.set(req, res));
+  app.put('/establishments/:establishmentCode/resources/:code', (req, res) =>
+    resourceController.update(req, res)
+  );
+  app.delete('/establishments/:establishmentCode/resources/:code', (req, res) =>
+    resourceController.delete(req, res)
+  );
+  app.put('/establishments/:establishmentCode/resources/:resourceCode/schedule', (req, res) =>
+    scheduleController.set(req, res)
+  );
   app.post('/establishments/:establishmentCode/services', (req, res) =>
     serviceController.create(req, res)
   );

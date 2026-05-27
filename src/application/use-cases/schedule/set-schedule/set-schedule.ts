@@ -12,6 +12,7 @@ interface EntryInput {
 
 interface Input {
   resourceCode: string;
+  establishmentCode: string;
   entries: EntryInput[];
 }
 
@@ -23,10 +24,16 @@ export class SetSchedule {
     private readonly scheduleRepository: ScheduleRepository
   ) {}
 
-  async execute({ resourceCode, entries }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
+  async execute({
+    resourceCode,
+    establishmentCode,
+    entries,
+  }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
     const findResult = await this.resourceRepository.findByCode(resourceCode);
     if (!findResult.isOk) return findResult;
     if (!findResult.data) return fail(new NotFoundError('Resource', resourceCode));
+    if (findResult.data.establishmentCode !== establishmentCode)
+      return fail(new NotFoundError('Resource', resourceCode));
 
     const resource = findResult.data;
     const scheduleResult = resource.setSchedule(entries);

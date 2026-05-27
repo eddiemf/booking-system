@@ -14,9 +14,13 @@ export class ResourceController extends Controller {
     establishmentCode: z.string().min(1),
   });
 
-  private readonly resourceParamsSchema = z.object({ code: z.string().min(1) });
+  private readonly resourceParamsSchema = z.object({
+    establishmentCode: z.string().min(1),
+    code: z.string().min(1),
+  });
 
   private readonly updateResourceSchema = z.object({
+    establishmentCode: z.string().min(1),
     code: z.string().min(1),
     name: z.string(),
   });
@@ -89,9 +93,9 @@ export class ResourceController extends Controller {
         return res.status(400).json(this.mapZodValidationError(validation.error));
       }
 
-      const { code, name } = validation.data;
+      const { code, establishmentCode, name } = validation.data;
 
-      const result = await this.updateResource.execute({ code, name });
+      const result = await this.updateResource.execute({ code, establishmentCode, name });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -116,9 +120,9 @@ export class ResourceController extends Controller {
       if (!paramsValidation.success) {
         return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
       }
-      const { code } = paramsValidation.data;
+      const { code, establishmentCode } = paramsValidation.data;
 
-      const result = await this.deleteResource.execute({ code });
+      const result = await this.deleteResource.execute({ code, establishmentCode });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {

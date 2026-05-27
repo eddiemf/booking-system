@@ -11,8 +11,10 @@ describe('ScheduleController', () => {
   const setScheduleMock = mock<SetSchedule>();
   const controller = new ScheduleController(setScheduleMock);
 
+  const establishmentCode = 'est123';
   const resourceCode = 'res123';
   const validEntries = [{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }];
+  const scheduleParams = { establishmentCode, resourceCode };
   const scheduleDTO: ScheduleDTO = {
     id: '1',
     resourceId: 'uuid-res',
@@ -22,10 +24,23 @@ describe('ScheduleController', () => {
   };
 
   describe('set()', () => {
+    it('returns 400 when establishmentCode is empty', async () => {
+      const { res } = getMockRes();
+      const req = getMockReq({
+        params: { ...scheduleParams, establishmentCode: '' },
+        body: { entries: validEntries },
+      });
+
+      // @ts-expect-error
+      await controller.set(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
     it('returns 400 when resourceCode is empty', async () => {
       const { res } = getMockRes();
       const req = getMockReq({
-        params: { resourceCode: '' },
+        params: { ...scheduleParams, resourceCode: '' },
         body: { entries: validEntries },
       });
 
@@ -37,7 +52,7 @@ describe('ScheduleController', () => {
 
     it('returns 400 when entries is not an array', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: 'invalid' } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: 'invalid' } });
 
       // @ts-expect-error
       await controller.set(req, res);
@@ -48,7 +63,7 @@ describe('ScheduleController', () => {
     it('returns 400 when dayOfWeek is out of range', async () => {
       const { res } = getMockRes();
       const req = getMockReq({
-        params: { resourceCode },
+        params: scheduleParams,
         body: { entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] },
       });
 
@@ -64,7 +79,7 @@ describe('ScheduleController', () => {
       );
       const { res } = getMockRes();
       const req = getMockReq({
-        params: { resourceCode },
+        params: scheduleParams,
         body: { entries: [{ dayOfWeek: 1, startTime: '17:00', endTime: '09:00' }] },
       });
 
@@ -77,7 +92,7 @@ describe('ScheduleController', () => {
     it('returns 404 when resource does not exist', async () => {
       setScheduleMock.execute.mockResolvedValue(fail(new NotFoundError('Resource', resourceCode)));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: validEntries } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: validEntries } });
 
       // @ts-expect-error
       await controller.set(req, res);
@@ -88,7 +103,7 @@ describe('ScheduleController', () => {
     it('returns 200 with schedule DTOs on success', async () => {
       setScheduleMock.execute.mockResolvedValue(ok([scheduleDTO]));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: validEntries } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: validEntries } });
 
       // @ts-expect-error
       await controller.set(req, res);
@@ -100,7 +115,7 @@ describe('ScheduleController', () => {
     it('returns 200 with empty array when entries is empty', async () => {
       setScheduleMock.execute.mockResolvedValue(ok([]));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: [] } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: [] } });
 
       // @ts-expect-error
       await controller.set(req, res);
@@ -112,7 +127,7 @@ describe('ScheduleController', () => {
     it('returns 500 when setSchedule returns a storage error', async () => {
       setScheduleMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: validEntries } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: validEntries } });
 
       // @ts-expect-error
       await controller.set(req, res);
@@ -123,7 +138,7 @@ describe('ScheduleController', () => {
     it('returns 500 when setSchedule throws', async () => {
       setScheduleMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { resourceCode }, body: { entries: validEntries } });
+      const req = getMockReq({ params: scheduleParams, body: { entries: validEntries } });
 
       // @ts-expect-error
       await controller.set(req, res);

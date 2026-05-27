@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
   type ResourceRepository,
@@ -24,15 +25,15 @@ describe('CreateResource', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   it('returns validation error for empty name', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, name: '' })
@@ -50,7 +51,7 @@ describe('CreateResource', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -60,7 +61,7 @@ describe('CreateResource', () => {
   });
 
   it('returns storage error when save fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.save.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -69,7 +70,7 @@ describe('CreateResource', () => {
   });
 
   it('returns resource DTO on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.save.mockResolvedValue(ok(savedEntity));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());

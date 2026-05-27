@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
   type ResourceRepository,
@@ -23,17 +24,17 @@ describe('DeleteResource', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   const validInput = { code: 'res123', establishmentCode: 'est123', userId };
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -42,7 +43,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -52,7 +53,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -63,7 +64,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns conflict error when resource has future bookings', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(
       fail(new ConflictError('Resource has future bookings.'))
@@ -75,7 +76,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns storage error when delete fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -85,7 +86,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns ok on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(ok(undefined));
 

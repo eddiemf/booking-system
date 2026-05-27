@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
   type ResourceRepository,
@@ -24,15 +25,15 @@ describe('UpdateResource', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   it('returns validation error for empty name', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
 
     const error = await useCase
@@ -43,7 +44,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -52,7 +53,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -62,7 +63,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
 
     const error = await useCase
@@ -73,7 +74,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns storage error when update fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     resourceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -83,7 +84,7 @@ describe('UpdateResource', () => {
   });
 
   it('returns updated resource DTO on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     resourceRepository.update.mockResolvedValue(ok(updatedEntity));
 

@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ServiceEntity,
   type ServiceRepository,
@@ -34,15 +35,15 @@ describe('UpdateService', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   it('returns validation error for invalid name', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
 
     const error = await useCase
@@ -53,7 +54,7 @@ describe('UpdateService', () => {
   });
 
   it('returns validation error for invalid duration', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
 
     const error = await useCase
@@ -64,7 +65,7 @@ describe('UpdateService', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -74,7 +75,7 @@ describe('UpdateService', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -83,7 +84,7 @@ describe('UpdateService', () => {
   });
 
   it('returns storage error when update fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     serviceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -93,7 +94,7 @@ describe('UpdateService', () => {
   });
 
   it('returns updated service DTO on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(updatedEntity));
     serviceRepository.update.mockResolvedValue(ok(updatedEntity));
 

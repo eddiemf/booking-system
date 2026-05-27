@@ -1,4 +1,4 @@
-import type { EstablishmentRepository, ServiceRepository } from '@app/domain/entities';
+import { EstablishmentEntity, type EstablishmentRepository, type ServiceRepository } from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -13,15 +13,15 @@ describe('DeleteService', () => {
   const userId = 'uuid-user';
   const input = { code: 'svc123', establishmentCode: 'est123', userId };
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...input, userId: 'other-user' })
@@ -31,7 +31,7 @@ describe('DeleteService', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.delete.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
 
     const error = await useCase.execute(input).then((result) => result.getError());
@@ -40,7 +40,7 @@ describe('DeleteService', () => {
   });
 
   it('returns conflict error when service has future bookings', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.delete.mockResolvedValue(
       fail(new ConflictError('Service has future bookings.'))
     );
@@ -51,7 +51,7 @@ describe('DeleteService', () => {
   });
 
   it('returns storage error when delete fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(input).then((result) => result.getError());
@@ -60,7 +60,7 @@ describe('DeleteService', () => {
   });
 
   it('returns ok on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.delete.mockResolvedValue(ok(undefined));
 
     const result = await useCase.execute(input);

@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ResourceEntity,
   type ResourceRepository,
@@ -41,17 +42,17 @@ describe('SetSchedule', () => {
   ];
 
   const establishmentCode = 'est123';
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-est',
     code: establishmentCode,
     name: 'Salon',
     userId,
-  };
+  });
 
   const validInput = { resourceCode, establishmentCode, entries: validEntries, userId };
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -61,7 +62,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -70,7 +71,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -81,7 +82,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns storage error when findByCode fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -90,7 +91,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns validation error for invalid entry', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -101,7 +102,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns storage error when replaceAll fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -111,7 +112,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns schedule DTOs on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok(savedEntities));
 
@@ -123,7 +124,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns empty array when entries is empty', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok([]));
 

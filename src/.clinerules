@@ -341,7 +341,33 @@ This ensures type safety without escape hatches.
 
 ---
 
-## 18. What NOT To Do
+## 18. No `as never` Escape Hatches in Tests
+
+Never use `as never` to bypass type mismatches in mock objects. This hides real type errors.
+
+**Bad** — plain object literal passed as `Result<Entity, E>`:
+```typescript
+const mockEstablishment = { id: 'uuid', code: 'est123', name: 'Salon', userId };
+establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+```
+
+**Good** — use `Entity.reconstruct()` to create a proper entity instance:
+```typescript
+const mockEstablishment = EstablishmentEntity.reconstruct({
+  id: 'uuid', code: 'est123', name: 'Salon', userId,
+});
+establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+```
+
+**Rule:**
+- If a mock needs to look like an entity, construct it via `Entity.reconstruct()`
+- If a mock needs to look like a VO, construct it via `VO.from()`
+- Never use `as never` to silence a type error in a mock setup
+- The one exception: `mock<Interface>()` from `vitest-mock-extended` does not count — that's a proper typed mock
+
+---
+
+## 19. What NOT To Do
 
 - Do not add features beyond what was asked
 - Do not add "flexibility" or "configurability" that wasn't requested

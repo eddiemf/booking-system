@@ -1,4 +1,5 @@
 import {
+  EstablishmentEntity,
   type EstablishmentRepository,
   ServiceEntity,
   type ServiceRepository,
@@ -24,15 +25,15 @@ describe('CreateService', () => {
     userId,
   };
 
-  const mockEstablishment = {
+  const mockEstablishment = EstablishmentEntity.reconstruct({
     id: 'uuid-1',
     code: 'est123',
     name: 'Salon',
     userId,
-  };
+  });
 
   it('returns a validation error if creating the entity returns a validation error', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const resultError = await useCase
       .execute({ ...validInput, name: '' })
@@ -50,7 +51,7 @@ describe('CreateService', () => {
   });
 
   it('returns a forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
     const resultError = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -60,7 +61,7 @@ describe('CreateService', () => {
   });
 
   it('returns a storage error if saving the entity returns a storage error', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     const error = new StorageError('Failed to save the entity');
     serviceRepository.save.mockResolvedValue(fail(error));
 
@@ -70,7 +71,7 @@ describe('CreateService', () => {
   });
 
   it('returns a service DTO when creation was successful', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.save.mockResolvedValue(
       ok(
         ServiceEntity.reconstruct({

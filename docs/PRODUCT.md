@@ -52,14 +52,19 @@ These decisions are fixed for the current phase of development and inform how fe
 | **Scoping** | Services, Resources, and Schedules belong to an Establishment | All reads and writes must be scoped to an `establishmentId`. |
 | **API route nesting** | `GET /establishments/:id/services`, not `GET /services` | Prevents cross-establishment data leakage and aligns with the ownership model. |
 | **Domain ↔ DB mapping** | `ServiceEntity.create()` for new (unperisted) entities; `reconstruct()` for DB-sourced ones | Keeps UUIDs and DB IDs from ever getting mixed up. |
+| **Auth strategy** | OAuth2 with Google + Apple (no email/password) | No secret management burden; users authenticate via trusted providers. |
+| **Token format** | JWT signed by server after OAuth callback | Stateless auth; server issues short-lived JWT after successful OAuth exchange. |
+| **Authorization model** | Owners own establishments. 403 on ownership violation | Explicit forbidden response (vs hiding existence). |
+| **Public endpoints** | `GET /establishments/:code`, `GET /establishments/:code/resources`, `GET /establishments/:code/services` are public | Customers must discover establishments and services without logging in. |
 
 ---
 
 ## Development Sequence
 
-Features must be built in this order because of data dependency: you cannot scope a Service to an Establishment that doesn't exist yet.
+Features must be built in this order because of data dependency: you cannot scope a Service to an Establishment that doesn't exist yet, and you cannot enforce ownership without auth.
 
 ```
+0. Authentication & Authorization (Epic 0) — MVP prerequisite
 1. Establishment CRUD (Epic 2)
 2. Service CRUD — scoped to establishment (Epic 1, revised)
 3. Resource CRUD — scoped to establishment (Epic 3)
@@ -81,6 +86,59 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 ---
 
+### Epic 0: Authentication & Authorization
+
+> Must be built first. All subsequent mutations require an authenticated user. Ownership determines who can mutate.
+
+#### Feature 0.1 — OAuth Login with Google `[planned]`
+
+- **Endpoint:** `POST /auth/google`
+- **Notes:**
+  - Accepts OAuth token from Google.
+  - Creates user if first login.
+  - Returns JWT + user profile.
+- **Acceptance criteria:**
+  - [ ] Returns 200 with JWT + user DTO on valid Google token.
+  - [ ] Creates a new User if email doesn't exist.
+  - [ ] Returns existing User if email already registered.
+  - [ ] Returns 401 on invalid/expired Google token.
+
+#### Feature 0.2 — OAuth Login with Apple `[planned]`
+
+- **Endpoint:** `POST /auth/apple`
+- **Notes:**
+  - Same flow as Google for Apple Sign-In.
+- **Acceptance criteria:**
+  - [ ] Returns 200 with JWT + user DTO on valid Apple token.
+  - [ ] Creates a new User if email doesn't exist.
+  - [ ] Returns existing User if email already registered.
+  - [ ] Returns 401 on invalid/expired Apple token.
+
+#### Feature 0.3 — Get Current User `[planned]`
+
+- **Endpoint:** `GET /auth/me`
+- **Notes:**
+  - Requires valid JWT.
+  - Returns current user profile.
+- **Acceptance criteria:**
+  - [ ] Returns 200 with user DTO.
+  - [ ] Returns 401 when no/expired token.
+
+#### Feature 0.4 — Authorization Layer `[planned]`
+
+- **Notes:**
+  - Middleware applies to all mutation endpoints.
+  - Use cases accept `userId`, verify ownership.
+  - 403 Forbidden on ownership violations.
+- **Acceptance criteria:**
+  - [ ] All POST/PUT/DELETE endpoints require valid JWT → 401 if missing.
+  - [ ] Updating another's establishment returns 403.
+  - [ ] Deleting another's resource returns 403.
+  - [ ] Setting schedule on another's resource returns 403.
+  - [ ] Public GET endpoints return data without auth.
+
+---
+
 ### Epic 2: Establishment Management
 
 > Must be built first. All other entities (Services, Resources) are scoped to an Establishment.
@@ -92,29 +150,35 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Requires a `name`.
   - [ ] Returns `201` with the created establishment DTO (`id`, `name`).
   - [ ] Returns `400` when `name` is missing.
+  - [ ] Returns `401` when no auth token provided.
 
 #### Feature 2.2 — Get Establishment by ID `[done]`
 
-- **Endpoint:** `GET /establishments/:id`
+- **Endpoint:** `GET /establishments/:code`
+- **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
   - [ ] Returns the establishment data.
   - [ ] Returns `404` when not found.
 
 #### Feature 2.3 — Update an Establishment `[done]`
 
-- **Endpoint:** `PUT /establishments/:id`
+- **Endpoint:** `PUT /establishments/:code`
 - **Acceptance criteria:**
   - [ ] Allows updating `name`.
   - [ ] Returns the updated establishment DTO.
   - [ ] Returns `404` when not found.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner.
 
 #### Feature 2.4 — Delete an Establishment `[done]`
 
-- **Endpoint:** `DELETE /establishments/:id`
+- **Endpoint:** `DELETE /establishments/:code`
 - **Acceptance criteria:**
   - [ ] Returns `204` on success.
   - [ ] Returns `404` when not found.
   - [ ] Returns `409` if the establishment has active services or future bookings.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner.
 
 ---
 
@@ -124,49 +188,57 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 #### Feature 1.1 — Create a Service `[done]`
 
-- **Endpoint:** `POST /establishments/:establishmentId/services`
+- **Endpoint:** `POST /establishments/:establishmentCode/services`
 - **Acceptance criteria:**
   - [x] A service requires a `name` and a positive `duration` (in minutes).
   - [x] `description` is optional.
   - [x] Returns `201` with the created service DTO.
   - [x] Returns `400` when `name` is missing or `duration` is ≤ 0.
-  - [ ] *(post-Epic 2)* Requires a valid `establishmentId` in the URL.
-  - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
+  - [ ] Requires a valid `establishmentCode` in the URL.
+  - [ ] Returns `404` when the establishment does not exist.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 #### Feature 1.2 — List Services `[done]`
 
-- **Endpoint:** `GET /establishments/:establishmentId/services`
+- **Endpoint:** `GET /establishments/:establishmentCode/services`
+- **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
   - [x] Returns a list of all services.
   - [x] Returns an empty array when no services exist.
   - [x] Each item includes `id`, `name`, `description`, and `duration`.
-  - [ ] *(post-Epic 2)* Returns only services belonging to the given establishment.
-  - [ ] *(post-Epic 2)* Returns `404` when the establishment does not exist.
+  - [ ] Returns only services belonging to the given establishment.
+  - [ ] Returns `404` when the establishment does not exist.
 
 #### Feature 1.3 — Get Service by ID `[done]`
 
-- **Endpoint:** `GET /establishments/:establishmentId/services/:id`
+- **Endpoint:** `GET /establishments/:establishmentCode/services/:code`
+- **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
-  - [ ] Returns the service matching the given ID.
-  - [ ] Returns `404` when no service with that ID exists in the establishment.
+  - [ ] Returns the service matching the given code.
+  - [ ] Returns `404` when no service with that code exists in the establishment.
 
 #### Feature 1.4 — Update a Service `[done]`
 
-- **Endpoint:** `PUT /establishments/:establishmentId/services/:id`
+- **Endpoint:** `PUT /establishments/:establishmentCode/services/:code`
 - **Acceptance criteria:**
   - [ ] Allows updating `name`, `description`, and `duration`.
   - [ ] Returns the updated service DTO.
   - [ ] Returns `404` when the service does not exist in the establishment.
   - [ ] Returns `400` on invalid values (same rules as creation).
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 #### Feature 1.5 — Delete a Service `[done]`
 
-- **Endpoint:** `DELETE /establishments/:establishmentId/services/:id`
+- **Endpoint:** `DELETE /establishments/:establishmentCode/services/:code`
 - **Acceptance criteria:**
   - [ ] Removes the service permanently.
   - [ ] Returns `204` on success.
   - [ ] Returns `404` when the service does not exist in the establishment.
   - [ ] Returns `409` if the service has future bookings.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 ---
 
@@ -176,35 +248,42 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 #### Feature 3.1 — Create a Resource `[done]`
 
-- **Endpoint:** `POST /establishments/:establishmentId/resources`
+- **Endpoint:** `POST /establishments/:establishmentCode/resources`
 - **Acceptance criteria:**
-  - [ ] A resource requires a `name` and a `type` (`employee` | `room`).
+  - [ ] A resource requires a `name`.
   - [ ] Returns `201` with the created resource DTO.
   - [ ] Returns `400` on missing or invalid fields.
   - [ ] Returns `404` when the establishment does not exist.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 #### Feature 3.2 — List Resources for an Establishment `[done]`
 
-- **Endpoint:** `GET /establishments/:establishmentId/resources`
+- **Endpoint:** `GET /establishments/:establishmentCode/resources`
+- **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
   - [ ] Returns all resources for the establishment.
   - [ ] Supports optional filtering by `type`.
 
 #### Feature 3.3 — Update a Resource `[done]`
 
-- **Endpoint:** `PUT /resources/:id`
+- **Endpoint:** `PUT /establishments/:establishmentCode/resources/:code`
 - **Acceptance criteria:**
-  - [ ] Allows updating `name` and `type`.
+  - [ ] Allows updating `name`.
   - [ ] Returns the updated resource DTO.
   - [ ] Returns `404` when not found.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 #### Feature 3.4 — Delete a Resource `[done]`
 
-- **Endpoint:** `DELETE /resources/:id`
+- **Endpoint:** `DELETE /establishments/:establishmentCode/resources/:code`
 - **Acceptance criteria:**
   - [ ] Returns `204` on success.
   - [ ] Returns `404` when not found.
   - [ ] Returns `409` if the resource has future bookings.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 ---
 
@@ -214,16 +293,19 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 #### Feature 4.1 — Set Schedule for a Resource `[done]`
 
-- **Endpoint:** `PUT /resources/:resourceId/schedule`
+- **Endpoint:** `PUT /establishments/:establishmentCode/resources/:resourceCode/schedule`
 - **Acceptance criteria:**
   - [ ] Accepts an array of schedule entries, each with `dayOfWeek` (0–6), `startTime` (HH:MM), and `endTime` (HH:MM).
   - [ ] Replaces the existing schedule entirely.
   - [ ] Returns `400` when time ranges are invalid (end ≤ start, invalid format).
   - [ ] Returns `404` when the resource does not exist.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when user is not the owner of the establishment.
 
 #### Feature 4.2 — Get Available Slots `[planned]`
 
-- **Endpoint:** `GET /services/:serviceId/availability?date=YYYY-MM-DD`
+- **Endpoint:** `GET /services/:serviceCode/availability?date=YYYY-MM-DD`
+- **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
   - [ ] Returns a list of available time slots for the given service and date.
   - [ ] Slots are derived from resource schedules minus existing bookings.
@@ -247,6 +329,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `201` with the booking DTO (`id`, `serviceId`, `resourceId`, `startsAt`, `endsAt`, `status`).
   - [ ] Returns `400` on missing or invalid fields.
   - [ ] Returns `409` when the resource is already booked for the overlapping time.
+  - [ ] Returns `401` when no auth token provided.
 
 #### Feature 5.2 — Get a Booking `[planned]`
 
@@ -254,6 +337,8 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 - **Acceptance criteria:**
   - [ ] Returns the booking details.
   - [ ] Returns `404` when not found.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when the booking belongs to another user.
 
 #### Feature 5.3 — List Bookings `[planned]`
 
@@ -261,6 +346,8 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 - **Acceptance criteria:**
   - [ ] Supports optional filtering by `resourceId`, `serviceId`, `date`.
   - [ ] Returns bookings ordered by `startsAt` ascending.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns only the current user's bookings (customers) or establishment bookings (owners).
 
 #### Feature 5.4 — Cancel a Booking `[planned]`
 
@@ -270,6 +357,8 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `204` on success.
   - [ ] Returns `404` when not found.
   - [ ] Returns `400` when the booking is already cancelled or in the past.
+  - [ ] Returns `401` when no auth token provided.
+  - [ ] Returns `403` when the booking belongs to another user.
 
 ---
 
@@ -277,7 +366,6 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 These are out of scope for the MVP but can be prioritized in future iterations.
 
-- **Authentication & Authorization** — JWT-based auth; owners can only manage their own establishments; customers can only manage their own bookings.
 - **Customer profiles** — Dedicated customer entity with booking history.
 - **Notifications** — Email/SMS reminders for upcoming bookings.
 - **Recurring schedules** — Block recurring time off for resources.

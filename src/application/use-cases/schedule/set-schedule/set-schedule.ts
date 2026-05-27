@@ -1,5 +1,14 @@
-import type { ResourceRepository, ScheduleRepository } from '@app/domain/entities';
-import { NotFoundError, type StorageError, type ValidationError } from '@app/domain/errors';
+import type {
+  EstablishmentRepository,
+  ResourceRepository,
+  ScheduleRepository,
+} from '@app/domain/entities';
+import {
+  ForbiddenError,
+  NotFoundError,
+  type StorageError,
+  type ValidationError,
+} from '@app/domain/errors';
 import type { ScheduleDTO } from '@app/dtos';
 import { ScheduleMapper } from '@app/mappers';
 import { fail, ok, type PromiseResult } from '@shared/result';
@@ -14,21 +23,32 @@ interface Input {
   resourceCode: string;
   establishmentCode: string;
   entries: EntryInput[];
+  userId: string;
 }
 
-type SetScheduleError = ValidationError | StorageError | NotFoundError;
+type SetScheduleError = ValidationError | StorageError | NotFoundError | ForbiddenError;
 
 export class SetSchedule {
   constructor(
     private readonly resourceRepository: ResourceRepository,
-    private readonly scheduleRepository: ScheduleRepository
+    private readonly scheduleRepository: ScheduleRepository,
+    private readonly establishmentRepository: EstablishmentRepository
   ) {}
 
   async execute({
     resourceCode,
     establishmentCode,
     entries,
+    userId,
   }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
+    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    if (!establishmentResult.isOk) return establishmentResult;
+    if (!establishmentResult.data)
+      return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishmentResult.data.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
+
     const findResult = await this.resourceRepository.findByCode(resourceCode);
     if (!findResult.isOk) return findResult;
     if (!findResult.data) return fail(new NotFoundError('Resource', resourceCode));

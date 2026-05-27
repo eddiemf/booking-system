@@ -9,12 +9,14 @@ export type EstablishmentCreationError = ValidationError;
 
 interface Props {
   name: string;
+  userId: string;
 }
 
 interface ReconstructProps {
   id: string;
   code: string;
   name: string;
+  userId: string;
   resources?: ResourceEntity[];
   services?: ServiceEntity[];
 }
@@ -24,6 +26,7 @@ export class EstablishmentEntity {
     private _id: string,
     private _code: string,
     private _name: string,
+    private _userId: string,
     private _resources: ResourceEntity[],
     private _services: ServiceEntity[]
   ) {}
@@ -40,6 +43,10 @@ export class EstablishmentEntity {
     return this._name;
   }
 
+  get userId(): string {
+    return this._userId;
+  }
+
   get resources(): ResourceEntity[] {
     return this._resources;
   }
@@ -48,11 +55,13 @@ export class EstablishmentEntity {
     return this._services;
   }
 
-  static create({ name }: Props): Result<EstablishmentEntity, EstablishmentCreationError> {
+  static create({ name, userId }: Props): Result<EstablishmentEntity, EstablishmentCreationError> {
     const nameError = EstablishmentEntity.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new EstablishmentEntity(EntityId.generate(), EntityCode.generate(), name, [], []));
+    return ok(
+      new EstablishmentEntity(EntityId.generate(), EntityCode.generate(), name, userId, [], [])
+    );
   }
 
   update({ name }: { name: string }): Result<EstablishmentEntity, ValidationError> {
@@ -72,9 +81,10 @@ export class EstablishmentEntity {
     id,
     code,
     name,
+    userId,
     resources = [],
     services = [],
   }: ReconstructProps): EstablishmentEntity {
-    return new EstablishmentEntity(id, code, name, resources, services);
+    return new EstablishmentEntity(id, code, name, userId, resources, services);
   }
 }

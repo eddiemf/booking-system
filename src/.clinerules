@@ -329,7 +329,19 @@ When changing constructor parameter names → update container registrations acc
 
 ---
 
-## 17. What NOT To Do
+## 17. No Non-Null Assertions
+
+Never use TypeScript's non-null assertion operator (`!`) to access values that might be `undefined`, especially on `req.user` or any property inferred from middleware. Instead:
+
+- Create an interface that extends `Request` (e.g., `AuthenticatedRequest`) with the guaranteed field as required
+- Use that typed interface on controller methods that require auth
+- Cast inside middleware with `(req as AuthenticatedRequest).user = payload`
+
+This ensures type safety without escape hatches.
+
+---
+
+## 18. What NOT To Do
 
 - Do not add features beyond what was asked
 - Do not add "flexibility" or "configurability" that wasn't requested

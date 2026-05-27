@@ -1,5 +1,5 @@
 import type { EstablishmentCreationError, EstablishmentRepository } from '@app/domain/entities';
-import { NotFoundError, type StorageError } from '@app/domain/errors';
+import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
@@ -7,6 +7,7 @@ import { EstablishmentMapper } from '../../../mappers';
 type Input = {
   code: string;
   name: string;
+  userId: string;
 };
 
 export class UpdateEstablishment {
@@ -15,15 +16,20 @@ export class UpdateEstablishment {
   async execute({
     code,
     name,
+    userId,
   }: Input): PromiseResult<
     EstablishmentDTO,
-    EstablishmentCreationError | StorageError | NotFoundError
+    EstablishmentCreationError | StorageError | NotFoundError | ForbiddenError
   > {
     const findResult = await this.establishmentRepository.findByCode(code);
     if (!findResult.isOk) return findResult;
     if (!findResult.data) return fail(new NotFoundError('Establishment', code));
 
     const establishment = findResult.data;
+    if (establishment.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
+
     const updateValidation = establishment.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 

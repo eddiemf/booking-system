@@ -42,10 +42,16 @@ describe('ServiceController', () => {
     deleteServiceMock
   );
 
+  const getAuthenticatedReq = (extra = {}) =>
+    getMockReq({
+      user: { userId: 'uuid-user', userCode: 'usr123', email: 'alice@example.com' },
+      ...extra,
+    });
+
   describe('create()', () => {
     it('returns 400 when establishmentCode is empty', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode: '' }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode: '' }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -55,7 +61,7 @@ describe('ServiceController', () => {
 
     it('returns 400 when name is missing', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({
+      const req = getAuthenticatedReq({
         params: { establishmentCode },
         body: { ...validBody, name: undefined },
       });
@@ -68,7 +74,7 @@ describe('ServiceController', () => {
 
     it('returns 400 when duration is not provided', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({
+      const req = getAuthenticatedReq({
         params: { establishmentCode },
         body: { ...validBody, duration: undefined },
       });
@@ -84,7 +90,7 @@ describe('ServiceController', () => {
         fail(new NotFoundError('Establishment', establishmentCode))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -95,7 +101,7 @@ describe('ServiceController', () => {
     it('returns 201 with service DTO on success', async () => {
       createServiceMock.execute.mockResolvedValue(ok(serviceDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -105,6 +111,7 @@ describe('ServiceController', () => {
         description: validBody.description,
         duration: validBody.duration,
         establishmentCode,
+        userId: 'uuid-user',
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(serviceDTO);
@@ -113,7 +120,7 @@ describe('ServiceController', () => {
     it('returns 500 when createService returns a storage error', async () => {
       createServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -124,7 +131,7 @@ describe('ServiceController', () => {
     it('returns 500 when createService throws', async () => {
       createServiceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -231,7 +238,7 @@ describe('ServiceController', () => {
   describe('update()', () => {
     it('returns 400 when body is invalid', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({
+      const req = getAuthenticatedReq({
         params: { establishmentCode, code: serviceCode },
         body: { ...validBody, name: undefined },
       });
@@ -245,7 +252,10 @@ describe('ServiceController', () => {
     it('returns 404 when service does not exist', async () => {
       updateServiceMock.execute.mockResolvedValue(fail(new NotFoundError('Service', serviceCode)));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+      const req = getAuthenticatedReq({
+        params: { establishmentCode, code: serviceCode },
+        body: validBody,
+      });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -256,7 +266,10 @@ describe('ServiceController', () => {
     it('returns 200 with updated service DTO on success', async () => {
       updateServiceMock.execute.mockResolvedValue(ok(serviceDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+      const req = getAuthenticatedReq({
+        params: { establishmentCode, code: serviceCode },
+        body: validBody,
+      });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -270,7 +283,10 @@ describe('ServiceController', () => {
         fail(new ValidationError('name', 'Value is required.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+      const req = getAuthenticatedReq({
+        params: { establishmentCode, code: serviceCode },
+        body: validBody,
+      });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -281,7 +297,10 @@ describe('ServiceController', () => {
     it('returns 500 when updateService returns a storage error', async () => {
       updateServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+      const req = getAuthenticatedReq({
+        params: { establishmentCode, code: serviceCode },
+        body: validBody,
+      });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -292,7 +311,10 @@ describe('ServiceController', () => {
     it('returns 500 when updateService throws', async () => {
       updateServiceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode }, body: validBody });
+      const req = getAuthenticatedReq({
+        params: { establishmentCode, code: serviceCode },
+        body: validBody,
+      });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -305,7 +327,7 @@ describe('ServiceController', () => {
     it('returns 204 on success', async () => {
       deleteServiceMock.execute.mockResolvedValue(ok(undefined));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+      const req = getAuthenticatedReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -316,7 +338,7 @@ describe('ServiceController', () => {
     it('returns 404 when service does not exist', async () => {
       deleteServiceMock.execute.mockResolvedValue(fail(new NotFoundError('Service', serviceCode)));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+      const req = getAuthenticatedReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -329,7 +351,7 @@ describe('ServiceController', () => {
         fail(new ConflictError('Service has future bookings.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+      const req = getAuthenticatedReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -340,7 +362,7 @@ describe('ServiceController', () => {
     it('returns 500 when deleteService returns a storage error', async () => {
       deleteServiceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+      const req = getAuthenticatedReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -351,7 +373,7 @@ describe('ServiceController', () => {
     it('returns 500 when deleteService throws', async () => {
       deleteServiceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode, code: serviceCode } });
+      const req = getAuthenticatedReq({ params: { establishmentCode, code: serviceCode } });
 
       // @ts-expect-error
       await controller.delete(req, res);

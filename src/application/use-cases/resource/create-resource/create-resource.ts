@@ -4,7 +4,7 @@ import {
   type ResourceRepository,
   type ResourceValidationError,
 } from '@app/domain/entities';
-import { NotFoundError, type StorageError } from '@app/domain/errors';
+import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
@@ -12,6 +12,7 @@ import { ResourceMapper } from '../../../mappers';
 type Input = {
   name: string;
   establishmentCode: string;
+  userId: string;
 };
 
 export class CreateResource {
@@ -23,11 +24,18 @@ export class CreateResource {
   async execute({
     name,
     establishmentCode,
-  }: Input): PromiseResult<ResourceDTO, ResourceValidationError | StorageError | NotFoundError> {
+    userId,
+  }: Input): PromiseResult<
+    ResourceDTO,
+    ResourceValidationError | StorageError | NotFoundError | ForbiddenError
+  > {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
     if (!establishmentResult.data)
       return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishmentResult.data.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
 
     const entityResult = ResourceEntity.create({
       name,

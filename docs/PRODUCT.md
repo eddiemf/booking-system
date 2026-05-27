@@ -122,19 +122,19 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns 200 with user DTO.
   - [x] Returns 401 when no/expired token.
 
-#### Feature 0.4 — Authorization Layer `[in-progress]`
+#### Feature 0.4 — Authorization Layer `[done]`
 
 - **Notes:**
   - Middleware applies to all mutation endpoints.
   - Use cases accept `userId`, verify ownership.
   - 403 Forbidden on ownership violations.
 - **Acceptance criteria:**
-  - [ ] All POST/PUT/DELETE endpoints require valid JWT → 401 if missing.
-  - [ ] Updating another's establishment returns 403.
-  - [ ] Deleting another's resource returns 403.
-  - [ ] Setting schedule on another's resource returns 403.
-  - [ ] Public GET endpoints return data without auth.
-  - [ ] Wire auth middleware to all POST/PUT/DELETE routes in `server.ts`.
+  - [x] All POST/PUT/DELETE endpoints require valid JWT → 401 if missing.
+  - [x] Updating another's establishment returns 403.
+  - [x] Deleting another's resource returns 403.
+  - [x] Setting schedule on another's resource returns 403.
+  - [x] Public GET endpoints return data without auth.
+  - [x] Wire auth middleware to all POST/PUT/DELETE routes in `server.ts`.
 
 ---
 

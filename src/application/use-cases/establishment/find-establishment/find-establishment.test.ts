@@ -29,7 +29,14 @@ describe('FindEstablishment', () => {
 
   it('returns an establishment DTO when found', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
-      ok(EstablishmentEntity.reconstruct({ id: 'uuid-1', code: 'abc123', name: 'My Salon' }))
+      ok(
+        EstablishmentEntity.reconstruct({
+          id: 'uuid-1',
+          code: 'abc123',
+          name: 'My Salon',
+          userId: 'uuid-user',
+        })
+      )
     );
 
     const data = await useCase.execute({ code: 'abc123' }).then((result) => result.getData());

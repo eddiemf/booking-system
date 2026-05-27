@@ -9,6 +9,7 @@ describe('EstablishmentMapper', () => {
         id: 'uuid-1',
         code: 'abc123',
         name: 'My Salon',
+        userId: 'uuid-user',
       });
 
       const dto = EstablishmentMapper.toDTO(entity);

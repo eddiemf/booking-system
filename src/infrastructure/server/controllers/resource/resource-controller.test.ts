@@ -29,10 +29,16 @@ describe('ResourceController', () => {
     deleteResourceMock
   );
 
+  const getAuthenticatedReq = (extra = {}) =>
+    getMockReq({
+      user: { userId: 'uuid-user', userCode: 'usr123', email: 'alice@example.com' },
+      ...extra,
+    });
+
   describe('create()', () => {
     it('returns 400 when establishmentCode is empty', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode: '' }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode: '' }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -42,7 +48,7 @@ describe('ResourceController', () => {
 
     it('returns 400 when name is missing', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({
+      const req = getAuthenticatedReq({
         params: { establishmentCode },
         body: { ...validBody, name: undefined },
       });
@@ -58,7 +64,7 @@ describe('ResourceController', () => {
         fail(new NotFoundError('Establishment', establishmentCode))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -69,7 +75,7 @@ describe('ResourceController', () => {
     it('returns 201 with resource DTO on success', async () => {
       createResourceMock.execute.mockResolvedValue(ok(resourceDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -83,7 +89,7 @@ describe('ResourceController', () => {
         fail(new ValidationError('name', 'Value is required.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -94,7 +100,7 @@ describe('ResourceController', () => {
     it('returns 500 when createResource returns a storage error', async () => {
       createResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -105,7 +111,7 @@ describe('ResourceController', () => {
     it('returns 500 when createResource throws', async () => {
       createResourceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode }, body: validBody });
+      const req = getAuthenticatedReq({ params: { establishmentCode }, body: validBody });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -183,7 +189,7 @@ describe('ResourceController', () => {
 
     it('returns 400 when body is invalid', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({
+      const req = getAuthenticatedReq({
         params: { ...updateParams, code: '' },
         body: { name: 'Room A' },
       });
@@ -199,7 +205,7 @@ describe('ResourceController', () => {
         fail(new NotFoundError('Resource', resourceCode))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: updateParams, body: validBody });
+      const req = getAuthenticatedReq({ params: updateParams, body: validBody });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -210,7 +216,7 @@ describe('ResourceController', () => {
     it('returns 200 with updated resource DTO on success', async () => {
       updateResourceMock.execute.mockResolvedValue(ok(resourceDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ params: updateParams, body: validBody });
+      const req = getAuthenticatedReq({ params: updateParams, body: validBody });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -224,7 +230,7 @@ describe('ResourceController', () => {
         fail(new ValidationError('name', 'Value is required.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: updateParams, body: validBody });
+      const req = getAuthenticatedReq({ params: updateParams, body: validBody });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -235,7 +241,7 @@ describe('ResourceController', () => {
     it('returns 500 when updateResource returns a storage error', async () => {
       updateResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: updateParams, body: validBody });
+      const req = getAuthenticatedReq({ params: updateParams, body: validBody });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -246,7 +252,7 @@ describe('ResourceController', () => {
     it('returns 500 when updateResource throws', async () => {
       updateResourceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: updateParams, body: validBody });
+      const req = getAuthenticatedReq({ params: updateParams, body: validBody });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -264,7 +270,7 @@ describe('ResourceController', () => {
     it('returns 204 on success', async () => {
       deleteResourceMock.execute.mockResolvedValue(ok(undefined));
       const { res } = getMockRes();
-      const req = getMockReq({ params: deleteParams });
+      const req = getAuthenticatedReq({ params: deleteParams });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -277,7 +283,7 @@ describe('ResourceController', () => {
         fail(new NotFoundError('Resource', resourceCode))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: deleteParams });
+      const req = getAuthenticatedReq({ params: deleteParams });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -290,7 +296,7 @@ describe('ResourceController', () => {
         fail(new ConflictError('Resource has future bookings.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: deleteParams });
+      const req = getAuthenticatedReq({ params: deleteParams });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -301,7 +307,7 @@ describe('ResourceController', () => {
     it('returns 500 when deleteResource returns a storage error', async () => {
       deleteResourceMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
       const { res } = getMockRes();
-      const req = getMockReq({ params: deleteParams });
+      const req = getAuthenticatedReq({ params: deleteParams });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -312,7 +318,7 @@ describe('ResourceController', () => {
     it('returns 500 when deleteResource throws', async () => {
       deleteResourceMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: deleteParams });
+      const req = getAuthenticatedReq({ params: deleteParams });
 
       // @ts-expect-error
       await controller.delete(req, res);

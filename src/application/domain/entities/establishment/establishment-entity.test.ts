@@ -7,22 +7,26 @@ import { EstablishmentEntity } from './establishment-entity';
 describe('EstablishmentEntity', () => {
   describe('create()', () => {
     it('fails to create with empty name', () => {
-      const error = EstablishmentEntity.create({ name: '' }).getError();
+      const error = EstablishmentEntity.create({ name: '', userId: 'uuid-user' }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
     it('creates a valid establishment', () => {
-      const data = EstablishmentEntity.create({ name: 'My Salon' }).getData();
+      const data = EstablishmentEntity.create({ name: 'My Salon', userId: 'uuid-user' }).getData();
 
       expect(data).toBeInstanceOf(EstablishmentEntity);
       expect(data.name).toBe('My Salon');
+      expect(data.userId).toBe('uuid-user');
       expect(typeof data.id).toBe('string');
     });
 
     it('starts with empty resources and services', () => {
-      const entity = EstablishmentEntity.create({ name: 'My Salon' }).getData();
+      const entity = EstablishmentEntity.create({
+        name: 'My Salon',
+        userId: 'uuid-user',
+      }).getData();
 
       expect(entity.resources).toEqual([]);
       expect(entity.services).toEqual([]);
@@ -34,6 +38,7 @@ describe('EstablishmentEntity', () => {
       id: 'uuid-1',
       code: 'abc123',
       name: 'Old Name',
+      userId: 'uuid-user',
     });
 
     it('fails with empty name', () => {
@@ -49,6 +54,7 @@ describe('EstablishmentEntity', () => {
       expect(updatedEstablishment.name).toBe('New Name');
       expect(updatedEstablishment.id).toBe(establishment.id);
       expect(updatedEstablishment.code).toBe(establishment.code);
+      expect(updatedEstablishment.userId).toBe(establishment.userId);
       expect(updatedEstablishment.resources).toEqual(establishment.resources);
       expect(updatedEstablishment.services).toEqual(establishment.services);
     });
@@ -56,7 +62,12 @@ describe('EstablishmentEntity', () => {
 
   describe('reconstruct()', () => {
     it('defaults resources and services to empty arrays', () => {
-      const entity = EstablishmentEntity.reconstruct({ id: '1', code: 'abc', name: 'Salon' });
+      const entity = EstablishmentEntity.reconstruct({
+        id: '1',
+        code: 'abc',
+        name: 'Salon',
+        userId: 'uuid-user',
+      });
 
       expect(entity.resources).toEqual([]);
       expect(entity.services).toEqual([]);
@@ -83,6 +94,7 @@ describe('EstablishmentEntity', () => {
         id: '1',
         code: 'abc',
         name: 'Salon',
+        userId: 'uuid-user',
         resources: [resource],
         services: [service],
       });

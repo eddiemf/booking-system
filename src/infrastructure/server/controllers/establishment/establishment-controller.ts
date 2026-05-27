@@ -7,6 +7,7 @@ import type {
 } from '@app/use-cases';
 import type { Request, Response } from 'express';
 import z from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth-middleware';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class EstablishmentController extends Controller {
@@ -30,7 +31,7 @@ export class EstablishmentController extends Controller {
     super();
   }
 
-  async create(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
+  async create(req: AuthenticatedRequest, res: Response<EstablishmentDTO | ErrorResponse>) {
     try {
       const validation = this.establishmentSchema.safeParse(req.body);
       if (!validation.success) {
@@ -39,7 +40,7 @@ export class EstablishmentController extends Controller {
 
       const { name } = validation.data;
 
-      const result = await this.createEstablishment.execute({ name });
+      const result = await this.createEstablishment.execute({ name, userId: req.user.userId });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -79,7 +80,7 @@ export class EstablishmentController extends Controller {
     }
   }
 
-  async update(req: Request, res: Response<EstablishmentDTO | ErrorResponse>) {
+  async update(req: AuthenticatedRequest, res: Response<EstablishmentDTO | ErrorResponse>) {
     try {
       const validation = this.updateEstablishmentSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -88,7 +89,11 @@ export class EstablishmentController extends Controller {
 
       const { code, name } = validation.data;
 
-      const result = await this.updateEstablishment.execute({ code, name });
+      const result = await this.updateEstablishment.execute({
+        code,
+        name,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -96,6 +101,9 @@ export class EstablishmentController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());
@@ -107,7 +115,7 @@ export class EstablishmentController extends Controller {
     }
   }
 
-  async delete(req: Request, res: Response<ErrorResponse | void>) {
+  async delete(req: AuthenticatedRequest, res: Response<ErrorResponse | void>) {
     try {
       const paramsValidation = this.codeParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
@@ -115,7 +123,10 @@ export class EstablishmentController extends Controller {
       }
       const { code } = paramsValidation.data;
 
-      const result = await this.deleteEstablishment.execute({ code });
+      const result = await this.deleteEstablishment.execute({
+        code,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -123,6 +134,9 @@ export class EstablishmentController extends Controller {
         }
         if (result.error.code === 'ConflictError') {
           return res.status(409).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());

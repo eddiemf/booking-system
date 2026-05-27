@@ -3,6 +3,7 @@ import type { AuthDTO } from '@app/dtos/auth-dto';
 import type { GetCurrentUser, LoginWithGoogle } from '@app/use-cases';
 import type { Request, Response } from 'express';
 import z from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth-middleware';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class AuthController extends Controller {
@@ -39,9 +40,9 @@ export class AuthController extends Controller {
     }
   }
 
-  async me(req: Request, res: Response<UserDTO | ErrorResponse>) {
+  async me(req: AuthenticatedRequest, res: Response<UserDTO | ErrorResponse>) {
     try {
-      const result = await this.getCurrentUser.execute({ userId: req.user!.userId });
+      const result = await this.getCurrentUser.execute({ userId: req.user.userId });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {

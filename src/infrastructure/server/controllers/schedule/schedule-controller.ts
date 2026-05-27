@@ -1,7 +1,8 @@
 import type { ScheduleDTO } from '@app/dtos';
 import type { SetSchedule } from '@app/use-cases';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import z from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth-middleware';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ScheduleController extends Controller {
@@ -21,7 +22,7 @@ export class ScheduleController extends Controller {
     super();
   }
 
-  async set(req: Request, res: Response<ScheduleDTO[] | ErrorResponse>) {
+  async set(req: AuthenticatedRequest, res: Response<ScheduleDTO[] | ErrorResponse>) {
     try {
       const validation = this.setScheduleSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -34,6 +35,7 @@ export class ScheduleController extends Controller {
         resourceCode,
         establishmentCode,
         entries,
+        userId: req.user.userId,
       });
 
       if (!result.isOk) {
@@ -42,6 +44,9 @@ export class ScheduleController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
         return res.status(500).json(this.getInternalServerError());
       }

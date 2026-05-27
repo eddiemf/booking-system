@@ -2,6 +2,7 @@ import type { ResourceDTO } from '@app/dtos';
 import type { CreateResource, DeleteResource, ListResources, UpdateResource } from '@app/use-cases';
 import type { Request, Response } from 'express';
 import z from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth-middleware';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ResourceController extends Controller {
@@ -34,7 +35,7 @@ export class ResourceController extends Controller {
     super();
   }
 
-  async create(req: Request, res: Response<ResourceDTO | ErrorResponse>) {
+  async create(req: AuthenticatedRequest, res: Response<ResourceDTO | ErrorResponse>) {
     try {
       const validation = this.createResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -43,7 +44,11 @@ export class ResourceController extends Controller {
 
       const { establishmentCode, name } = validation.data;
 
-      const result = await this.createResource.execute({ name, establishmentCode });
+      const result = await this.createResource.execute({
+        name,
+        establishmentCode,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -51,6 +56,9 @@ export class ResourceController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());
@@ -86,7 +94,7 @@ export class ResourceController extends Controller {
     }
   }
 
-  async update(req: Request, res: Response<ResourceDTO | ErrorResponse>) {
+  async update(req: AuthenticatedRequest, res: Response<ResourceDTO | ErrorResponse>) {
     try {
       const validation = this.updateResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -95,7 +103,12 @@ export class ResourceController extends Controller {
 
       const { code, establishmentCode, name } = validation.data;
 
-      const result = await this.updateResource.execute({ code, establishmentCode, name });
+      const result = await this.updateResource.execute({
+        code,
+        establishmentCode,
+        name,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'ValidationError') {
@@ -103,6 +116,9 @@ export class ResourceController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());
@@ -114,7 +130,7 @@ export class ResourceController extends Controller {
     }
   }
 
-  async delete(req: Request, res: Response<ErrorResponse | void>) {
+  async delete(req: AuthenticatedRequest, res: Response<ErrorResponse | void>) {
     try {
       const paramsValidation = this.resourceParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
@@ -122,7 +138,11 @@ export class ResourceController extends Controller {
       }
       const { code, establishmentCode } = paramsValidation.data;
 
-      const result = await this.deleteResource.execute({ code, establishmentCode });
+      const result = await this.deleteResource.execute({
+        code,
+        establishmentCode,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -130,6 +150,9 @@ export class ResourceController extends Controller {
         }
         if (result.error.code === 'ConflictError') {
           return res.status(409).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());

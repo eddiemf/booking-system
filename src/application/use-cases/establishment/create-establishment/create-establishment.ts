@@ -10,6 +10,7 @@ import { EstablishmentMapper } from '../../../mappers';
 
 type Input = {
   name: string;
+  userId: string;
 };
 
 export class CreateEstablishment {
@@ -17,8 +18,9 @@ export class CreateEstablishment {
 
   async execute({
     name,
+    userId,
   }: Input): PromiseResult<EstablishmentDTO, EstablishmentCreationError | StorageError> {
-    const establishmentResult = EstablishmentEntity.create({ name });
+    const establishmentResult = EstablishmentEntity.create({ name, userId });
     if (!establishmentResult.isOk) return establishmentResult;
 
     const entity = establishmentResult.data;

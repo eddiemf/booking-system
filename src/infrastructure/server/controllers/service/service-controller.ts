@@ -8,6 +8,7 @@ import type {
 } from '@app/use-cases';
 import type { Request, Response } from 'express';
 import z from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth-middleware';
 import { Controller, type ErrorResponse } from '../controller';
 
 export class ServiceController extends Controller {
@@ -45,7 +46,7 @@ export class ServiceController extends Controller {
     super();
   }
 
-  async create(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
+  async create(req: AuthenticatedRequest, res: Response<ServiceDTO | ErrorResponse>) {
     try {
       const validation = this.createServiceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -59,6 +60,7 @@ export class ServiceController extends Controller {
         description,
         duration,
         establishmentCode,
+        userId: req.user.userId,
       });
 
       if (!result.isOk) {
@@ -67,6 +69,9 @@ export class ServiceController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());
@@ -122,7 +127,7 @@ export class ServiceController extends Controller {
     }
   }
 
-  async update(req: Request, res: Response<ServiceDTO | ErrorResponse>) {
+  async update(req: AuthenticatedRequest, res: Response<ServiceDTO | ErrorResponse>) {
     try {
       const validation = this.updateServiceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
@@ -137,6 +142,7 @@ export class ServiceController extends Controller {
         name,
         description,
         duration,
+        userId: req.user.userId,
       });
 
       if (!result.isOk) {
@@ -145,6 +151,9 @@ export class ServiceController extends Controller {
         }
         if (result.error.code === 'NotFoundError') {
           return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());
@@ -156,7 +165,7 @@ export class ServiceController extends Controller {
     }
   }
 
-  async delete(req: Request, res: Response<ErrorResponse | void>) {
+  async delete(req: AuthenticatedRequest, res: Response<ErrorResponse | void>) {
     try {
       const paramsValidation = this.serviceParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
@@ -164,7 +173,11 @@ export class ServiceController extends Controller {
       }
       const { code, establishmentCode } = paramsValidation.data;
 
-      const result = await this.deleteService.execute({ code, establishmentCode });
+      const result = await this.deleteService.execute({
+        code,
+        establishmentCode,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) {
         if (result.error.code === 'NotFoundError') {
@@ -172,6 +185,9 @@ export class ServiceController extends Controller {
         }
         if (result.error.code === 'ConflictError') {
           return res.status(409).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
         }
 
         return res.status(500).json(this.getInternalServerError());

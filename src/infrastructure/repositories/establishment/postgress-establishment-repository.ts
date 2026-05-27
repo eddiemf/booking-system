@@ -21,6 +21,7 @@ type EstablishmentRow = {
   id: string;
   code: string;
   name: string;
+  userId: string;
   resourceId: string | null;
   resourceCode: string | null;
   resourceName: string | null;
@@ -42,6 +43,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           id: establishmentsTable.id,
           code: establishmentsTable.code,
           name: establishmentsTable.name,
+          userId: establishmentsTable.userId,
           resourceId: resourcesTable.id,
           resourceCode: resourcesTable.code,
           resourceName: resourcesTable.name,
@@ -59,7 +61,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
 
       if (estRows.length === 0 || !estRows[0]) return ok(null);
 
-      const { id, name: establishmentName } = estRows[0];
+      const { id, name: establishmentName, userId } = estRows[0];
 
       const serviceRows = await this.db
         .select({
@@ -87,7 +89,14 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
       );
 
       return ok(
-        EstablishmentEntity.reconstruct({ id, code, name: establishmentName, resources, services })
+        EstablishmentEntity.reconstruct({
+          id,
+          code,
+          name: establishmentName,
+          userId,
+          resources,
+          services,
+        })
       );
     } catch (error) {
       return fail(new StorageError('Failed to find establishment.'));
@@ -96,9 +105,12 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
 
   async save(establishment: EstablishmentEntity): PromiseResult<EstablishmentEntity, StorageError> {
     try {
-      await this.db
-        .insert(establishmentsTable)
-        .values({ id: establishment.id, code: establishment.code, name: establishment.name });
+      await this.db.insert(establishmentsTable).values({
+        id: establishment.id,
+        code: establishment.code,
+        name: establishment.name,
+        userId: establishment.userId,
+      });
       return ok(establishment);
     } catch (error) {
       return fail(new StorageError('Failed to save establishment.'));
@@ -121,6 +133,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           id: rows[0].id,
           code: rows[0].code,
           name: establishment.name,
+          userId: establishment.userId,
         })
       );
     } catch (error) {

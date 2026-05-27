@@ -41,6 +41,9 @@ export const createIocContainer = () => {
     injectionMode: InjectionMode.CLASSIC,
     strict: true,
   }).register({
+    // Config (needed by server.ts)
+    config: asValue(config),
+
     // Controllers
     authController: asClass(AuthController).singleton(),
     establishmentController: asClass(EstablishmentController).singleton(),

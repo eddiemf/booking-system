@@ -1,16 +1,32 @@
-import type { ServiceRepository } from '@app/domain/entities';
-import type { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
-import type { PromiseResult } from '@shared/result';
+import type { EstablishmentRepository, ServiceRepository } from '@app/domain/entities';
+import {
+  type ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  type StorageError,
+} from '@app/domain/errors';
+import { fail, type PromiseResult } from '@shared/result';
 
-type Input = { code: string; establishmentCode: string };
+type Input = { code: string; establishmentCode: string; userId: string };
 
 export class DeleteService {
-  constructor(private readonly serviceRepository: ServiceRepository) {}
+  constructor(
+    private readonly serviceRepository: ServiceRepository,
+    private readonly establishmentRepository: EstablishmentRepository
+  ) {}
 
-  execute({
+  async execute({
     code,
     establishmentCode,
-  }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
+    userId,
+  }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError | ForbiddenError> {
+    const estResult = await this.establishmentRepository.findByCode(establishmentCode);
+    if (!estResult.isOk) return estResult;
+    if (!estResult.data) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (estResult.data.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
+
     return this.serviceRepository.delete(code, establishmentCode);
   }
 }

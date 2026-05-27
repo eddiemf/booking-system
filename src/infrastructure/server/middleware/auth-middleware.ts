@@ -2,15 +2,11 @@ import type { JwtPayload } from '@infrastructure/auth/jwt';
 import { verifyToken } from '@infrastructure/auth/jwt';
 import type { NextFunction, Request, Response } from 'express';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
-  }
+export interface AuthenticatedRequest extends Request {
+  user: JwtPayload;
 }
 
-export function authMiddleware(jwtSecret: string) {
+export function getAuthMiddleware(jwtSecret: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const header = req.headers.authorization;
     if (!header || !header.startsWith('Bearer ')) {
@@ -22,7 +18,7 @@ export function authMiddleware(jwtSecret: string) {
     const token = header.slice(7);
     try {
       const payload = verifyToken(token, jwtSecret);
-      req.user = payload;
+      (req as AuthenticatedRequest).user = payload;
       next();
     } catch {
       return res

@@ -10,8 +10,12 @@ describe('CreateEstablishment', () => {
 
   const useCase = new CreateEstablishment(establishmentRepository);
 
+  const validInput = { name: 'My Salon', userId: 'uuid-user' };
+
   it('returns a validation error if creating the entity returns a validation error', async () => {
-    const resultError = await useCase.execute({ name: '' }).then((result) => result.getError());
+    const resultError = await useCase
+      .execute({ name: '', userId: 'uuid-user' })
+      .then((result) => result.getError());
 
     expect(resultError).toBeInstanceOf(ValidationError);
   });
@@ -20,22 +24,27 @@ describe('CreateEstablishment', () => {
     const error = new StorageError('Failed to save the entity');
     establishmentRepository.save.mockResolvedValue(fail(error));
 
-    const resultError = await useCase
-      .execute({ name: 'My Salon' })
-      .then((result) => result.getError());
+    const resultError = await useCase.execute(validInput).then((result) => result.getError());
 
     expect(establishmentRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'My Salon' })
+      expect.objectContaining({ name: 'My Salon', userId: 'uuid-user' })
     );
     expect(resultError).toBe(error);
   });
 
   it('returns an establishment DTO when creation was successful', async () => {
     establishmentRepository.save.mockResolvedValue(
-      ok(EstablishmentEntity.reconstruct({ id: 'uuid-42', code: 'est123', name: 'My Salon' }))
+      ok(
+        EstablishmentEntity.reconstruct({
+          id: 'uuid-42',
+          code: 'est123',
+          name: 'My Salon',
+          userId: 'uuid-user',
+        })
+      )
     );
 
-    const data = await useCase.execute({ name: 'My Salon' }).then((result) => result.getData());
+    const data = await useCase.execute(validInput).then((result) => result.getData());
 
     expect(data).toEqual({ id: 'est123', name: 'My Salon' });
   });

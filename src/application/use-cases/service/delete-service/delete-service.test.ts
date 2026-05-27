@@ -1,5 +1,5 @@
-import type { ServiceRepository } from '@app/domain/entities';
-import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentRepository, ServiceRepository } from '@app/domain/entities';
+import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -7,11 +7,31 @@ import { DeleteService } from './delete-service';
 
 describe('DeleteService', () => {
   const serviceRepository = mock<ServiceRepository>();
-  const useCase = new DeleteService(serviceRepository);
+  const establishmentRepository = mock<EstablishmentRepository>();
+  const useCase = new DeleteService(serviceRepository, establishmentRepository);
 
-  const input = { code: 'svc123', establishmentCode: 'est123' };
+  const userId = 'uuid-user';
+  const input = { code: 'svc123', establishmentCode: 'est123', userId };
+
+  const mockEstablishment = {
+    id: 'uuid-est',
+    code: 'est123',
+    name: 'Salon',
+    userId,
+  };
+
+  it('returns forbidden error when user is not the owner', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
+
+    const error = await useCase
+      .execute({ ...input, userId: 'other-user' })
+      .then((result) => result.getError());
+
+    expect(error).toBeInstanceOf(ForbiddenError);
+  });
 
   it('returns not-found error when service does not exist', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
     serviceRepository.delete.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
 
     const error = await useCase.execute(input).then((result) => result.getError());
@@ -20,6 +40,7 @@ describe('DeleteService', () => {
   });
 
   it('returns conflict error when service has future bookings', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
     serviceRepository.delete.mockResolvedValue(
       fail(new ConflictError('Service has future bookings.'))
     );
@@ -30,6 +51,7 @@ describe('DeleteService', () => {
   });
 
   it('returns storage error when delete fails', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
     serviceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(input).then((result) => result.getError());
@@ -38,6 +60,7 @@ describe('DeleteService', () => {
   });
 
   it('returns ok on success', async () => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment as never));
     serviceRepository.delete.mockResolvedValue(ok(undefined));
 
     const result = await useCase.execute(input);

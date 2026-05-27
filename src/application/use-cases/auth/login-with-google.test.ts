@@ -69,9 +69,7 @@ describe('LoginWithGoogle', () => {
 
     const data = await useCase.execute({ token: validToken }).then((r) => r.getData());
 
-    expect(userRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Alice' })
-    );
+    expect(userRepository.save).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alice' }));
     expect(data.token).toBe('signed-jwt');
     expect(data.user.email).toBe('alice@example.com');
   });

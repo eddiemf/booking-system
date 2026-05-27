@@ -14,7 +14,9 @@ export const establishmentsTable = pgTable('establishments', {
   code: varchar({ length: 10 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   ...timestamps,
-  userId: uuid('user_id').references(() => usersTable.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => usersTable.id),
 });
 
 export const servicesTable = pgTable('services', {

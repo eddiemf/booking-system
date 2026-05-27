@@ -26,10 +26,16 @@ describe('EstablishmentController', () => {
     deleteEstablishmentMock
   );
 
+  const getAuthenticatedReq = (extra = {}) =>
+    getMockReq({
+      user: { userId: 'uuid-user', userCode: 'usr123', email: 'alice@example.com' },
+      ...extra,
+    });
+
   describe('create()', () => {
     it('returns a validation error if a name is not provided', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({ body: {} });
+      const req = getAuthenticatedReq({ body: {} });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -45,12 +51,15 @@ describe('EstablishmentController', () => {
     it('returns 201 with establishment DTO if params are valid', async () => {
       createEstablishmentMock.execute.mockResolvedValue(ok(mockedEstablishmentDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ body: mockedValidInput });
+      const req = getAuthenticatedReq({ body: mockedValidInput });
 
       // @ts-expect-error
       await controller.create(req, res);
 
-      expect(createEstablishmentMock.execute).toHaveBeenCalledWith({ name: 'My Salon' });
+      expect(createEstablishmentMock.execute).toHaveBeenCalledWith({
+        name: 'My Salon',
+        userId: 'uuid-user',
+      });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockedEstablishmentDTO);
     });
@@ -60,7 +69,7 @@ describe('EstablishmentController', () => {
         fail(new ValidationError('name', 'Value is required.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ body: mockedValidInput });
+      const req = getAuthenticatedReq({ body: mockedValidInput });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -77,7 +86,7 @@ describe('EstablishmentController', () => {
         fail(new StorageError('Failed to save establishment.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ body: mockedValidInput });
+      const req = getAuthenticatedReq({ body: mockedValidInput });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -92,7 +101,7 @@ describe('EstablishmentController', () => {
     it('returns 500 if createEstablishment throws an unexpected error', async () => {
       createEstablishmentMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ body: mockedValidInput });
+      const req = getAuthenticatedReq({ body: mockedValidInput });
 
       // @ts-expect-error
       await controller.create(req, res);
@@ -182,7 +191,7 @@ describe('EstablishmentController', () => {
   describe('update()', () => {
     it('returns 400 if name is not provided', async () => {
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: {} });
+      const req = getAuthenticatedReq({ params: { code }, body: {} });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -198,12 +207,16 @@ describe('EstablishmentController', () => {
     it('returns 200 with updated establishment DTO on success', async () => {
       updateEstablishmentMock.execute.mockResolvedValue(ok(mockedEstablishmentDTO));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: mockedValidInput });
+      const req = getAuthenticatedReq({ params: { code }, body: mockedValidInput });
 
       // @ts-expect-error
       await controller.update(req, res);
 
-      expect(updateEstablishmentMock.execute).toHaveBeenCalledWith({ code, name: 'My Salon' });
+      expect(updateEstablishmentMock.execute).toHaveBeenCalledWith({
+        code,
+        name: 'My Salon',
+        userId: 'uuid-user',
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockedEstablishmentDTO);
     });
@@ -213,7 +226,7 @@ describe('EstablishmentController', () => {
         fail(new NotFoundError('Establishment', code))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: mockedValidInput });
+      const req = getAuthenticatedReq({ params: { code }, body: mockedValidInput });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -230,7 +243,7 @@ describe('EstablishmentController', () => {
         fail(new ValidationError('name', 'Value is required.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: mockedValidInput });
+      const req = getAuthenticatedReq({ params: { code }, body: mockedValidInput });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -247,7 +260,7 @@ describe('EstablishmentController', () => {
         fail(new StorageError('Failed to update establishment.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: mockedValidInput });
+      const req = getAuthenticatedReq({ params: { code }, body: mockedValidInput });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -262,7 +275,7 @@ describe('EstablishmentController', () => {
     it('returns 500 if updateEstablishment throws an unexpected error', async () => {
       updateEstablishmentMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code }, body: mockedValidInput });
+      const req = getAuthenticatedReq({ params: { code }, body: mockedValidInput });
 
       // @ts-expect-error
       await controller.update(req, res);
@@ -279,12 +292,15 @@ describe('EstablishmentController', () => {
     it('returns 204 on success', async () => {
       deleteEstablishmentMock.execute.mockResolvedValue(ok(undefined));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code } });
+      const req = getAuthenticatedReq({ params: { code } });
 
       // @ts-expect-error
       await controller.delete(req, res);
 
-      expect(deleteEstablishmentMock.execute).toHaveBeenCalledWith({ code });
+      expect(deleteEstablishmentMock.execute).toHaveBeenCalledWith({
+        code,
+        userId: 'uuid-user',
+      });
       expect(res.status).toHaveBeenCalledWith(204);
     });
 
@@ -293,7 +309,7 @@ describe('EstablishmentController', () => {
         fail(new NotFoundError('Establishment', code))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code } });
+      const req = getAuthenticatedReq({ params: { code } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -310,7 +326,7 @@ describe('EstablishmentController', () => {
         fail(new ConflictError('Establishment has associated services or bookings.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code } });
+      const req = getAuthenticatedReq({ params: { code } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -327,7 +343,7 @@ describe('EstablishmentController', () => {
         fail(new StorageError('Failed to delete establishment.'))
       );
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code } });
+      const req = getAuthenticatedReq({ params: { code } });
 
       // @ts-expect-error
       await controller.delete(req, res);
@@ -338,7 +354,7 @@ describe('EstablishmentController', () => {
     it('returns 500 if deleteEstablishment throws an unexpected error', async () => {
       deleteEstablishmentMock.execute.mockRejectedValue(new Error('Unexpected'));
       const { res } = getMockRes();
-      const req = getMockReq({ params: { code } });
+      const req = getAuthenticatedReq({ params: { code } });
 
       // @ts-expect-error
       await controller.delete(req, res);

@@ -4,7 +4,7 @@ import {
   type ServiceRepository,
   type ServiceValidationError,
 } from '@app/domain/entities';
-import { NotFoundError, type StorageError } from '@app/domain/errors';
+import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
@@ -14,6 +14,7 @@ type Input = {
   description?: string | undefined;
   duration: number;
   establishmentCode: string;
+  userId: string;
 };
 
 export class CreateService {
@@ -27,11 +28,18 @@ export class CreateService {
     description,
     duration,
     establishmentCode,
-  }: Input): PromiseResult<ServiceDTO, ServiceValidationError | StorageError | NotFoundError> {
+    userId,
+  }: Input): PromiseResult<
+    ServiceDTO,
+    ServiceValidationError | StorageError | NotFoundError | ForbiddenError
+  > {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
     if (!establishmentResult.data)
       return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishmentResult.data.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
 
     const establishmentId = establishmentResult.data.id;
     const serviceResult = ServiceEntity.create({

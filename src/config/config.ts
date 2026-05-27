@@ -5,35 +5,23 @@ export class ConfigError extends Error {
   }
 }
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (value === undefined || value === null) {
+    throw new ConfigError(`${name} environment variable is required.`);
+  }
+  return value;
+}
+
 export function getConfig() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new ConfigError('DATABASE_URL environment variable is required.');
-  }
-
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    throw new ConfigError('JWT_SECRET environment variable is required.');
-  }
-
-  const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  if (!googleClientId) {
-    throw new ConfigError('GOOGLE_CLIENT_ID environment variable is required.');
-  }
-
-  const appleClientId = process.env.APPLE_CLIENT_ID;
-  if (!appleClientId) {
-    throw new ConfigError('APPLE_CLIENT_ID environment variable is required.');
-  }
-
   return {
     database: {
-      url: databaseUrl,
+      url: requireEnv('DATABASE_URL'),
     },
     auth: {
-      jwtSecret,
-      googleClientId,
-      appleClientId,
+      jwtSecret: requireEnv('JWT_SECRET'),
+      googleClientId: requireEnv('GOOGLE_CLIENT_ID'),
+      appleClientId: requireEnv('APPLE_CLIENT_ID'),
     },
   };
 }

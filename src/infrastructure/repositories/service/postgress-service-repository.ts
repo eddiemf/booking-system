@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { isForeignKeyViolation } from '../../db/errors';
 import { establishmentsTable, servicesTable } from '../../db/schema';
 
 export class PostgressServiceRepository implements ServiceRepository {
@@ -20,7 +21,7 @@ export class PostgressServiceRepository implements ServiceRepository {
       });
       return ok(service);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new NotFoundError('Establishment', service.establishmentId));
       }
       return fail(new StorageError('Failed to save service.'));
@@ -164,7 +165,7 @@ export class PostgressServiceRepository implements ServiceRepository {
       if (!rows[0]) return fail(new NotFoundError('Service', code));
       return ok(undefined);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new ConflictError('Service has future bookings.'));
       }
       return fail(new StorageError('Failed to delete service.'));

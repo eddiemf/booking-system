@@ -3,6 +3,7 @@ import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { isForeignKeyViolation } from '../../db/errors';
 import { schedulesTable } from '../../db/schema';
 
 export class PostgressScheduleRepository implements ScheduleRepository {
@@ -32,7 +33,7 @@ export class PostgressScheduleRepository implements ScheduleRepository {
 
       return ok(entries);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new NotFoundError('Resource', resourceId));
       }
       return fail(new StorageError('Failed to replace schedule.'));

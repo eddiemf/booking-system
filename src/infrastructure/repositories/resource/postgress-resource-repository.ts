@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { isForeignKeyViolation } from '../../db/errors';
 import { establishmentsTable, resourcesTable, schedulesTable } from '../../db/schema';
 
 type ResourceRow = {
@@ -34,7 +35,7 @@ export class PostgressResourceRepository implements ResourceRepository {
       });
       return ok(resource);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new NotFoundError('Establishment', resource.establishmentId));
       }
       return fail(new StorageError('Failed to save resource.'));
@@ -135,7 +136,7 @@ export class PostgressResourceRepository implements ResourceRepository {
       if (!rows[0]) return fail(new NotFoundError('Resource', code));
       return ok(undefined);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new ConflictError('Resource has future bookings.'));
       }
       return fail(new StorageError('Failed to delete resource.'));

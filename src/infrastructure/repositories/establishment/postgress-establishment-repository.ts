@@ -9,6 +9,7 @@ import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { isForeignKeyViolation } from '../../db/errors';
 import {
   establishmentsTable,
   resourcesTable,
@@ -136,7 +137,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
       if (!rows[0]) return fail(new NotFoundError('Establishment', code));
       return ok(undefined);
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === '23503') {
+      if (isForeignKeyViolation(error)) {
         return fail(new ConflictError('Establishment has associated services or bookings.'));
       }
       return fail(new StorageError('Failed to delete establishment.'));

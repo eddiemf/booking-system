@@ -90,7 +90,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Must be built first. All subsequent mutations require an authenticated user. Ownership determines who can mutate.
 
-#### Feature 0.1 — OAuth Login with Google `[planned]`
+#### Feature 0.1 — OAuth Login with Google `[done]`
 
 - **Endpoint:** `POST /auth/google`
 - **Notes:**
@@ -98,10 +98,10 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - Creates user if first login.
   - Returns JWT + user profile.
 - **Acceptance criteria:**
-  - [ ] Returns 200 with JWT + user DTO on valid Google token.
-  - [ ] Creates a new User if email doesn't exist.
-  - [ ] Returns existing User if email already registered.
-  - [ ] Returns 401 on invalid/expired Google token.
+  - [x] Returns 200 with JWT + user DTO on valid Google token.
+  - [x] Creates a new User if email doesn't exist.
+  - [x] Returns existing User if email already registered.
+  - [x] Returns 401 on invalid/expired Google token.
 
 #### Feature 0.2 — OAuth Login with Apple `[planned]`
 
@@ -114,15 +114,15 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns existing User if email already registered.
   - [ ] Returns 401 on invalid/expired Apple token.
 
-#### Feature 0.3 — Get Current User `[planned]`
+#### Feature 0.3 — Get Current User `[done]`
 
 - **Endpoint:** `GET /auth/me`
 - **Notes:**
   - Requires valid JWT.
   - Returns current user profile.
 - **Acceptance criteria:**
-  - [ ] Returns 200 with user DTO.
-  - [ ] Returns 401 when no/expired token.
+  - [x] Returns 200 with user DTO.
+  - [x] Returns 401 when no/expired token.
 
 #### Feature 0.4 — Authorization Layer `[planned]`
 

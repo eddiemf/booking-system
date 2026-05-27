@@ -1,3 +1,4 @@
+export * from './auth';
 export * from './establishment';
 export * from './resource';
 export * from './schedule';

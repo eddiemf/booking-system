@@ -89,10 +89,6 @@ export class ServiceController extends Controller {
       const result = await this.listServices.execute({ establishmentCode });
 
       if (!result.isOk) {
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-
         return res.status(500).json(this.getInternalServerError());
       }
 

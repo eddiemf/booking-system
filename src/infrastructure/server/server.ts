@@ -5,6 +5,7 @@ export function createServer() {
   const app = express();
   const container = createIocContainer();
 
+  const authController = container.resolve('authController');
   const establishmentController = container.resolve('establishmentController');
   const resourceController = container.resolve('resourceController');
   const scheduleController = container.resolve('scheduleController');
@@ -13,6 +14,11 @@ export function createServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Auth routes
+  app.post('/auth/google', (req, res) => authController.googleLogin(req, res));
+  app.get('/auth/me', (req, res) => authController.me(req, res));
+
+  // Establishment routes
   app.post('/establishments', (req, res) => establishmentController.create(req, res));
   app.get('/establishments/:code', (req, res) => establishmentController.find(req, res));
   app.put('/establishments/:code', (req, res) => establishmentController.update(req, res));

@@ -20,6 +20,7 @@
       "@app/*": ["./src/application/*"],
       "@shared/*": ["./src/shared/*"],
       "@config/*": ["./src/config/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
       "@__utils__/*": ["./src/__utils__/*"]
     }
   }

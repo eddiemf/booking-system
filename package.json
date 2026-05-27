@@ -13,6 +13,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
     "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.11.14",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",
@@ -31,6 +32,8 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "google-auth-library": "^10.6.2",
+    "jsonwebtoken": "^9.0.3",
     "nanoid": "^5.1.11",
     "pg": "^8.21.0",
     "uuid": "^11.1.0",

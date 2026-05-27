@@ -20,7 +20,36 @@ If a design forces a layer boundary violation → stop. The design is wrong, not
 
 ---
 
-## 2. Result Pattern (Never Throw for Expected Failures)
+## 2. Ports & Adapters Pattern (External Dependencies)
+
+Services that call external APIs, auth providers, or non-persistence infrastructure use the Ports & Adapters pattern:
+
+```
+src/application/ports/               ← Interfaces (contracts) in application layer
+  google-auth.port.ts                ← What the use case needs from outside
+  jwt.port.ts
+  index.ts
+
+src/infrastructure/adapters/         ← Implementations in infrastructure layer
+  google-auth.adapter.ts             ← Wraps throw-based libs, converts to Result
+  jwt.adapter.ts
+  index.ts
+```
+
+**Rules:**
+- **Port interfaces** live in `src/application/ports/` (not domain). They define what the application needs — "verify a Google token", "sign a JWT". These are NOT domain concepts.
+- **Adapter implementations** live in `src/infrastructure/adapters/`. They wrap throw-based libraries and convert errors to `Result`/`PromiseResult`.
+- Port interfaces use `PromiseResult<T, E>` — same as repository interfaces.
+- Adapters are registered in the IoC container with `.inject(() => ({ ... }))` to pass config values.
+- Constructor parameter names in adapters (e.g., `clientId`, `jwtSecret`) must match the `.inject()` keys.
+- Port interfaces are injected into use case constructors, never raw functions or inline types.
+- JWT verification in Express middleware stays in `src/infrastructure/auth/jwt.ts` as a direct function call — it doesn't go through ports (middleware is not application logic).
+
+**Do NOT put non-domain interfaces in `src/application/domain/`** — that pollutes the domain with infrastructure concerns.
+
+---
+
+## 3. Result Pattern (Never Throw for Expected Failures)
 
 Every function that can fail returns `Result<T, E>` (sync) or `PromiseResult<T, E>` (async).
 
@@ -47,7 +76,7 @@ execute(input): PromiseResult<OutputDTO, ErrorType1 | ErrorType2>
 
 ---
 
-## 3. Entity Lifecycle
+## 4. Entity Lifecycle
 
 Every entity follows this exact pattern:
 
@@ -71,14 +100,18 @@ update(props): Result<this, ValidationError>
 
 ---
 
-## 4. Value Objects
+## 5. Value Objects
 
 - Subdirectory per VO inside the entity folder it belongs to
 
   ```
   entities/service/duration/duration.ts
   entities/schedule/time-of-day/time-of-day.ts
+  entities/user/email/email.ts
   ```
+
+- **When to extract a VO:** when a primitive field (string, number, boolean) has validation rules or format constraints in a domain entity — extract it to a Value Object. Examples: `email`, `phone`, `zipCode`, `url`, `colorHex`. Wrap only when validation logic exists — don't wrap every string.
+
 
 - Private constructor, immutable (all fields `readonly`)
 - `static create(value, field): Result<VO, ValidationError>` — for user input. `field` is the name used in the error message (e.g., `'startTime'`, `'duration'`).
@@ -88,7 +121,7 @@ update(props): Result<this, ValidationError>
 
 ---
 
-## 5. Entity Identity
+## 6. Entity Identity
 
 Every entity has two identity fields:
 
@@ -103,7 +136,7 @@ Every entity has two identity fields:
 
 ---
 
-## 6. Use Cases
+## 7. Use Cases
 
 ```typescript
 class SomeUseCase {
@@ -121,7 +154,7 @@ class SomeUseCase {
 **Rules:**
 
 - Single public `execute(input)` method
-- Can have private methods in order to encapsulate complex logic and make code more readable
+- **Private methods:** When `execute()` contains a block of code that performs a distinct sub-task longer than ~5 lines — extract to a private method. The method name describes the sub-task (e.g., `findOrCreateUser`, `validateSchedule`). The signature returns `Result<T, E>` or `PromiseResult<T, E>`. This keeps `execute()` at a single abstraction level.
 - Input is a plain object (never domain types) and should be defined as an interface, not type
 - Returns DTOs, not entities
 - Never constructs entities without calling `Entity.create()` or `Entity.reconstruct()`
@@ -129,7 +162,7 @@ class SomeUseCase {
 
 ---
 
-## 7. DTOs & Mappers
+## 8. DTOs & Mappers
 
 **DTOs** (`src/application/dtos/`):
 
@@ -146,7 +179,7 @@ class SomeUseCase {
 
 ---
 
-## 8. Repository Contracts (Domain Interfaces)
+## 9. Repository Contracts (Domain Interfaces)
 
 ```typescript
 interface SomeRepository {
@@ -167,7 +200,7 @@ interface SomeRepository {
 
 ---
 
-## 9. Controllers
+## 10. Controllers
 
 ```typescript
 class SomeController extends Controller {
@@ -217,7 +250,7 @@ class SomeController extends Controller {
 
 ---
 
-## 10. Domain Errors
+## 11. Domain Errors
 
 ```typescript
 class ValidationError extends AppError<'ValidationError'> {
@@ -241,7 +274,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 11. Aggregates
+## 12. Aggregates
 
 - `ResourceEntity` is aggregate root for scheduling
 - `ScheduleEntity` instances are **only** created through `resource.setSchedule(entries)` — never construct `ScheduleEntity` directly in use cases
@@ -250,7 +283,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 12. Testing Conventions
+## 13. Testing Conventions
 
 - Test files: `.test.ts` alongside the implementation file
 - Every entity, VO, mapper, use case, and controller must have a test file
@@ -261,7 +294,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 13. Imports & Aliases
+## 14. Imports & Aliases
 
 ```typescript
 @app/*        → src/application/*
@@ -275,7 +308,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 14. DI / IoC Container
+## 15. DI / IoC Container
 
 - Awilix with `InjectionMode.CLASSIC`
 - Constructor parameter names = container registration names (they must match)
@@ -286,7 +319,7 @@ When changing constructor parameter names → update container registrations acc
 
 ---
 
-## 15. Code Style (from biome.json & tsconfig)
+## 16. Code Style (from biome.json & tsconfig)
 
 - Single quotes, semicolons always, trailing commas es5
 - 100 line width, space indentation (2 spaces)
@@ -296,7 +329,7 @@ When changing constructor parameter names → update container registrations acc
 
 ---
 
-## 16. What NOT To Do
+## 17. What NOT To Do
 
 - Do not add features beyond what was asked
 - Do not add "flexibility" or "configurability" that wasn't requested

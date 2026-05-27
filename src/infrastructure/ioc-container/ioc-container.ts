@@ -7,8 +7,10 @@ import {
   DeleteService,
   FindEstablishment,
   FindService,
+  GetCurrentUser,
   ListResources,
   ListServices,
+  LoginWithGoogle,
   SetSchedule,
   UpdateEstablishment,
   UpdateResource,
@@ -17,13 +19,16 @@ import {
 import { getConfig } from '@config/config';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { GoogleAuthAdapter, JwtAdapter } from '../adapters';
 import {
   PostgressEstablishmentRepository,
   PostgressResourceRepository,
   PostgressScheduleRepository,
   PostgressServiceRepository,
+  PostgressUserRepository,
 } from '../repositories';
 import {
+  AuthController,
   EstablishmentController,
   ResourceController,
   ScheduleController,
@@ -37,6 +42,7 @@ export const createIocContainer = () => {
     strict: true,
   }).register({
     // Controllers
+    authController: asClass(AuthController).singleton(),
     establishmentController: asClass(EstablishmentController).singleton(),
     resourceController: asClass(ResourceController).singleton(),
     scheduleController: asClass(ScheduleController).singleton(),
@@ -58,11 +64,23 @@ export const createIocContainer = () => {
     listServices: asClass(ListServices).singleton(),
     updateService: asClass(UpdateService).singleton(),
 
+    loginWithGoogle: asClass(LoginWithGoogle).singleton(),
+    getCurrentUser: asClass(GetCurrentUser).singleton(),
+
     // Repositories
     establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),
     resourceRepository: asClass(PostgressResourceRepository).singleton(),
     scheduleRepository: asClass(PostgressScheduleRepository).singleton(),
     serviceRepository: asClass(PostgressServiceRepository).singleton(),
+    userRepository: asClass(PostgressUserRepository).singleton(),
+
+    // Ports / Adapters
+    googleAuthPort: asClass(GoogleAuthAdapter)
+      .inject(() => ({ clientId: config.auth.googleClientId }))
+      .singleton(),
+    jwtPort: asClass(JwtAdapter)
+      .inject(() => ({ jwtSecret: config.auth.jwtSecret }))
+      .singleton(),
 
     // Database
     db: asValue(drizzle(config.database.url)),

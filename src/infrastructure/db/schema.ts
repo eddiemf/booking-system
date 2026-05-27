@@ -3,6 +3,8 @@ import { timestamps } from './timestamps';
 
 export const usersTable = pgTable('users', {
   id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
+  email: varchar({ length: 255 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   ...timestamps,
 });

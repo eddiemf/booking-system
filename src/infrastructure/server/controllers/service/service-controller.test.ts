@@ -134,19 +134,6 @@ describe('ServiceController', () => {
   });
 
   describe('list()', () => {
-    it('returns 404 when establishment does not exist', async () => {
-      listServicesMock.execute.mockResolvedValue(
-        fail(new NotFoundError('Establishment', establishmentCode))
-      );
-      const { res } = getMockRes();
-      const req = getMockReq({ params: { establishmentCode } });
-
-      // @ts-expect-error
-      await controller.list(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
     it('returns 200 with list of service DTOs', async () => {
       listServicesMock.execute.mockResolvedValue(ok([serviceDTO]));
       const { res } = getMockRes();

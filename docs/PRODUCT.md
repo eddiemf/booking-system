@@ -72,8 +72,6 @@ Features must be built in this order because of data dependency: you cannot scop
 5. Booking (Epic 5)
 ```
 
-> Features 1.1 and 1.2 were bootstrapped without establishment scope as a foundation exercise. They will be refactored to establishment-scoped endpoints after Epic 2 is complete.
-
 ---
 
 ## MVP Scope
@@ -124,7 +122,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns 200 with user DTO.
   - [x] Returns 401 when no/expired token.
 
-#### Feature 0.4 — Authorization Layer `[planned]`
+#### Feature 0.4 — Authorization Layer `[in-progress]`
 
 - **Notes:**
   - Middleware applies to all mutation endpoints.
@@ -136,6 +134,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Deleting another's resource returns 403.
   - [ ] Setting schedule on another's resource returns 403.
   - [ ] Public GET endpoints return data without auth.
+  - [ ] Wire auth middleware to all POST/PUT/DELETE routes in `server.ts`.
 
 ---
 
@@ -147,9 +146,9 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `POST /establishments`
 - **Acceptance criteria:**
-  - [ ] Requires a `name`.
-  - [ ] Returns `201` with the created establishment DTO (`id`, `name`).
-  - [ ] Returns `400` when `name` is missing.
+  - [x] Requires a `name`.
+  - [x] Returns `201` with the created establishment DTO (`id`, `name`).
+  - [x] Returns `400` when `name` is missing.
   - [ ] Returns `401` when no auth token provided.
 
 #### Feature 2.2 — Get Establishment by ID `[done]`
@@ -157,16 +156,16 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 - **Endpoint:** `GET /establishments/:code`
 - **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
-  - [ ] Returns the establishment data.
-  - [ ] Returns `404` when not found.
+  - [x] Returns the establishment data.
+  - [x] Returns `404` when not found.
 
 #### Feature 2.3 — Update an Establishment `[done]`
 
 - **Endpoint:** `PUT /establishments/:code`
 - **Acceptance criteria:**
-  - [ ] Allows updating `name`.
-  - [ ] Returns the updated establishment DTO.
-  - [ ] Returns `404` when not found.
+  - [x] Allows updating `name`.
+  - [x] Returns the updated establishment DTO.
+  - [x] Returns `404` when not found.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner.
 
@@ -174,9 +173,9 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `DELETE /establishments/:code`
 - **Acceptance criteria:**
-  - [ ] Returns `204` on success.
-  - [ ] Returns `404` when not found.
-  - [ ] Returns `409` if the establishment has active services or future bookings.
+  - [x] Returns `204` on success.
+  - [x] Returns `404` when not found.
+  - [x] Returns `409` if the establishment has active services or future bookings.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner.
 
@@ -184,7 +183,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 ### Epic 1: Service Management
 
-> Services belong to an Establishment. Features 1.1 and 1.2 were bootstrapped globally and must be refactored to establishment-scoped endpoints after Epic 2 is done.
+> Services belong to an Establishment.
 
 #### Feature 1.1 — Create a Service `[done]`
 
@@ -194,8 +193,8 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] `description` is optional.
   - [x] Returns `201` with the created service DTO.
   - [x] Returns `400` when `name` is missing or `duration` is ≤ 0.
-  - [ ] Requires a valid `establishmentCode` in the URL.
-  - [ ] Returns `404` when the establishment does not exist.
+  - [x] Requires a valid `establishmentCode` in the URL.
+  - [x] Returns `404` when the establishment does not exist.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -207,25 +206,25 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns a list of all services.
   - [x] Returns an empty array when no services exist.
   - [x] Each item includes `id`, `name`, `description`, and `duration`.
-  - [ ] Returns only services belonging to the given establishment.
-  - [ ] Returns `404` when the establishment does not exist.
+  - [x] Returns only services belonging to the given establishment.
+  - [ ] Returns `404` when the establishment does not exist (currently returns empty array).
 
 #### Feature 1.3 — Get Service by ID `[done]`
 
 - **Endpoint:** `GET /establishments/:establishmentCode/services/:code`
 - **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
-  - [ ] Returns the service matching the given code.
-  - [ ] Returns `404` when no service with that code exists in the establishment.
+  - [x] Returns the service matching the given code.
+  - [x] Returns `404` when no service with that code exists in the establishment.
 
 #### Feature 1.4 — Update a Service `[done]`
 
 - **Endpoint:** `PUT /establishments/:establishmentCode/services/:code`
 - **Acceptance criteria:**
-  - [ ] Allows updating `name`, `description`, and `duration`.
-  - [ ] Returns the updated service DTO.
-  - [ ] Returns `404` when the service does not exist in the establishment.
-  - [ ] Returns `400` on invalid values (same rules as creation).
+  - [x] Allows updating `name`, `description`, and `duration`.
+  - [x] Returns the updated service DTO.
+  - [x] Returns `404` when the service does not exist in the establishment.
+  - [x] Returns `400` on invalid values (same rules as creation).
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -233,10 +232,10 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `DELETE /establishments/:establishmentCode/services/:code`
 - **Acceptance criteria:**
-  - [ ] Removes the service permanently.
-  - [ ] Returns `204` on success.
-  - [ ] Returns `404` when the service does not exist in the establishment.
-  - [ ] Returns `409` if the service has future bookings.
+  - [x] Removes the service permanently.
+  - [x] Returns `204` on success.
+  - [x] Returns `404` when the service does not exist in the establishment.
+  - [x] Returns `409` if the service has future bookings.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -250,10 +249,10 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `POST /establishments/:establishmentCode/resources`
 - **Acceptance criteria:**
-  - [ ] A resource requires a `name`.
-  - [ ] Returns `201` with the created resource DTO.
-  - [ ] Returns `400` on missing or invalid fields.
-  - [ ] Returns `404` when the establishment does not exist.
+  - [x] A resource requires a `name`.
+  - [x] Returns `201` with the created resource DTO.
+  - [x] Returns `400` on missing or invalid fields.
+  - [x] Returns `404` when the establishment does not exist.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -262,16 +261,15 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 - **Endpoint:** `GET /establishments/:establishmentCode/resources`
 - **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
-  - [ ] Returns all resources for the establishment.
-  - [ ] Supports optional filtering by `type`.
+  - [x] Returns all resources for the establishment.
 
 #### Feature 3.3 — Update a Resource `[done]`
 
 - **Endpoint:** `PUT /establishments/:establishmentCode/resources/:code`
 - **Acceptance criteria:**
-  - [ ] Allows updating `name`.
-  - [ ] Returns the updated resource DTO.
-  - [ ] Returns `404` when not found.
+  - [x] Allows updating `name`.
+  - [x] Returns the updated resource DTO.
+  - [x] Returns `404` when not found.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -279,9 +277,9 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `DELETE /establishments/:establishmentCode/resources/:code`
 - **Acceptance criteria:**
-  - [ ] Returns `204` on success.
-  - [ ] Returns `404` when not found.
-  - [ ] Returns `409` if the resource has future bookings.
+  - [x] Returns `204` on success.
+  - [x] Returns `404` when not found.
+  - [x] Returns `409` if the resource has future bookings.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
@@ -295,10 +293,10 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 - **Endpoint:** `PUT /establishments/:establishmentCode/resources/:resourceCode/schedule`
 - **Acceptance criteria:**
-  - [ ] Accepts an array of schedule entries, each with `dayOfWeek` (0–6), `startTime` (HH:MM), and `endTime` (HH:MM).
-  - [ ] Replaces the existing schedule entirely.
-  - [ ] Returns `400` when time ranges are invalid (end ≤ start, invalid format).
-  - [ ] Returns `404` when the resource does not exist.
+  - [x] Accepts an array of schedule entries, each with `dayOfWeek` (0–6), `startTime` (HH:MM), and `endTime` (HH:MM).
+  - [x] Replaces the existing schedule entirely.
+  - [x] Returns `400` when time ranges are invalid (end ≤ start, invalid format).
+  - [x] Returns `404` when the resource does not exist.
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 

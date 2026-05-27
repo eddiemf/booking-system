@@ -1,7 +1,7 @@
 import type { UserRepository } from '@app/domain/entities';
 import { UserEntity } from '@app/domain/entities';
 import type { AuthenticationError, StorageError, ValidationError } from '@app/domain/errors';
-import type { GoogleAuthPort, JwtPort } from '@app/ports';
+import type { AppleAuthPort, JwtPort } from '@app/ports';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { AuthDTO } from '../../dtos/auth-dto';
 import { UserMapper } from '../../mappers/user';
@@ -12,20 +12,20 @@ type Input = {
 
 type LoginError = AuthenticationError | StorageError | ValidationError;
 
-export class LoginWithGoogle {
+export class LoginWithApple {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly googleAuth: GoogleAuthPort,
+    private readonly appleAuth: AppleAuthPort,
     private readonly jwt: JwtPort
   ) {}
 
   async execute({ token }: Input): PromiseResult<AuthDTO, LoginError> {
-    const googleResult = await this.googleAuth.verifyToken(token);
-    if (!googleResult.isOk) return googleResult;
+    const appleResult = await this.appleAuth.verifyToken(token);
+    if (!appleResult.isOk) return appleResult;
 
-    const googleUser = googleResult.data;
+    const appleUser = appleResult.data;
 
-    const userResult = await this.findOrCreateUser(googleUser.email, googleUser.name);
+    const userResult = await this.findOrCreateUser(appleUser.email, appleUser.name);
     if (!userResult.isOk) return userResult;
 
     const user = userResult.data;

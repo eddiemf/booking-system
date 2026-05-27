@@ -1,4 +1,8 @@
-import { EstablishmentEntity, type EstablishmentRepository, type ServiceRepository } from '@app/domain/entities';
+import {
+  EstablishmentEntity,
+  type EstablishmentRepository,
+  type ServiceRepository,
+} from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';

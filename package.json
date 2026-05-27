@@ -28,6 +28,7 @@
     "vitest-mock-extended": "^4.0.0"
   },
   "dependencies": {
+    "apple-signin-auth": "^2.0.0",
     "awilix": "^13.0.3",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",

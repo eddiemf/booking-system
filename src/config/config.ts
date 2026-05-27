@@ -21,6 +21,11 @@ export function getConfig() {
     throw new ConfigError('GOOGLE_CLIENT_ID environment variable is required.');
   }
 
+  const appleClientId = process.env.APPLE_CLIENT_ID;
+  if (!appleClientId) {
+    throw new ConfigError('APPLE_CLIENT_ID environment variable is required.');
+  }
+
   return {
     database: {
       url: databaseUrl,
@@ -28,6 +33,7 @@ export function getConfig() {
     auth: {
       jwtSecret,
       googleClientId,
+      appleClientId,
     },
   };
 }

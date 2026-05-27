@@ -20,6 +20,7 @@ export function createServer() {
 
   // Auth routes
   app.post('/auth/google', (req, res) => authController.googleLogin(req, res));
+  app.post('/auth/apple', (req, res) => authController.appleLogin(req, res));
   app.get('/auth/me', requireAuth, (req, res) =>
     authController.me(req as AuthenticatedRequest, res)
   );

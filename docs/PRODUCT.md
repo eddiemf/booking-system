@@ -101,16 +101,16 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns existing User if email already registered.
   - [x] Returns 401 on invalid/expired Google token.
 
-#### Feature 0.2 — OAuth Login with Apple `[planned]`
+#### Feature 0.2 — OAuth Login with Apple `[done]`
 
 - **Endpoint:** `POST /auth/apple`
 - **Notes:**
   - Same flow as Google for Apple Sign-In.
 - **Acceptance criteria:**
-  - [ ] Returns 200 with JWT + user DTO on valid Apple token.
-  - [ ] Creates a new User if email doesn't exist.
-  - [ ] Returns existing User if email already registered.
-  - [ ] Returns 401 on invalid/expired Apple token.
+  - [x] Returns 200 with JWT + user DTO on valid Apple token.
+  - [x] Creates a new User if email doesn't exist.
+  - [x] Returns existing User if email already registered.
+  - [x] Returns 401 on invalid/expired Apple token.
 
 #### Feature 0.3 — Get Current User `[done]`
 

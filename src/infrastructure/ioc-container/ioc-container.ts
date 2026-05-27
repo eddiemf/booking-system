@@ -10,6 +10,7 @@ import {
   GetCurrentUser,
   ListResources,
   ListServices,
+  LoginWithApple,
   LoginWithGoogle,
   SetSchedule,
   UpdateEstablishment,
@@ -19,7 +20,7 @@ import {
 import { getConfig } from '@config/config';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { GoogleAuthAdapter, JwtAdapter } from '../adapters';
+import { AppleAuthAdapter, GoogleAuthAdapter, JwtAdapter } from '../adapters';
 import {
   PostgressEstablishmentRepository,
   PostgressResourceRepository,
@@ -68,6 +69,7 @@ export const createIocContainer = () => {
     updateService: asClass(UpdateService).singleton(),
 
     loginWithGoogle: asClass(LoginWithGoogle).singleton(),
+    loginWithApple: asClass(LoginWithApple).singleton(),
     getCurrentUser: asClass(GetCurrentUser).singleton(),
 
     // Repositories
@@ -78,10 +80,13 @@ export const createIocContainer = () => {
     userRepository: asClass(PostgressUserRepository).singleton(),
 
     // Ports / Adapters
-    googleAuthPort: asClass(GoogleAuthAdapter)
+    appleAuth: asClass(AppleAuthAdapter)
+      .inject(() => ({ clientId: config.auth.appleClientId }))
+      .singleton(),
+    googleAuth: asClass(GoogleAuthAdapter)
       .inject(() => ({ clientId: config.auth.googleClientId }))
       .singleton(),
-    jwtPort: asClass(JwtAdapter)
+    jwt: asClass(JwtAdapter)
       .inject(() => ({ jwtSecret: config.auth.jwtSecret }))
       .singleton(),
 

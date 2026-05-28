@@ -20,6 +20,7 @@ describe('AvailabilityController', () => {
     endTime: '10:00',
     resourceCode: 'res123',
     resourceName: 'Alice',
+    price: 0,
   };
 
   describe('getSlots()', () => {

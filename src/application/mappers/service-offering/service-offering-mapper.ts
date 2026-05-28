@@ -15,6 +15,7 @@ export class ServiceOfferingMapper {
       maxCapacity: serviceOffering.maxCapacity.value,
       durationMinutes: serviceOffering.durationMinutes.toMinutes(),
       slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
+      price: serviceOffering.price.value,
     };
   }
 }

@@ -21,6 +21,8 @@ interface Props {
   resourceName: string;
   startsAt: string;
   endsAt: string;
+  servicePrice: number;
+  serviceDuration: number;
 }
 
 interface ReconstructProps {
@@ -40,6 +42,8 @@ interface ReconstructProps {
   startsAt: string;
   endsAt: string;
   status: BookingStatus;
+  servicePrice: number;
+  serviceDuration: number;
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
@@ -61,7 +65,9 @@ export class BookingEntity {
     private _resourceName: string,
     private _startsAt: string,
     private _endsAt: string,
-    private _status: BookingStatus
+    private _status: BookingStatus,
+    private _servicePrice: number,
+    private _serviceDuration: number
   ) {}
 
   get id(): string {
@@ -112,6 +118,12 @@ export class BookingEntity {
   get status(): BookingStatus {
     return this._status;
   }
+  get servicePrice(): number {
+    return this._servicePrice;
+  }
+  get serviceDuration(): number {
+    return this._serviceDuration;
+  }
 
   static create(props: Props): Result<BookingEntity, BookingCreationError> {
     const startsAtError = BookingEntity.validateDateTime(props.startsAt, 'startsAt');
@@ -145,7 +157,9 @@ export class BookingEntity {
         props.resourceName,
         props.startsAt,
         props.endsAt,
-        'confirmed'
+        'confirmed',
+        props.servicePrice,
+        props.serviceDuration
       )
     );
   }
@@ -181,7 +195,9 @@ export class BookingEntity {
       props.resourceName,
       props.startsAt,
       props.endsAt,
-      props.status
+      props.status,
+      props.servicePrice,
+      props.serviceDuration
     );
   }
 

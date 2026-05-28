@@ -63,6 +63,7 @@ describe('CreateBooking', () => {
     maxCapacity: 1,
     durationMinutes: 60,
     slotIntervalMinutes: 30,
+    price: 0,
   });
 
   const validInput = {

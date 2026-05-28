@@ -26,6 +26,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
         maxCapacity: serviceOffering.maxCapacity.value,
         durationMinutes: serviceOffering.durationMinutes.toMinutes(),
         slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
+        price: serviceOffering.price.value,
       });
       return ok(serviceOffering);
     } catch (error) {
@@ -71,6 +72,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
           maxCapacity: serviceOfferingsTable.maxCapacity,
           durationMinutes: serviceOfferingsTable.durationMinutes,
           slotIntervalMinutes: serviceOfferingsTable.slotIntervalMinutes,
+          price: serviceOfferingsTable.price,
         })
         .from(serviceOfferingsTable)
         .innerJoin(servicesTable, eq(serviceOfferingsTable.serviceId, servicesTable.id))
@@ -89,6 +91,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
             maxCapacity: row.maxCapacity,
             durationMinutes: row.durationMinutes,
             slotIntervalMinutes: row.slotIntervalMinutes,
+            price: row.price,
           })
         )
       );
@@ -111,6 +114,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
           maxCapacity: serviceOfferingsTable.maxCapacity,
           durationMinutes: serviceOfferingsTable.durationMinutes,
           slotIntervalMinutes: serviceOfferingsTable.slotIntervalMinutes,
+          price: serviceOfferingsTable.price,
         })
         .from(serviceOfferingsTable)
         .innerJoin(resourcesTable, eq(serviceOfferingsTable.resourceId, resourcesTable.id))
@@ -132,6 +136,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
             maxCapacity: row.maxCapacity,
             durationMinutes: row.durationMinutes,
             slotIntervalMinutes: row.slotIntervalMinutes,
+            price: row.price,
           })
         )
       );

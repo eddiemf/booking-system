@@ -6,4 +6,5 @@ export interface ServiceOfferingDTO {
   maxCapacity: number;
   durationMinutes: number;
   slotIntervalMinutes: number;
+  price: number;
 }

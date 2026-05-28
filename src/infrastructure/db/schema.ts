@@ -56,6 +56,7 @@ export const serviceOfferingsTable = pgTable(
     maxCapacity: integer('max_capacity').notNull().default(1),
     durationMinutes: integer('duration_minutes').notNull(),
     slotIntervalMinutes: integer('slot_interval_minutes').notNull(),
+    price: integer().notNull().default(0),
   },
   (table) => ({
     uniqueServiceResource: unique().on(table.serviceId, table.resourceId),
@@ -86,6 +87,8 @@ export const bookingsTable = pgTable('bookings', {
   resourceName: varchar('resource_name', { length: 255 }).notNull(),
   startsAt: varchar('starts_at', { length: 30 }).notNull(),
   endsAt: varchar('ends_at', { length: 30 }).notNull(),
+  servicePrice: integer('service_price').notNull().default(0),
+  serviceDuration: integer('service_duration').notNull().default(0),
   status: varchar({ length: 20 }).notNull().default('confirmed'),
   ...timestamps,
 });

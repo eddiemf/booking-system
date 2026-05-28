@@ -9,6 +9,7 @@ export interface ResourceSlot {
   endTime: string;
   resourceCode: string;
   resourceName: string;
+  price: number;
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
@@ -99,6 +100,7 @@ export class AvailabilityService {
           endTime: TimeOfDay.fromMinutes(time + durationMinutes).value,
           resourceCode,
           resourceName,
+          price: offering.price.value,
         });
       }
     }

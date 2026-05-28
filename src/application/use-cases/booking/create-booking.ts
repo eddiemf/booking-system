@@ -99,6 +99,8 @@ export class CreateBooking {
       resourceName: resource.name,
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
+      servicePrice: offering.price.value,
+      serviceDuration: offering.durationMinutes.toMinutes(),
     });
     if (!entityResult.isOk) return entityResult;
 

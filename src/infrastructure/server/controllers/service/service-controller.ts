@@ -45,6 +45,7 @@ export class ServiceController extends Controller {
     maxCapacity: z.coerce.number().int().positive().optional(),
     durationMinutes: z.coerce.number().int().positive(),
     slotIntervalMinutes: z.coerce.number().int().positive(),
+    price: z.coerce.number().int().min(0).optional(),
   });
 
   private readonly deleteServiceOfferingSchema = z.object({
@@ -169,6 +170,7 @@ export class ServiceController extends Controller {
         maxCapacity,
         durationMinutes,
         slotIntervalMinutes,
+        price,
       } = validation.data;
 
       const result = await this.createServiceOffering.execute({
@@ -179,6 +181,7 @@ export class ServiceController extends Controller {
         maxCapacity,
         durationMinutes,
         slotIntervalMinutes,
+        price,
       });
 
       if (!result.isOk) return this.sendError(res, result);

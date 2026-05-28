@@ -22,6 +22,8 @@ describe('BookingMapper', () => {
         startsAt: '2026-06-15T09:00:00Z',
         endsAt: '2026-06-15T10:00:00Z',
         status: 'confirmed',
+        servicePrice: 0,
+        serviceDuration: 60,
       });
 
       const dto = BookingMapper.toDTO(entity);
@@ -39,6 +41,8 @@ describe('BookingMapper', () => {
         startsAt: '2026-06-15T09:00:00Z',
         endsAt: '2026-06-15T10:00:00Z',
         status: 'confirmed',
+        servicePrice: 0,
+        serviceDuration: 60,
       });
     });
 
@@ -60,6 +64,8 @@ describe('BookingMapper', () => {
         startsAt: '2026-06-15T09:00:00Z',
         endsAt: '2026-06-15T10:00:00Z',
         status: 'cancelled',
+        servicePrice: 0,
+        serviceDuration: 0,
       });
 
       const dto = BookingMapper.toDTO(entity);

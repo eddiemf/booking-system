@@ -24,6 +24,7 @@ type Input = {
   maxCapacity?: number | undefined;
   durationMinutes: number;
   slotIntervalMinutes: number;
+  price?: number | undefined;
 };
 
 export class CreateServiceOffering {
@@ -42,6 +43,7 @@ export class CreateServiceOffering {
     maxCapacity,
     durationMinutes,
     slotIntervalMinutes,
+    price,
   }: Input): PromiseResult<
     ServiceOfferingDTO,
     StorageError | NotFoundError | ForbiddenError | ConflictError | ValidationError
@@ -77,6 +79,7 @@ export class CreateServiceOffering {
       maxCapacity,
       durationMinutes,
       slotIntervalMinutes,
+      price,
     });
     if (!entity.isOk) return entity;
 

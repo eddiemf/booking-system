@@ -106,13 +106,26 @@ describe('GetAvailability', () => {
       maxCapacity: 1,
       durationMinutes: 60,
       slotIntervalMinutes: 30,
+      price: 0,
     });
 
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([offering]));
 
     availabilityService.generateResourceSlots.mockReturnValue([
-      { startTime: '09:00', endTime: '10:00', resourceCode: 'res123', resourceName: 'Alice' },
-      { startTime: '10:00', endTime: '11:00', resourceCode: 'res123', resourceName: 'Alice' },
+      {
+        startTime: '09:00',
+        endTime: '10:00',
+        resourceCode: 'res123',
+        resourceName: 'Alice',
+        price: 0,
+      },
+      {
+        startTime: '10:00',
+        endTime: '11:00',
+        resourceCode: 'res123',
+        resourceName: 'Alice',
+        price: 0,
+      },
     ]);
 
     const resource = ResourceEntity.reconstruct({
@@ -131,8 +144,20 @@ describe('GetAvailability', () => {
       .then((r) => r.getData());
 
     expect(data).toEqual([
-      { startTime: '09:00', endTime: '10:00', resourceCode: 'res123', resourceName: 'Alice' },
-      { startTime: '10:00', endTime: '11:00', resourceCode: 'res123', resourceName: 'Alice' },
+      {
+        startTime: '09:00',
+        endTime: '10:00',
+        resourceCode: 'res123',
+        resourceName: 'Alice',
+        price: 0,
+      },
+      {
+        startTime: '10:00',
+        endTime: '11:00',
+        resourceCode: 'res123',
+        resourceName: 'Alice',
+        price: 0,
+      },
     ]);
   });
 
@@ -156,6 +181,7 @@ describe('GetAvailability', () => {
       maxCapacity: 1,
       durationMinutes: 60,
       slotIntervalMinutes: 30,
+      price: 0,
     });
 
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([emptyOffering]));
@@ -200,6 +226,7 @@ describe('GetAvailability', () => {
       maxCapacity: 1,
       durationMinutes: 30,
       slotIntervalMinutes: 30,
+      price: 0,
     });
 
     const multiOffering2 = ServiceOfferingEntity.reconstruct({
@@ -210,6 +237,7 @@ describe('GetAvailability', () => {
       maxCapacity: 1,
       durationMinutes: 30,
       slotIntervalMinutes: 30,
+      price: 0,
     });
 
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(
@@ -218,10 +246,22 @@ describe('GetAvailability', () => {
 
     availabilityService.generateResourceSlots
       .mockReturnValueOnce([
-        { startTime: '09:00', endTime: '09:30', resourceCode: 'res1', resourceName: 'Alice' },
+        {
+          startTime: '09:00',
+          endTime: '09:30',
+          resourceCode: 'res1',
+          resourceName: 'Alice',
+          price: 0,
+        },
       ])
       .mockReturnValueOnce([
-        { startTime: '10:00', endTime: '10:30', resourceCode: 'res2', resourceName: 'Bob' },
+        {
+          startTime: '10:00',
+          endTime: '10:30',
+          resourceCode: 'res2',
+          resourceName: 'Bob',
+          price: 0,
+        },
       ]);
 
     const resource1 = ResourceEntity.reconstruct({

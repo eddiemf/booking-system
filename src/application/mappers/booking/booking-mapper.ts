@@ -15,6 +15,8 @@ export class BookingMapper {
       startsAt: booking.startsAt,
       endsAt: booking.endsAt,
       status: booking.status,
+      servicePrice: booking.servicePrice,
+      serviceDuration: booking.serviceDuration,
     };
   }
 }

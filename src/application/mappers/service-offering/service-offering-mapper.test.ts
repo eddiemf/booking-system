@@ -13,6 +13,7 @@ describe('ServiceOfferingMapper', () => {
         maxCapacity: 5,
         durationMinutes: 60,
         slotIntervalMinutes: 30,
+        price: 5000,
       });
 
       const resource = ResourceEntity.reconstruct({
@@ -34,6 +35,7 @@ describe('ServiceOfferingMapper', () => {
         maxCapacity: 5,
         durationMinutes: 60,
         slotIntervalMinutes: 30,
+        price: 5000,
       });
     });
   });

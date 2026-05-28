@@ -3,4 +3,5 @@ export interface AvailabilitySlotDTO {
   endTime: string;
   resourceCode: string;
   resourceName: string;
+  price: number;
 }

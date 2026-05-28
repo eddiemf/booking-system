@@ -10,4 +10,6 @@ export interface BookingDTO {
   startsAt: string;
   endsAt: string;
   status: 'confirmed' | 'cancelled';
+  servicePrice: number;
+  serviceDuration: number;
 }

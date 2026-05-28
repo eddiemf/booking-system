@@ -4,6 +4,7 @@ import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
 import { Duration } from '../service/duration/duration';
 import { Capacity } from './capacity/capacity';
+import { Price } from './price/price';
 
 export type ServiceOfferingCreationError = ValidationError;
 
@@ -15,7 +16,8 @@ export class ServiceOfferingEntity {
     private _resourceId: string,
     private _maxCapacity: Capacity,
     private _durationMinutes: Duration,
-    private _slotIntervalMinutes: Duration
+    private _slotIntervalMinutes: Duration,
+    private _price: Price
   ) {}
 
   get id(): string {
@@ -46,12 +48,17 @@ export class ServiceOfferingEntity {
     return this._slotIntervalMinutes;
   }
 
+  get price(): Price {
+    return this._price;
+  }
+
   static create(props: {
     serviceId: string;
     resourceId: string;
     maxCapacity?: number | undefined;
     durationMinutes: number;
     slotIntervalMinutes: number;
+    price?: number | undefined;
   }): Result<ServiceOfferingEntity, ServiceOfferingCreationError> {
     const capacityResult = Capacity.create(props.maxCapacity ?? 1, 'maxCapacity');
     if (!capacityResult.isOk) return capacityResult;
@@ -62,6 +69,9 @@ export class ServiceOfferingEntity {
     const intervalResult = Duration.create(props.slotIntervalMinutes, 'slotIntervalMinutes');
     if (!intervalResult.isOk) return intervalResult;
 
+    const priceResult = Price.create(props.price ?? 0, 'price');
+    if (!priceResult.isOk) return priceResult;
+
     return ok(
       new ServiceOfferingEntity(
         EntityId.generate(),
@@ -70,7 +80,8 @@ export class ServiceOfferingEntity {
         props.resourceId,
         capacityResult.data,
         durationResult.data,
-        intervalResult.data
+        intervalResult.data,
+        priceResult.data
       )
     );
   }
@@ -83,6 +94,7 @@ export class ServiceOfferingEntity {
     maxCapacity: number;
     durationMinutes: number;
     slotIntervalMinutes: number;
+    price: number;
   }): ServiceOfferingEntity {
     return new ServiceOfferingEntity(
       props.id,
@@ -91,7 +103,8 @@ export class ServiceOfferingEntity {
       props.resourceId,
       Capacity.from(props.maxCapacity),
       Duration.from(props.durationMinutes),
-      Duration.from(props.slotIntervalMinutes)
+      Duration.from(props.slotIntervalMinutes),
+      Price.from(props.price)
     );
   }
 }

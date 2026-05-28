@@ -31,6 +31,8 @@ describe('CancelBooking', () => {
     startsAt: futureStartsAt,
     endsAt: futureEndsAt,
     status: 'confirmed',
+    servicePrice: 0,
+    serviceDuration: 60,
   });
 
   const cancelledBooking = BookingEntity.reconstruct({
@@ -50,6 +52,8 @@ describe('CancelBooking', () => {
     startsAt: futureStartsAt,
     endsAt: futureEndsAt,
     status: 'cancelled',
+    servicePrice: 0,
+    serviceDuration: 60,
   });
 
   it('returns not-found error when booking does not exist', async () => {
@@ -103,6 +107,8 @@ describe('CancelBooking', () => {
       startsAt: futureStartsAt,
       endsAt: futureEndsAt,
       status: 'confirmed',
+      servicePrice: 0,
+      serviceDuration: 60,
     });
     bookingRepository.findByCode.mockResolvedValue(ok(freshBooking));
     bookingRepository.update.mockImplementation(async (entity) => ok(entity));

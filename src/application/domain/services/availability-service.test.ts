@@ -26,6 +26,7 @@ describe('AvailabilityService', () => {
       maxCapacity: 1,
       durationMinutes,
       slotIntervalMinutes,
+      price: 0,
     });
 
   const buildSchedule = (dayOfWeek: number, start: string, end: string) =>
@@ -93,18 +94,21 @@ describe('AvailabilityService', () => {
         endTime: '10:00',
         resourceCode: 'res123',
         resourceName: 'Alice',
+        price: 0,
       });
       expect(slots[1]).toEqual({
         startTime: '10:00',
         endTime: '11:00',
         resourceCode: 'res123',
         resourceName: 'Alice',
+        price: 0,
       });
       expect(slots[2]).toEqual({
         startTime: '11:00',
         endTime: '12:00',
         resourceCode: 'res123',
         resourceName: 'Alice',
+        price: 0,
       });
     });
 
@@ -161,12 +165,14 @@ describe('AvailabilityService', () => {
         endTime: '09:30',
         resourceCode: 'res123',
         resourceName: 'Alice',
+        price: 0,
       });
       expect(slots[6]).toEqual({
         startTime: '10:30',
         endTime: '11:00',
         resourceCode: 'res123',
         resourceName: 'Alice',
+        price: 0,
       });
     });
 

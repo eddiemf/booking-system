@@ -22,6 +22,8 @@ type BookingRow = {
   startsAt: string;
   endsAt: string;
   status: string;
+  servicePrice: number;
+  serviceDuration: number;
 };
 
 export class PostgressBookingRepository implements BookingRepository {
@@ -46,6 +48,8 @@ export class PostgressBookingRepository implements BookingRepository {
         startsAt: booking.startsAt,
         endsAt: booking.endsAt,
         status: booking.status,
+        servicePrice: booking.servicePrice,
+        serviceDuration: booking.serviceDuration,
       });
       return ok(booking);
     } catch {
@@ -159,6 +163,8 @@ export class PostgressBookingRepository implements BookingRepository {
       startsAt: row.startsAt,
       endsAt: row.endsAt,
       status: row.status as 'confirmed' | 'cancelled',
+      servicePrice: row.servicePrice,
+      serviceDuration: row.serviceDuration,
     });
   }
 }

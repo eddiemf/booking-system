@@ -148,6 +148,7 @@ describe('CreateServiceOffering', () => {
           maxCapacity: 1,
           durationMinutes: 60,
           slotIntervalMinutes: 30,
+          price: 0,
         })
       )
     );
@@ -162,6 +163,7 @@ describe('CreateServiceOffering', () => {
       maxCapacity: 1,
       durationMinutes: 60,
       slotIntervalMinutes: 30,
+      price: 0,
     });
   });
 });

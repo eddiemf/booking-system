@@ -31,6 +31,8 @@ describe('BookingController', () => {
     startsAt: '2026-06-15T09:00:00Z',
     endsAt: '2026-06-15T10:00:00Z',
     status: 'confirmed',
+    servicePrice: 0,
+    serviceDuration: 60,
   };
 
   const getAuthenticatedReq = (extra = {}) =>

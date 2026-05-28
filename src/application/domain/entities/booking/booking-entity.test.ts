@@ -21,6 +21,8 @@ const validProps = {
   resourceName: 'Bob',
   startsAt: futureStartsAt,
   endsAt: futureEndsAt,
+  servicePrice: 0,
+  serviceDuration: 60,
 };
 
 describe('BookingEntity', () => {
@@ -159,6 +161,8 @@ describe('BookingEntity', () => {
         code: 'bkg1',
         ...validProps,
         status: 'cancelled',
+        servicePrice: 0,
+        serviceDuration: 60,
       });
 
       expect(booking.status).toBe('cancelled');

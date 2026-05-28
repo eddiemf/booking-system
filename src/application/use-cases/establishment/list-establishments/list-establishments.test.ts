@@ -30,9 +30,7 @@ describe('ListEstablishments', () => {
   it('returns list of establishment DTOs on success', async () => {
     establishmentRepository.findAll.mockResolvedValue(ok([mockEstablishment]));
 
-    const data = await useCase
-      .execute({ limit: 10, offset: 0 })
-      .then((result) => result.getData());
+    const data = await useCase.execute({ limit: 10, offset: 0 }).then((result) => result.getData());
 
     expect(data).toEqual([{ id: 'est123', name: 'Salon' }]);
   });

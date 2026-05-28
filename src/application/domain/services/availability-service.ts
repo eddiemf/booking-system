@@ -39,7 +39,7 @@ export class AvailabilityService {
    */
   resolveTimeSlot(
     startsAt: string,
-    durationMinutes: number
+    offering: ServiceOfferingEntity
   ): Result<{ startsAt: string; endsAt: string }, ValidationError> {
     if (!ISO_DATE_REGEX.test(startsAt)) {
       return fail(new ValidationError('startsAt', 'Must be a valid ISO 8601 datetime string.'));
@@ -54,7 +54,7 @@ export class AvailabilityService {
       return fail(new ValidationError('startsAt', 'Must be in the future.'));
     }
 
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+    const endDate = new Date(startDate.getTime() + offering.durationMinutes.toMinutes() * 60000);
 
     return ok({ startsAt, endsAt: endDate.toISOString() });
   }

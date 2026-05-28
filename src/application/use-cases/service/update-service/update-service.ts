@@ -35,25 +35,31 @@ export class UpdateService {
     ServiceDTO,
     StorageError | NotFoundError | ValidationError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const [establishmentResult, serviceResult] = await Promise.all([
+      this.establishmentRepository.findByCode(establishmentCode),
+      this.serviceRepository.findByCode(code, establishmentCode),
+    ]);
+
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    if (!serviceResult.isOk) return serviceResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const serviceResult = await this.serviceRepository.findByCode(code, establishmentCode);
-    if (!serviceResult.isOk) return serviceResult;
-    if (!serviceResult.data) return fail(new NotFoundError('Service', code));
-
     const service = serviceResult.data;
+    if (!service) return fail(new NotFoundError('Service', code));
+
     const updateValidation = service.update({ name, description, duration });
     if (!updateValidation.isOk) return updateValidation;
 
     const updateResult = await this.serviceRepository.update(code, establishmentCode, service);
     if (!updateResult.isOk) return updateResult;
 
-    return ok(ServiceMapper.toDTO(updateResult.data));
+    const updatedService = updateResult.data;
+
+    return ok(ServiceMapper.toDTO(updatedService));
   }
 }

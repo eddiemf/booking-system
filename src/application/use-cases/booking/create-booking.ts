@@ -46,42 +46,42 @@ export class CreateBooking {
     userCode,
     userName,
   }: Input): PromiseResult<BookingDTO, CreateBookingError> {
-    const serviceResult = await this.serviceRepository.findByCode(serviceCode, establishmentCode);
+    const [serviceResult, resourceResult, offeringsResult] = await Promise.all([
+      this.serviceRepository.findByCode(serviceCode, establishmentCode),
+      this.resourceRepository.findByCode(resourceCode),
+      this.serviceOfferingRepository.findByServiceCode(serviceCode, establishmentCode),
+    ]);
+
     if (!serviceResult.isOk) return serviceResult;
-    if (!serviceResult.data) return fail(new NotFoundError('Service', serviceCode));
-
-    const resourceResult = await this.resourceRepository.findByCode(resourceCode);
     if (!resourceResult.isOk) return resourceResult;
-    if (!resourceResult.data) return fail(new NotFoundError('Resource', resourceCode));
-    if (resourceResult.data.establishmentCode !== establishmentCode) {
-      return fail(new NotFoundError('Resource', resourceCode));
-    }
-    const resource = resourceResult.data;
-
-    const offeringsResult = await this.serviceOfferingRepository.findByServiceCode(
-      serviceCode,
-      establishmentCode
-    );
     if (!offeringsResult.isOk) return offeringsResult;
 
-    const offering = offeringsResult.data.find((offering) => offering.resourceId === resource.id);
-    if (!offering) {
+    const service = serviceResult.data;
+    if (!service) return fail(new NotFoundError('Service', serviceCode));
+
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
+    if (resource.establishmentCode !== establishmentCode) {
       return fail(new NotFoundError('Resource', resourceCode));
     }
 
-    const slotResult = this.availabilityService.resolveTimeSlot(
-      startsAt,
-      offering.durationMinutes.toMinutes()
-    );
+    const offerings = offeringsResult.data;
+    const offering = offerings.find((offering) => offering.resourceId === resource.id);
+    if (!offering) return fail(new NotFoundError('Resource', resourceCode));
+
+    const slotResult = this.availabilityService.resolveTimeSlot(startsAt, offering);
     if (!slotResult.isOk) return slotResult;
 
+    const slot = slotResult.data;
     const overlapResult = await this.bookingRepository.findOverlapping(
-      resourceResult.data.id,
-      slotResult.data.startsAt,
-      slotResult.data.endsAt
+      resource.id,
+      slot.startsAt,
+      slot.endsAt
     );
     if (!overlapResult.isOk) return overlapResult;
-    if (overlapResult.data.length > 0) {
+
+    const overlappingBookings = overlapResult.data;
+    if (overlappingBookings.length > 0) {
       return fail(new ConflictError('Resource is already booked for this time slot.'));
     }
 
@@ -89,22 +89,24 @@ export class CreateBooking {
       customerId: userId,
       customerCode: userCode,
       customerName: userName,
-      establishmentId: serviceResult.data.establishmentId,
+      establishmentId: service.establishmentId,
       establishmentCode,
-      serviceId: serviceResult.data.id,
+      serviceId: service.id,
       serviceCode,
-      serviceName: serviceResult.data.name,
-      resourceId: resourceResult.data.id,
+      serviceName: service.name,
+      resourceId: resource.id,
       resourceCode,
-      resourceName: resourceResult.data.name,
-      startsAt: slotResult.data.startsAt,
-      endsAt: slotResult.data.endsAt,
+      resourceName: resource.name,
+      startsAt: slot.startsAt,
+      endsAt: slot.endsAt,
     });
     if (!entityResult.isOk) return entityResult;
 
     const saveResult = await this.bookingRepository.save(entityResult.data);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(BookingMapper.toDTO(saveResult.data));
+    const savedBooking = saveResult.data;
+
+    return ok(BookingMapper.toDTO(savedBooking));
   }
 }

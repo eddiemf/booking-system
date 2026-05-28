@@ -46,28 +46,34 @@ export class CreateServiceOffering {
     ServiceOfferingDTO,
     StorageError | NotFoundError | ForbiddenError | ConflictError | ValidationError
   > {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const [establishmentResult, serviceResult, resourceResult] = await Promise.all([
+      this.establishmentRepository.findByCode(establishmentCode),
+      this.serviceRepository.findByCode(serviceCode, establishmentCode),
+      this.resourceRepository.findByCode(resourceCode),
+    ]);
+
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    if (!serviceResult.isOk) return serviceResult;
+    if (!resourceResult.isOk) return resourceResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const serviceResult = await this.serviceRepository.findByCode(serviceCode, establishmentCode);
-    if (!serviceResult.isOk) return serviceResult;
-    if (!serviceResult.data) return fail(new NotFoundError('Service', serviceCode));
+    const service = serviceResult.data;
+    if (!service) return fail(new NotFoundError('Service', serviceCode));
 
-    const resourceResult = await this.resourceRepository.findByCode(resourceCode);
-    if (!resourceResult.isOk) return resourceResult;
-    if (!resourceResult.data) return fail(new NotFoundError('Resource', resourceCode));
-    if (resourceResult.data.establishmentCode !== establishmentCode) {
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
+    if (resource.establishmentCode !== establishmentCode) {
       return fail(new NotFoundError('Resource', resourceCode));
     }
 
     const entity = ServiceOfferingEntity.create({
-      serviceId: serviceResult.data.id,
-      resourceId: resourceResult.data.id,
+      serviceId: service.id,
+      resourceId: resource.id,
       maxCapacity,
       durationMinutes,
       slotIntervalMinutes,
@@ -77,6 +83,6 @@ export class CreateServiceOffering {
     const saveResult = await this.serviceOfferingRepository.assign(entity.data);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(ServiceOfferingMapper.toDTO(saveResult.data, serviceCode, resourceResult.data));
+    return ok(ServiceOfferingMapper.toDTO(saveResult.data, serviceCode, resource));
   }
 }

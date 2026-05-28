@@ -28,22 +28,28 @@ export class DeleteServiceOffering {
     establishmentCode,
     userId,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ForbiddenError> {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const [establishmentResult, serviceResult, resourceResult] = await Promise.all([
+      this.establishmentRepository.findByCode(establishmentCode),
+      this.serviceRepository.findByCode(serviceCode, establishmentCode),
+      this.resourceRepository.findByCode(resourceCode),
+    ]);
+
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    if (!serviceResult.isOk) return serviceResult;
+    if (!resourceResult.isOk) return resourceResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const serviceResult = await this.serviceRepository.findByCode(serviceCode, establishmentCode);
-    if (!serviceResult.isOk) return serviceResult;
-    if (!serviceResult.data) return fail(new NotFoundError('Service', serviceCode));
+    const service = serviceResult.data;
+    if (!service) return fail(new NotFoundError('Service', serviceCode));
 
-    const resourceResult = await this.resourceRepository.findByCode(resourceCode);
-    if (!resourceResult.isOk) return resourceResult;
-    if (!resourceResult.data) return fail(new NotFoundError('Resource', resourceCode));
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
 
-    return this.serviceOfferingRepository.unassign(serviceResult.data.id, resourceResult.data.id);
+    return this.serviceOfferingRepository.unassign(service.id, resource.id);
   }
 }

@@ -41,27 +41,33 @@ export class SetSchedule {
     entries,
     userId,
   }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const [establishmentResult, resourceResult] = await Promise.all([
+      this.establishmentRepository.findByCode(establishmentCode),
+      this.resourceRepository.findByCode(resourceCode),
+    ]);
+
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    if (!resourceResult.isOk) return resourceResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const findResult = await this.resourceRepository.findByCode(resourceCode);
-    if (!findResult.isOk) return findResult;
-    if (!findResult.data) return fail(new NotFoundError('Resource', resourceCode));
-    if (findResult.data.establishmentCode !== establishmentCode)
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
+    if (resource.establishmentCode !== establishmentCode)
       return fail(new NotFoundError('Resource', resourceCode));
 
-    const resource = findResult.data;
     const scheduleResult = resource.setSchedule(entries);
     if (!scheduleResult.isOk) return scheduleResult;
 
     const replaceResult = await this.scheduleRepository.replaceAll(resource.id, resource.schedules);
     if (!replaceResult.isOk) return replaceResult;
 
-    return ok(replaceResult.data.map(ScheduleMapper.toDTO));
+    const schedules = replaceResult.data;
+
+    return ok(schedules.map(ScheduleMapper.toDTO));
   }
 }

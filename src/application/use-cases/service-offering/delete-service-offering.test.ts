@@ -60,6 +60,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns forbidden error when user is not the owner', async () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
+    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -71,6 +73,7 @@ describe('DeleteServiceOffering', () => {
   it('returns not-found error when service does not exist', async () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(null));
+    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 

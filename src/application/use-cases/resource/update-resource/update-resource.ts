@@ -31,27 +31,33 @@ export class UpdateResource {
     ResourceDTO,
     ValidationError | StorageError | NotFoundError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const [establishmentResult, resourceResult] = await Promise.all([
+      this.establishmentRepository.findByCode(establishmentCode),
+      this.resourceRepository.findByCode(code),
+    ]);
+
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    if (!resourceResult.isOk) return resourceResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const resourceResult = await this.resourceRepository.findByCode(code);
-    if (!resourceResult.isOk) return resourceResult;
-    if (!resourceResult.data) return fail(new NotFoundError('Resource', code));
-    if (resourceResult.data.establishmentCode !== establishmentCode)
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', code));
+    if (resource.establishmentCode !== establishmentCode)
       return fail(new NotFoundError('Resource', code));
 
-    const resource = resourceResult.data;
     const updateValidation = resource.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 
     const updateResult = await this.resourceRepository.update(code, resource);
     if (!updateResult.isOk) return updateResult;
 
-    return ok(ResourceMapper.toDTO(updateResult.data));
+    const updatedResource = updateResult.data;
+
+    return ok(ResourceMapper.toDTO(updatedResource));
   }
 }

@@ -44,6 +44,7 @@ describe('DeleteResource', () => {
 
   it('returns forbidden error when user is not the owner', async () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })

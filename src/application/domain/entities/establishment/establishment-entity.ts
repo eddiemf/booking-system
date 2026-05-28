@@ -2,8 +2,8 @@ import { ValidationError } from '@app/domain/errors';
 import { EntityCode } from '@app/domain/identity/entity-code';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import type { ResourceEntity } from '../resource/resource-entity';
-import type { ServiceEntity } from '../service/service-entity';
+import type { Resource } from '../resource/resource-entity';
+import type { Service } from '../service/service-entity';
 
 export type EstablishmentCreationError = ValidationError;
 
@@ -17,18 +17,18 @@ interface ReconstructProps {
   code: string;
   name: string;
   userId: string;
-  resources?: ResourceEntity[];
-  services?: ServiceEntity[];
+  resources?: Resource[];
+  services?: Service[];
 }
 
-export class EstablishmentEntity {
+export class Establishment {
   private constructor(
     private _id: string,
     private _code: string,
     private _name: string,
     private _userId: string,
-    private _resources: ResourceEntity[],
-    private _services: ServiceEntity[]
+    private _resources: Resource[],
+    private _services: Service[]
   ) {}
 
   get id(): string {
@@ -47,25 +47,23 @@ export class EstablishmentEntity {
     return this._userId;
   }
 
-  get resources(): ResourceEntity[] {
+  get resources(): Resource[] {
     return this._resources;
   }
 
-  get services(): ServiceEntity[] {
+  get services(): Service[] {
     return this._services;
   }
 
-  static create({ name, userId }: Props): Result<EstablishmentEntity, EstablishmentCreationError> {
-    const nameError = EstablishmentEntity.requireName(name);
+  static create({ name, userId }: Props): Result<Establishment, EstablishmentCreationError> {
+    const nameError = Establishment.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(
-      new EstablishmentEntity(EntityId.generate(), EntityCode.generate(), name, userId, [], [])
-    );
+    return ok(new Establishment(EntityId.generate(), EntityCode.generate(), name, userId, [], []));
   }
 
-  update({ name }: { name: string }): Result<EstablishmentEntity, ValidationError> {
-    const nameError = EstablishmentEntity.requireName(name);
+  update({ name }: { name: string }): Result<Establishment, ValidationError> {
+    const nameError = Establishment.requireName(name);
     if (nameError) return fail(nameError);
 
     this._name = name;
@@ -84,7 +82,7 @@ export class EstablishmentEntity {
     userId,
     resources = [],
     services = [],
-  }: ReconstructProps): EstablishmentEntity {
-    return new EstablishmentEntity(id, code, name, userId, resources, services);
+  }: ReconstructProps): Establishment {
+    return new Establishment(id, code, name, userId, resources, services);
   }
 }

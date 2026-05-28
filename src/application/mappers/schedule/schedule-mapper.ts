@@ -1,8 +1,8 @@
-import type { ScheduleEntity } from '@app/domain/entities';
+import type { Schedule } from '@app/domain/entities';
 import type { ScheduleDTO } from '@app/dtos';
 
 export class ScheduleMapper {
-  static toDTO(entity: ScheduleEntity): ScheduleDTO {
+  static toDTO(entity: Schedule): ScheduleDTO {
     return {
       id: entity.code,
       resourceId: entity.resourceId,

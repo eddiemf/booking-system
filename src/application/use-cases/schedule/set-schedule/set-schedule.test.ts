@@ -1,9 +1,9 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
-  ScheduleEntity,
+  Schedule,
   type ScheduleRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
@@ -20,7 +20,7 @@ describe('SetSchedule', () => {
 
   const userId = 'uuid-user';
   const resourceCode = 'res123';
-  const existingResource = ResourceEntity.reconstruct({
+  const existingResource = Resource.reconstruct({
     id: 'uuid-res',
     code: resourceCode,
     name: 'Alice',
@@ -31,7 +31,7 @@ describe('SetSchedule', () => {
   const validEntries = [{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }];
 
   const savedEntities = [
-    ScheduleEntity.reconstruct({
+    Schedule.reconstruct({
       id: '1',
       code: 'sch1',
       resourceId: 'uuid-res',
@@ -42,7 +42,7 @@ describe('SetSchedule', () => {
   ];
 
   const establishmentCode = 'est123';
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: establishmentCode,
     name: 'Salon',

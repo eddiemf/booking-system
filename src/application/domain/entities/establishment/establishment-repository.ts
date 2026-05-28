@@ -1,13 +1,13 @@
 import type { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import type { PromiseResult } from '@shared/result';
-import type { EstablishmentEntity } from './establishment-entity';
+import type { Establishment } from './establishment-entity';
 
 export interface EstablishmentRepository {
-  findByCode(code: string): PromiseResult<EstablishmentEntity | null, StorageError>;
-  save(establishment: EstablishmentEntity): PromiseResult<EstablishmentEntity, StorageError>;
+  findByCode(code: string): PromiseResult<Establishment | null, StorageError>;
+  save(establishment: Establishment): PromiseResult<Establishment, StorageError>;
   update(
     code: string,
-    establishment: EstablishmentEntity
-  ): PromiseResult<EstablishmentEntity, StorageError | NotFoundError>;
+    establishment: Establishment
+  ): PromiseResult<Establishment, StorageError | NotFoundError>;
   delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

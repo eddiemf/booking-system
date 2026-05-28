@@ -1,8 +1,8 @@
 import {
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
-  ServiceEntity,
-  ServiceOfferingEntity,
+  Service,
+  ServiceOffering,
   type ServiceOfferingRepository,
   type ServiceRepository,
 } from '@app/domain/entities';
@@ -67,7 +67,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns empty array when no resources are assigned to the service', async () => {
-    const service = ServiceEntity.reconstruct({
+    const service = Service.reconstruct({
       id: 'uuid-svc',
       code: serviceCode,
       name: 'Haircut',
@@ -87,7 +87,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns available slots from resource schedules', async () => {
-    const service = ServiceEntity.reconstruct({
+    const service = Service.reconstruct({
       id: 'uuid-svc',
       code: serviceCode,
       name: 'Haircut',
@@ -98,7 +98,7 @@ describe('GetAvailability', () => {
     });
     serviceRepository.findByCode.mockResolvedValue(ok(service));
 
-    const offering = ServiceOfferingEntity.reconstruct({
+    const offering = ServiceOffering.reconstruct({
       id: 'uuid-offering',
       code: 'off1',
       serviceId: 'uuid-svc',
@@ -128,7 +128,7 @@ describe('GetAvailability', () => {
       },
     ]);
 
-    const resource = ResourceEntity.reconstruct({
+    const resource = Resource.reconstruct({
       id: 'uuid-res',
       code: 'res123',
       name: 'Alice',
@@ -162,7 +162,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns empty array when domain service returns no slots', async () => {
-    const service = ServiceEntity.reconstruct({
+    const service = Service.reconstruct({
       id: 'uuid-svc',
       code: serviceCode,
       name: 'Haircut',
@@ -173,7 +173,7 @@ describe('GetAvailability', () => {
     });
     serviceRepository.findByCode.mockResolvedValue(ok(service));
 
-    const emptyOffering = ServiceOfferingEntity.reconstruct({
+    const emptyOffering = ServiceOffering.reconstruct({
       id: 'uuid-offering',
       code: 'off1',
       serviceId: 'uuid-svc',
@@ -188,7 +188,7 @@ describe('GetAvailability', () => {
 
     availabilityService.generateResourceSlots.mockReturnValue([]);
 
-    const resource = ResourceEntity.reconstruct({
+    const resource = Resource.reconstruct({
       id: 'uuid-res',
       code: 'res123',
       name: 'Alice',
@@ -207,7 +207,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns slots from multiple resources', async () => {
-    const service = ServiceEntity.reconstruct({
+    const service = Service.reconstruct({
       id: 'uuid-svc',
       code: serviceCode,
       name: 'Haircut',
@@ -218,7 +218,7 @@ describe('GetAvailability', () => {
     });
     serviceRepository.findByCode.mockResolvedValue(ok(service));
 
-    const multiOffering1 = ServiceOfferingEntity.reconstruct({
+    const multiOffering1 = ServiceOffering.reconstruct({
       id: 'l1',
       code: 'l1',
       serviceId: 'uuid-svc',
@@ -229,7 +229,7 @@ describe('GetAvailability', () => {
       price: 0,
     });
 
-    const multiOffering2 = ServiceOfferingEntity.reconstruct({
+    const multiOffering2 = ServiceOffering.reconstruct({
       id: 'l2',
       code: 'l2',
       serviceId: 'uuid-svc',
@@ -264,7 +264,7 @@ describe('GetAvailability', () => {
         },
       ]);
 
-    const resource1 = ResourceEntity.reconstruct({
+    const resource1 = Resource.reconstruct({
       id: 'uuid-res-1',
       code: 'res1',
       name: 'Alice',
@@ -273,7 +273,7 @@ describe('GetAvailability', () => {
       schedules: [],
     });
 
-    const resource2 = ResourceEntity.reconstruct({
+    const resource2 = Resource.reconstruct({
       id: 'uuid-res-2',
       code: 'res2',
       name: 'Bob',

@@ -1,13 +1,13 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
-import { ServiceEntity } from './service-entity';
+import { Service } from './service-entity';
 
 const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe('ServiceEntity', () => {
   describe('create()', () => {
     it('fails to create with empty name', () => {
-      const error = ServiceEntity.create({
+      const error = Service.create({
         name: '',
         duration: 60,
         establishmentId: '1',
@@ -19,7 +19,7 @@ describe('ServiceEntity', () => {
     });
 
     it('fails to create with duration less than zero', () => {
-      const error = ServiceEntity.create({
+      const error = Service.create({
         name: 'service',
         duration: -1,
         establishmentId: '1',
@@ -33,7 +33,7 @@ describe('ServiceEntity', () => {
     });
 
     it('fails to create with duration equal to zero', () => {
-      const error = ServiceEntity.create({
+      const error = Service.create({
         name: 'service',
         duration: 0,
         establishmentId: '1',
@@ -47,19 +47,19 @@ describe('ServiceEntity', () => {
     });
 
     it('creates a valid service with default description', () => {
-      const service = ServiceEntity.create({
+      const service = Service.create({
         name: 'service',
         duration: 60,
         establishmentId: '1',
         establishmentCode: 'est123',
       }).getData();
 
-      expect(service).toBeInstanceOf(ServiceEntity);
+      expect(service).toBeInstanceOf(Service);
       expect(service.description).toBe('');
     });
 
     it('creates a valid service with all properties set', () => {
-      const service = ServiceEntity.create({
+      const service = Service.create({
         name: 'haircut',
         description: 'A basic haircut',
         duration: 30,
@@ -74,7 +74,7 @@ describe('ServiceEntity', () => {
     });
 
     it('generates a UUIDv7 id', () => {
-      const service = ServiceEntity.create({
+      const service = Service.create({
         name: 'service',
         duration: 60,
         establishmentId: '1',
@@ -85,13 +85,13 @@ describe('ServiceEntity', () => {
     });
 
     it('generates a unique id per instance', () => {
-      const a = ServiceEntity.create({
+      const a = Service.create({
         name: 'service',
         duration: 60,
         establishmentId: '1',
         establishmentCode: 'est123',
       }).getData();
-      const b = ServiceEntity.create({
+      const b = Service.create({
         name: 'service',
         duration: 60,
         establishmentId: '1',
@@ -104,7 +104,7 @@ describe('ServiceEntity', () => {
 
   describe('reconstruct()', () => {
     it('restores all properties from the given data', () => {
-      const service = ServiceEntity.reconstruct({
+      const service = Service.reconstruct({
         id: 'id',
         code: 'svc123',
         name: 'massage',
@@ -114,7 +114,7 @@ describe('ServiceEntity', () => {
         establishmentCode: 'est123',
       });
 
-      expect(service).toBeInstanceOf(ServiceEntity);
+      expect(service).toBeInstanceOf(Service);
       expect(service.id).toBe('id');
       expect(service.code).toBe('svc123');
       expect(service.name).toBe('massage');
@@ -125,7 +125,7 @@ describe('ServiceEntity', () => {
   });
 
   describe('update()', () => {
-    const service = ServiceEntity.reconstruct({
+    const service = Service.reconstruct({
       id: 'uuid-svc',
       code: 'svc123',
       name: 'Old Name',

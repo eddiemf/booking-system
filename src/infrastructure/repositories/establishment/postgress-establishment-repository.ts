@@ -1,9 +1,9 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ResourceEntity,
-  ScheduleEntity,
-  ServiceEntity,
+  Resource,
+  Schedule,
+  Service,
 } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
@@ -36,7 +36,7 @@ type EstablishmentRow = {
 export class PostgressEstablishmentRepository implements EstablishmentRepository {
   constructor(private readonly db: NodePgDatabase) {}
 
-  async findByCode(code: string): PromiseResult<EstablishmentEntity | null, StorageError> {
+  async findByCode(code: string): PromiseResult<Establishment | null, StorageError> {
     try {
       const estRows = await this.db
         .select({
@@ -77,7 +77,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
 
       const resources = this.buildResources(id, code, estRows);
       const services = serviceRows.map((row) =>
-        ServiceEntity.reconstruct({
+        Service.reconstruct({
           id: row.id,
           code: row.code,
           name: row.name,
@@ -89,7 +89,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
       );
 
       return ok(
-        EstablishmentEntity.reconstruct({
+        Establishment.reconstruct({
           id,
           code,
           name: establishmentName,
@@ -103,7 +103,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
     }
   }
 
-  async save(establishment: EstablishmentEntity): PromiseResult<EstablishmentEntity, StorageError> {
+  async save(establishment: Establishment): PromiseResult<Establishment, StorageError> {
     try {
       await this.db.insert(establishmentsTable).values({
         id: establishment.id,
@@ -119,8 +119,8 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
 
   async update(
     code: string,
-    establishment: EstablishmentEntity
-  ): PromiseResult<EstablishmentEntity, StorageError | NotFoundError> {
+    establishment: Establishment
+  ): PromiseResult<Establishment, StorageError | NotFoundError> {
     try {
       const rows = await this.db
         .update(establishmentsTable)
@@ -129,7 +129,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
         .returning({ id: establishmentsTable.id, code: establishmentsTable.code });
       if (!rows[0]) return fail(new NotFoundError('Establishment', code));
       return ok(
-        EstablishmentEntity.reconstruct({
+        Establishment.reconstruct({
           id: rows[0].id,
           code: rows[0].code,
           name: establishment.name,
@@ -161,7 +161,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
     establishmentId: string,
     establishmentCode: string,
     rows: EstablishmentRow[]
-  ): ResourceEntity[] {
+  ): Resource[] {
     const map = new Map<string, { meta: EstablishmentRow; scheduleRows: EstablishmentRow[] }>();
     for (const row of rows) {
       if (!row.resourceId) continue;
@@ -173,14 +173,14 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
       }
     }
     return Array.from(map.values()).map(({ meta, scheduleRows }) =>
-      ResourceEntity.reconstruct({
+      Resource.reconstruct({
         id: meta.resourceId as string,
         code: meta.resourceCode as string,
         name: meta.resourceName as string,
         establishmentId,
         establishmentCode: establishmentCode,
         schedules: scheduleRows.map((scheduleRow) =>
-          ScheduleEntity.reconstruct({
+          Schedule.reconstruct({
             id: scheduleRow.scheduleId as string,
             code: scheduleRow.scheduleCode as string,
             resourceId: scheduleRow.scheduleResourceId as string,

@@ -1,9 +1,9 @@
 import {
   type BookingRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
-  ServiceEntity,
-  ServiceOfferingEntity,
+  Service,
+  ServiceOffering,
   type ServiceOfferingRepository,
   type ServiceRepository,
 } from '@app/domain/entities';
@@ -37,7 +37,7 @@ describe('CreateBooking', () => {
   const futureStartsAt = new Date(Date.now() + 86400000).toISOString();
   const futureEndsAt = new Date(Date.now() + 86400000 + 3600000).toISOString();
 
-  const mockService = ServiceEntity.reconstruct({
+  const mockService = Service.reconstruct({
     id: 'uuid-svc',
     code: serviceCode,
     name: 'Haircut',
@@ -47,7 +47,7 @@ describe('CreateBooking', () => {
     establishmentCode,
   });
 
-  const mockResource = ResourceEntity.reconstruct({
+  const mockResource = Resource.reconstruct({
     id: 'uuid-res',
     code: resourceCode,
     name: 'Bob',
@@ -55,7 +55,7 @@ describe('CreateBooking', () => {
     establishmentCode,
   });
 
-  const mockOffering = ServiceOfferingEntity.reconstruct({
+  const mockOffering = ServiceOffering.reconstruct({
     id: 'uuid-off',
     code: 'off1',
     serviceId: 'uuid-svc',
@@ -105,7 +105,7 @@ describe('CreateBooking', () => {
 
   it('returns not-found error when resource belongs to another establishment', async () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    const otherResource = ResourceEntity.reconstruct({
+    const otherResource = Resource.reconstruct({
       id: 'uuid-res',
       code: resourceCode,
       name: 'Bob',

@@ -1,6 +1,6 @@
 import {
+  Establishment,
   type EstablishmentCreationError,
-  EstablishmentEntity,
   type EstablishmentRepository,
 } from '@app/domain/entities';
 import type { StorageError } from '@app/domain/errors';
@@ -20,7 +20,7 @@ export class CreateEstablishment {
     name,
     userId,
   }: Input): PromiseResult<EstablishmentDTO, EstablishmentCreationError | StorageError> {
-    const establishmentResult = EstablishmentEntity.create({ name, userId });
+    const establishmentResult = Establishment.create({ name, userId });
     if (!establishmentResult.isOk) return establishmentResult;
 
     const entity = establishmentResult.data;

@@ -48,7 +48,7 @@ interface ReconstructProps {
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
-export class BookingEntity {
+export class Booking {
   private constructor(
     private _id: string,
     private _code: string,
@@ -125,11 +125,11 @@ export class BookingEntity {
     return this._serviceDuration;
   }
 
-  static create(props: Props): Result<BookingEntity, BookingCreationError> {
-    const startsAtError = BookingEntity.validateDateTime(props.startsAt, 'startsAt');
+  static create(props: Props): Result<Booking, BookingCreationError> {
+    const startsAtError = Booking.validateDateTime(props.startsAt, 'startsAt');
     if (startsAtError) return fail(startsAtError);
 
-    const endsAtError = BookingEntity.validateDateTime(props.endsAt, 'endsAt');
+    const endsAtError = Booking.validateDateTime(props.endsAt, 'endsAt');
     if (endsAtError) return fail(endsAtError);
 
     if (new Date(props.endsAt) <= new Date(props.startsAt)) {
@@ -141,7 +141,7 @@ export class BookingEntity {
     }
 
     return ok(
-      new BookingEntity(
+      new Booking(
         EntityId.generate(),
         EntityCode.generate(),
         props.customerId,
@@ -164,7 +164,7 @@ export class BookingEntity {
     );
   }
 
-  cancel(): Result<BookingEntity, ValidationError> {
+  cancel(): Result<Booking, ValidationError> {
     if (this._status === 'cancelled') {
       return fail(new ValidationError('status', 'Booking is already cancelled.'));
     }
@@ -178,8 +178,8 @@ export class BookingEntity {
     return ok(this);
   }
 
-  static reconstruct(props: ReconstructProps): BookingEntity {
-    return new BookingEntity(
+  static reconstruct(props: ReconstructProps): Booking {
+    return new Booking(
       props.id,
       props.code,
       props.customerId,

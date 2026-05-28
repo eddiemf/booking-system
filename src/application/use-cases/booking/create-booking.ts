@@ -1,5 +1,5 @@
 import {
-  BookingEntity,
+  Booking,
   type BookingRepository,
   type ResourceRepository,
   type ServiceOfferingRepository,
@@ -85,7 +85,7 @@ export class CreateBooking {
       return fail(new ConflictError('Resource is already booked for this time slot.'));
     }
 
-    const entityResult = BookingEntity.create({
+    const entityResult = Booking.create({
       customerId: userId,
       customerCode: userCode,
       customerName: userName,

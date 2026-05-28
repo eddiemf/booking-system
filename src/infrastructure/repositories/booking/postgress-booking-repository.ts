@@ -1,4 +1,4 @@
-import { BookingEntity, type BookingRepository } from '@app/domain/entities';
+import { Booking, type BookingRepository } from '@app/domain/entities';
 import { type ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq, gt, lt } from 'drizzle-orm';
@@ -29,7 +29,7 @@ type BookingRow = {
 export class PostgressBookingRepository implements BookingRepository {
   constructor(private readonly db: NodePgDatabase) {}
 
-  async save(booking: BookingEntity): PromiseResult<BookingEntity, StorageError | ConflictError> {
+  async save(booking: Booking): PromiseResult<Booking, StorageError | ConflictError> {
     try {
       await this.db.insert(bookingsTable).values({
         id: booking.id,
@@ -57,7 +57,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findByCode(code: string): PromiseResult<BookingEntity | null, StorageError> {
+  async findByCode(code: string): PromiseResult<Booking | null, StorageError> {
     try {
       const rows = await this.db
         .select()
@@ -74,7 +74,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findByCustomer(customerId: string): PromiseResult<BookingEntity[], StorageError> {
+  async findByCustomer(customerId: string): PromiseResult<Booking[], StorageError> {
     try {
       const rows = await this.db
         .select()
@@ -88,9 +88,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findByEstablishment(
-    establishmentCode: string
-  ): PromiseResult<BookingEntity[], StorageError> {
+  async findByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError> {
     try {
       const rows = await this.db
         .select()
@@ -108,7 +106,7 @@ export class PostgressBookingRepository implements BookingRepository {
     resourceId: string,
     startsAt: string,
     endsAt: string
-  ): PromiseResult<BookingEntity[], StorageError> {
+  ): PromiseResult<Booking[], StorageError> {
     try {
       const rows = await this.db
         .select()
@@ -128,7 +126,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async update(booking: BookingEntity): PromiseResult<BookingEntity, StorageError | NotFoundError> {
+  async update(booking: Booking): PromiseResult<Booking, StorageError | NotFoundError> {
     try {
       const rows = await this.db
         .update(bookingsTable)
@@ -145,8 +143,8 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  private toEntity(row: BookingRow): BookingEntity {
-    return BookingEntity.reconstruct({
+  private toEntity(row: BookingRow): Booking {
+    return Booking.reconstruct({
       id: row.id,
       code: row.code,
       customerId: row.customerId,

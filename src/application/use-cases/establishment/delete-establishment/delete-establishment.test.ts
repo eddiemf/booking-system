@@ -1,4 +1,4 @@
-import { EstablishmentEntity, type EstablishmentRepository } from '@app/domain/entities';
+import { Establishment, type EstablishmentRepository } from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,7 @@ describe('DeleteEstablishment', () => {
   const useCase = new DeleteEstablishment(establishmentRepository);
 
   const userId = 'uuid-user';
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-1',
     code: 'abc123',
     name: 'Salon',

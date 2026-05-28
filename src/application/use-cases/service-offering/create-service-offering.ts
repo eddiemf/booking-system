@@ -4,7 +4,7 @@ import type {
   ServiceOfferingRepository,
   ServiceRepository,
 } from '@app/domain/entities';
-import { ServiceOfferingEntity } from '@app/domain/entities';
+import { ServiceOffering } from '@app/domain/entities';
 import {
   type ConflictError,
   ForbiddenError,
@@ -73,7 +73,7 @@ export class CreateServiceOffering {
       return fail(new NotFoundError('Resource', resourceCode));
     }
 
-    const entity = ServiceOfferingEntity.create({
+    const entity = ServiceOffering.create({
       serviceId: service.id,
       resourceId: resource.id,
       maxCapacity,

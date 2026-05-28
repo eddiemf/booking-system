@@ -1,29 +1,29 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
-import { ResourceEntity } from '../resource/resource-entity';
-import { ServiceEntity } from '../service/service-entity';
-import { EstablishmentEntity } from './establishment-entity';
+import { Resource } from '../resource/resource-entity';
+import { Service } from '../service/service-entity';
+import { Establishment } from './establishment-entity';
 
 describe('EstablishmentEntity', () => {
   describe('create()', () => {
     it('fails to create with empty name', () => {
-      const error = EstablishmentEntity.create({ name: '', userId: 'uuid-user' }).getError();
+      const error = Establishment.create({ name: '', userId: 'uuid-user' }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
     it('creates a valid establishment', () => {
-      const data = EstablishmentEntity.create({ name: 'My Salon', userId: 'uuid-user' }).getData();
+      const data = Establishment.create({ name: 'My Salon', userId: 'uuid-user' }).getData();
 
-      expect(data).toBeInstanceOf(EstablishmentEntity);
+      expect(data).toBeInstanceOf(Establishment);
       expect(data.name).toBe('My Salon');
       expect(data.userId).toBe('uuid-user');
       expect(typeof data.id).toBe('string');
     });
 
     it('starts with empty resources and services', () => {
-      const entity = EstablishmentEntity.create({
+      const entity = Establishment.create({
         name: 'My Salon',
         userId: 'uuid-user',
       }).getData();
@@ -34,7 +34,7 @@ describe('EstablishmentEntity', () => {
   });
 
   describe('update()', () => {
-    const establishment = EstablishmentEntity.reconstruct({
+    const establishment = Establishment.reconstruct({
       id: 'uuid-1',
       code: 'abc123',
       name: 'Old Name',
@@ -62,7 +62,7 @@ describe('EstablishmentEntity', () => {
 
   describe('reconstruct()', () => {
     it('defaults resources and services to empty arrays', () => {
-      const entity = EstablishmentEntity.reconstruct({
+      const entity = Establishment.reconstruct({
         id: '1',
         code: 'abc',
         name: 'Salon',
@@ -74,14 +74,14 @@ describe('EstablishmentEntity', () => {
     });
 
     it('restores resources and services when provided', () => {
-      const resource = ResourceEntity.reconstruct({
+      const resource = Resource.reconstruct({
         id: 'r1',
         code: 'res1',
         name: 'Alice',
         establishmentId: '1',
         establishmentCode: 'est123',
       });
-      const service = ServiceEntity.reconstruct({
+      const service = Service.reconstruct({
         id: 's1',
         code: 'svc1',
         name: 'Haircut',
@@ -90,7 +90,7 @@ describe('EstablishmentEntity', () => {
         establishmentId: '1',
         establishmentCode: 'est123',
       });
-      const entity = EstablishmentEntity.reconstruct({
+      const entity = Establishment.reconstruct({
         id: '1',
         code: 'abc',
         name: 'Salon',

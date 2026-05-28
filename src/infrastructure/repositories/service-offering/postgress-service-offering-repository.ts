@@ -1,4 +1,4 @@
-import { ServiceOfferingEntity, type ServiceOfferingRepository } from '@app/domain/entities';
+import { ServiceOffering, type ServiceOfferingRepository } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq } from 'drizzle-orm';
@@ -15,8 +15,8 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
   constructor(private readonly db: NodePgDatabase) {}
 
   async assign(
-    serviceOffering: ServiceOfferingEntity
-  ): PromiseResult<ServiceOfferingEntity, StorageError | NotFoundError | ConflictError> {
+    serviceOffering: ServiceOffering
+  ): PromiseResult<ServiceOffering, StorageError | NotFoundError | ConflictError> {
     try {
       await this.db.insert(serviceOfferingsTable).values({
         id: serviceOffering.id,
@@ -61,7 +61,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
   async findByServiceCode(
     serviceCode: string,
     establishmentCode: string
-  ): PromiseResult<ServiceOfferingEntity[], StorageError> {
+  ): PromiseResult<ServiceOffering[], StorageError> {
     try {
       const rows = await this.db
         .select({
@@ -83,7 +83,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
 
       return ok(
         rows.map((row) =>
-          ServiceOfferingEntity.reconstruct({
+          ServiceOffering.reconstruct({
             id: row.id,
             code: row.code,
             serviceId: row.serviceId,
@@ -103,7 +103,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
   async findByResourceCode(
     resourceCode: string,
     establishmentCode: string
-  ): PromiseResult<ServiceOfferingEntity[], StorageError> {
+  ): PromiseResult<ServiceOffering[], StorageError> {
     try {
       const rows = await this.db
         .select({
@@ -128,7 +128,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
 
       return ok(
         rows.map((row) =>
-          ServiceOfferingEntity.reconstruct({
+          ServiceOffering.reconstruct({
             id: row.id,
             code: row.code,
             serviceId: row.serviceId,

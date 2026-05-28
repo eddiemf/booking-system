@@ -24,7 +24,7 @@ interface ReconstructProps {
   establishmentCode: string;
 }
 
-export class ServiceEntity {
+export class Service {
   private constructor(
     private _id: string,
     private _code: string,
@@ -69,15 +69,15 @@ export class ServiceEntity {
     description = '',
     establishmentId,
     establishmentCode,
-  }: Props): Result<ServiceEntity, ServiceValidationError> {
-    const nameError = ServiceEntity.requireName(name);
+  }: Props): Result<Service, ServiceValidationError> {
+    const nameError = Service.requireName(name);
     if (nameError) return fail(nameError);
 
     const durationResult = Duration.create(duration, 'duration');
     if (!durationResult.isOk) return durationResult;
 
     return ok(
-      new ServiceEntity(
+      new Service(
         EntityId.generate(),
         EntityCode.generate(),
         name,
@@ -97,8 +97,8 @@ export class ServiceEntity {
     name: string;
     description?: string | undefined;
     duration: number;
-  }): Result<ServiceEntity, ServiceValidationError> {
-    const nameError = ServiceEntity.requireName(name);
+  }): Result<Service, ServiceValidationError> {
+    const nameError = Service.requireName(name);
     if (nameError) return fail(nameError);
 
     const durationResult = Duration.create(duration, 'duration');
@@ -120,7 +120,7 @@ export class ServiceEntity {
     establishmentId,
     establishmentCode,
   }: ReconstructProps) {
-    return new ServiceEntity(
+    return new Service(
       id,
       code,
       name,

@@ -1,4 +1,4 @@
-import type { ScheduleEntity, ScheduleRepository } from '@app/domain/entities';
+import type { Schedule, ScheduleRepository } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
@@ -11,8 +11,8 @@ export class PostgressScheduleRepository implements ScheduleRepository {
 
   async replaceAll(
     resourceId: string,
-    entries: ScheduleEntity[]
-  ): PromiseResult<ScheduleEntity[], StorageError | NotFoundError> {
+    entries: Schedule[]
+  ): PromiseResult<Schedule[], StorageError | NotFoundError> {
     try {
       await this.db.transaction(async (tx) => {
         await tx.delete(schedulesTable).where(eq(schedulesTable.resourceId, resourceId));

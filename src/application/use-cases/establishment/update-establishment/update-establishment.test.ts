@@ -1,4 +1,4 @@
-import { EstablishmentEntity, type EstablishmentRepository } from '@app/domain/entities';
+import { Establishment, type EstablishmentRepository } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,7 @@ describe('UpdateEstablishment', () => {
   const useCase = new UpdateEstablishment(establishmentRepository);
 
   const userId = 'uuid-user';
-  const existing = EstablishmentEntity.reconstruct({
+  const existing = Establishment.reconstruct({
     id: 'uuid-1',
     code: 'abc123',
     name: 'Old Name',
@@ -62,7 +62,7 @@ describe('UpdateEstablishment', () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(existing));
     establishmentRepository.update.mockResolvedValue(
       ok(
-        EstablishmentEntity.reconstruct({
+        Establishment.reconstruct({
           id: 'uuid-1',
           code: 'abc123',
           name: 'New Name',

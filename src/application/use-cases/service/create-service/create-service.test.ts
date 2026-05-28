@@ -1,7 +1,7 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ServiceEntity,
+  Service,
   type ServiceRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
@@ -25,7 +25,7 @@ describe('CreateService', () => {
     userId,
   };
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-1',
     code: 'est123',
     name: 'Salon',
@@ -74,7 +74,7 @@ describe('CreateService', () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.save.mockResolvedValue(
       ok(
-        ServiceEntity.reconstruct({
+        Service.reconstruct({
           id: 'uuid-svc',
           code: 'svc123',
           name: 'Service',

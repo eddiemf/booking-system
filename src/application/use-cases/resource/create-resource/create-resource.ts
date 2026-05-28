@@ -1,6 +1,6 @@
 import {
   type EstablishmentRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
   type ResourceValidationError,
 } from '@app/domain/entities';
@@ -37,7 +37,7 @@ export class CreateResource {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const entityResult = ResourceEntity.create({
+    const entityResult = Resource.create({
       name,
       establishmentId: establishmentResult.data.id,
       establishmentCode: establishmentResult.data.code,

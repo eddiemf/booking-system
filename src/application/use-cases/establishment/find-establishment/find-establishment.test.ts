@@ -1,4 +1,4 @@
-import { EstablishmentEntity, type EstablishmentRepository } from '@app/domain/entities';
+import { Establishment, type EstablishmentRepository } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -30,7 +30,7 @@ describe('FindEstablishment', () => {
   it('returns an establishment DTO when found', async () => {
     establishmentRepository.findByCode.mockResolvedValue(
       ok(
-        EstablishmentEntity.reconstruct({
+        Establishment.reconstruct({
           id: 'uuid-1',
           code: 'abc123',
           name: 'My Salon',

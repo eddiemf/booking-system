@@ -1,4 +1,4 @@
-import { EstablishmentEntity, type EstablishmentRepository } from '@app/domain/entities';
+import { Establishment, type EstablishmentRepository } from '@app/domain/entities';
 import { StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -35,7 +35,7 @@ describe('CreateEstablishment', () => {
   it('returns an establishment DTO when creation was successful', async () => {
     establishmentRepository.save.mockResolvedValue(
       ok(
-        EstablishmentEntity.reconstruct({
+        Establishment.reconstruct({
           id: 'uuid-42',
           code: 'est123',
           name: 'My Salon',

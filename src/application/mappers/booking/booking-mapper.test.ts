@@ -1,11 +1,11 @@
-import { BookingEntity } from '@app/domain/entities';
+import { Booking } from '@app/domain/entities';
 import { describe, expect, it } from 'vitest';
 import { BookingMapper } from './booking-mapper';
 
 describe('BookingMapper', () => {
   describe('toDTO()', () => {
     it('maps from entity to DTO', () => {
-      const entity = BookingEntity.reconstruct({
+      const entity = Booking.reconstruct({
         id: 'uuid-123',
         code: 'bkg123',
         customerId: 'uuid-cust',
@@ -28,7 +28,7 @@ describe('BookingMapper', () => {
 
       const dto = BookingMapper.toDTO(entity);
 
-      expect(dto).not.toBeInstanceOf(BookingEntity);
+      expect(dto).not.toBeInstanceOf(Booking);
       expect(dto).toEqual({
         id: 'bkg123',
         customerCode: 'usr123',
@@ -47,7 +47,7 @@ describe('BookingMapper', () => {
     });
 
     it('maps cancelled status correctly', () => {
-      const entity = BookingEntity.reconstruct({
+      const entity = Booking.reconstruct({
         id: 'uuid-1',
         code: 'bkg1',
         customerId: 'uuid-cust',

@@ -1,8 +1,8 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
-import type { ResourceEntity } from '../entities/resource/resource-entity';
+import type { Resource } from '../entities/resource/resource-entity';
 import { TimeOfDay } from '../entities/schedule/time-of-day/time-of-day';
-import type { ServiceOfferingEntity } from '../entities/service-offering/service-offering-entity';
+import type { ServiceOffering } from '../entities/service-offering/service-offering-entity';
 
 export interface ResourceSlot {
   startTime: string;
@@ -40,7 +40,7 @@ export class AvailabilityService {
    */
   resolveTimeSlot(
     startsAt: string,
-    offering: ServiceOfferingEntity
+    offering: ServiceOffering
   ): Result<{ startsAt: string; endsAt: string }, ValidationError> {
     if (!ISO_DATE_REGEX.test(startsAt)) {
       return fail(new ValidationError('startsAt', 'Must be a valid ISO 8601 datetime string.'));
@@ -74,8 +74,8 @@ export class AvailabilityService {
     resource,
   }: {
     date: string;
-    resource: ResourceEntity;
-    offering: ServiceOfferingEntity;
+    resource: Resource;
+    offering: ServiceOffering;
   }): ResourceSlot[] {
     const slots: ResourceSlot[] = [];
     const dayOfWeek = new Date(date).getDay();

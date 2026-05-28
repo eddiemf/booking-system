@@ -1,7 +1,7 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
@@ -17,7 +17,7 @@ describe('UpdateResource', () => {
 
   const userId = 'uuid-user';
   const validInput = { code: 'res123', establishmentCode: 'est123', name: 'Room A', userId };
-  const updatedEntity = ResourceEntity.reconstruct({
+  const updatedEntity = Resource.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Room A',
@@ -25,7 +25,7 @@ describe('UpdateResource', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',

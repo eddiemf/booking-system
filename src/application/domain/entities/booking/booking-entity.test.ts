@@ -1,6 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
-import { BookingEntity } from './booking-entity';
+import { Booking } from './booking-entity';
 
 const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -28,21 +28,21 @@ const validProps = {
 describe('BookingEntity', () => {
   describe('create()', () => {
     it('fails with invalid startsAt format', () => {
-      const error = BookingEntity.create({ ...validProps, startsAt: 'not-a-date' }).getError();
+      const error = Booking.create({ ...validProps, startsAt: 'not-a-date' }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toContain('startsAt');
     });
 
     it('fails with invalid endsAt format', () => {
-      const error = BookingEntity.create({ ...validProps, endsAt: 'bad' }).getError();
+      const error = Booking.create({ ...validProps, endsAt: 'bad' }).getError();
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toContain('endsAt');
     });
 
     it('fails when endsAt is before startsAt', () => {
-      const error = BookingEntity.create({
+      const error = Booking.create({
         ...validProps,
         startsAt: futureEndsAt,
         endsAt: futureStartsAt,
@@ -53,7 +53,7 @@ describe('BookingEntity', () => {
     });
 
     it('fails when endsAt equals startsAt', () => {
-      const error = BookingEntity.create({
+      const error = Booking.create({
         ...validProps,
         startsAt: futureStartsAt,
         endsAt: futureStartsAt,
@@ -64,7 +64,7 @@ describe('BookingEntity', () => {
     });
 
     it('fails when startsAt is in the past', () => {
-      const error = BookingEntity.create({
+      const error = Booking.create({
         ...validProps,
         startsAt: new Date('2020-01-01').toISOString(),
         endsAt: new Date('2020-01-01T01:00:00Z').toISOString(),
@@ -75,9 +75,9 @@ describe('BookingEntity', () => {
     });
 
     it('creates a valid booking', () => {
-      const booking = BookingEntity.create(validProps).getData();
+      const booking = Booking.create(validProps).getData();
 
-      expect(booking).toBeInstanceOf(BookingEntity);
+      expect(booking).toBeInstanceOf(Booking);
       expect(booking.customerCode).toBe('usr123');
       expect(booking.serviceCode).toBe('svc123');
       expect(booking.resourceCode).toBe('res123');
@@ -86,13 +86,13 @@ describe('BookingEntity', () => {
     });
 
     it('generates a UUIDv7 id', () => {
-      const booking = BookingEntity.create(validProps).getData();
+      const booking = Booking.create(validProps).getData();
 
       expect(booking.id).toMatch(UUID_V7_REGEX);
     });
 
     it('generates a code', () => {
-      const booking = BookingEntity.create(validProps).getData();
+      const booking = Booking.create(validProps).getData();
 
       expect(booking.code).toBeDefined();
       expect(booking.code.length).toBe(10);
@@ -101,7 +101,7 @@ describe('BookingEntity', () => {
 
   describe('cancel()', () => {
     it('fails when booking is already cancelled', () => {
-      const booking = BookingEntity.reconstruct({
+      const booking = Booking.reconstruct({
         id: 'uuid-1',
         code: 'bkg1',
         ...validProps,
@@ -115,7 +115,7 @@ describe('BookingEntity', () => {
     });
 
     it('fails when booking is in the past', () => {
-      const booking = BookingEntity.reconstruct({
+      const booking = Booking.reconstruct({
         id: 'uuid-1',
         code: 'bkg1',
         ...validProps,
@@ -131,7 +131,7 @@ describe('BookingEntity', () => {
     });
 
     it('sets status to cancelled', () => {
-      const booking = BookingEntity.create(validProps).getData();
+      const booking = Booking.create(validProps).getData();
 
       const cancelled = booking.cancel().getData();
 
@@ -142,7 +142,7 @@ describe('BookingEntity', () => {
 
   describe('reconstruct()', () => {
     it('restores all properties from the given data', () => {
-      const booking = BookingEntity.reconstruct({
+      const booking = Booking.reconstruct({
         id: 'uuid-1',
         code: 'bkg1',
         ...validProps,
@@ -156,7 +156,7 @@ describe('BookingEntity', () => {
     });
 
     it('reconstructs with cancelled status', () => {
-      const booking = BookingEntity.reconstruct({
+      const booking = Booking.reconstruct({
         id: 'uuid-1',
         code: 'bkg1',
         ...validProps,

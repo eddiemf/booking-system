@@ -1,4 +1,4 @@
-import { ServiceEntity, type ServiceRepository } from '@app/domain/entities';
+import { Service, type ServiceRepository } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ describe('FindService', () => {
 
   const establishmentCode = 'est123';
   const code = 'svc123';
-  const mockService = ServiceEntity.reconstruct({
+  const mockService = Service.reconstruct({
     id: 'uuid-svc',
     code,
     name: 'Haircut',

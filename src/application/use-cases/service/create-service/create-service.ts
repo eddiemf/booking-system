@@ -1,6 +1,6 @@
 import {
   type EstablishmentRepository,
-  ServiceEntity,
+  Service,
   type ServiceRepository,
   type ServiceValidationError,
 } from '@app/domain/entities';
@@ -42,7 +42,7 @@ export class CreateService {
     }
 
     const establishmentId = establishmentResult.data.id;
-    const serviceResult = ServiceEntity.create({
+    const serviceResult = Service.create({
       name,
       description,
       duration,

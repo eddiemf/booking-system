@@ -1,7 +1,7 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ServiceEntity,
+  Service,
   type ServiceRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
@@ -25,7 +25,7 @@ describe('UpdateService', () => {
     userId,
   };
 
-  const updatedEntity = ServiceEntity.reconstruct({
+  const updatedEntity = Service.reconstruct({
     id: 'uuid-svc',
     code: 'svc123',
     name: 'Haircut',
@@ -35,7 +35,7 @@ describe('UpdateService', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',

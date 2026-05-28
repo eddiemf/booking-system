@@ -1,5 +1,5 @@
 import type { ServiceRepository } from '@app/domain/entities';
-import { ServiceEntity } from '@app/domain/entities';
+import { Service } from '@app/domain/entities';
 import { StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ describe('ListServices', () => {
   const useCase = new ListServices(serviceRepository);
 
   const establishmentCode = 'est123';
-  const mockService = ServiceEntity.reconstruct({
+  const mockService = Service.reconstruct({
     id: 'uuid-svc',
     code: 'svc123',
     name: 'Haircut',

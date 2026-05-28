@@ -2,7 +2,7 @@ import { ValidationError } from '@app/domain/errors';
 import { EntityCode } from '@app/domain/identity/entity-code';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import { ScheduleEntity } from '../schedule/schedule-entity';
+import { Schedule } from '../schedule/schedule-entity';
 
 export type ResourceValidationError = ValidationError;
 
@@ -18,17 +18,17 @@ interface ReconstructProps {
   name: string;
   establishmentId: string;
   establishmentCode: string;
-  schedules?: ScheduleEntity[];
+  schedules?: Schedule[];
 }
 
-export class ResourceEntity {
+export class Resource {
   private constructor(
     private _id: string,
     private _code: string,
     private _name: string,
     private _establishmentId: string,
     private _establishmentCode: string,
-    private _schedules: ScheduleEntity[]
+    private _schedules: Schedule[]
   ) {}
 
   get id(): string {
@@ -51,12 +51,12 @@ export class ResourceEntity {
     return this._establishmentCode;
   }
 
-  get schedules(): ScheduleEntity[] {
+  get schedules(): Schedule[] {
     return this._schedules;
   }
 
-  update({ name }: { name: string }): Result<ResourceEntity, ResourceValidationError> {
-    const nameError = ResourceEntity.requireName(name);
+  update({ name }: { name: string }): Result<Resource, ResourceValidationError> {
+    const nameError = Resource.requireName(name);
     if (nameError) return fail(nameError);
 
     this._name = name;
@@ -70,11 +70,11 @@ export class ResourceEntity {
       startTime: string;
       endTime: string;
     }[]
-  ): Result<ResourceEntity, ValidationError> {
-    const schedules: ScheduleEntity[] = [];
+  ): Result<Resource, ValidationError> {
+    const schedules: Schedule[] = [];
 
     for (const entry of entries) {
-      const scheduleResult = ScheduleEntity.create({ ...entry, resourceId: this._id });
+      const scheduleResult = Schedule.create({ ...entry, resourceId: this._id });
       if (!scheduleResult.isOk) return scheduleResult;
 
       schedules.push(scheduleResult.data);
@@ -89,12 +89,12 @@ export class ResourceEntity {
     name,
     establishmentId,
     establishmentCode,
-  }: Props): Result<ResourceEntity, ResourceValidationError> {
-    const nameError = ResourceEntity.requireName(name);
+  }: Props): Result<Resource, ResourceValidationError> {
+    const nameError = Resource.requireName(name);
     if (nameError) return fail(nameError);
 
     return ok(
-      new ResourceEntity(
+      new Resource(
         EntityId.generate(),
         EntityCode.generate(),
         name,
@@ -112,8 +112,8 @@ export class ResourceEntity {
     establishmentId,
     establishmentCode,
     schedules = [],
-  }: ReconstructProps): ResourceEntity {
-    return new ResourceEntity(id, code, name, establishmentId, establishmentCode, schedules);
+  }: ReconstructProps): Resource {
+    return new Resource(id, code, name, establishmentId, establishmentCode, schedules);
   }
 
   private static requireName(name: string): ValidationError | null {

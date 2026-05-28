@@ -1,4 +1,4 @@
-import { ResourceEntity, type ResourceRepository, ScheduleEntity } from '@app/domain/entities';
+import { Resource, type ResourceRepository, Schedule } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { and, eq, inArray } from 'drizzle-orm';
@@ -23,9 +23,7 @@ type ResourceRow = {
 export class PostgressResourceRepository implements ResourceRepository {
   constructor(private readonly db: NodePgDatabase) {}
 
-  async save(
-    resource: ResourceEntity
-  ): PromiseResult<ResourceEntity, StorageError | NotFoundError> {
+  async save(resource: Resource): PromiseResult<Resource, StorageError | NotFoundError> {
     try {
       await this.db.insert(resourcesTable).values({
         id: resource.id,
@@ -42,7 +40,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findAll(establishmentCode: string): PromiseResult<ResourceEntity[], StorageError> {
+  async findAll(establishmentCode: string): PromiseResult<Resource[], StorageError> {
     try {
       const rows = await this.db
         .select({
@@ -72,7 +70,7 @@ export class PostgressResourceRepository implements ResourceRepository {
   async findByIds(
     ids: string[],
     establishmentCode: string
-  ): PromiseResult<ResourceEntity[], StorageError> {
+  ): PromiseResult<Resource[], StorageError> {
     try {
       if (ids.length === 0) return ok([]);
 
@@ -103,7 +101,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findByCode(code: string): PromiseResult<ResourceEntity | null, StorageError> {
+  async findByCode(code: string): PromiseResult<Resource | null, StorageError> {
     try {
       const rows = await this.db
         .select({
@@ -134,8 +132,8 @@ export class PostgressResourceRepository implements ResourceRepository {
 
   async update(
     code: string,
-    resource: ResourceEntity
-  ): PromiseResult<ResourceEntity, StorageError | NotFoundError> {
+    resource: Resource
+  ): PromiseResult<Resource, StorageError | NotFoundError> {
     try {
       const rows = await this.db
         .update(resourcesTable)
@@ -148,7 +146,7 @@ export class PostgressResourceRepository implements ResourceRepository {
         });
       if (!rows[0]) return fail(new NotFoundError('Resource', code));
       return ok(
-        ResourceEntity.reconstruct({
+        Resource.reconstruct({
           id: rows[0].id,
           code: rows[0].code,
           name: resource.name,
@@ -177,7 +175,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  private groupResourceRows(rows: ResourceRow[]): ResourceEntity[] {
+  private groupResourceRows(rows: ResourceRow[]): Resource[] {
     const map = new Map<string, { meta: ResourceRow; scheduleRows: ResourceRow[] }>();
     for (const row of rows) {
       if (!map.has(row.id)) {
@@ -188,14 +186,14 @@ export class PostgressResourceRepository implements ResourceRepository {
       }
     }
     return Array.from(map.values()).map(({ meta, scheduleRows }) =>
-      ResourceEntity.reconstruct({
+      Resource.reconstruct({
         id: meta.id,
         code: meta.code,
         name: meta.name,
         establishmentId: meta.establishmentId,
         establishmentCode: meta.establishmentCode,
         schedules: scheduleRows.map((scheduleRow) =>
-          ScheduleEntity.reconstruct({
+          Schedule.reconstruct({
             id: scheduleRow.scheduleId as string,
             code: scheduleRow.scheduleCode as string,
             resourceId: scheduleRow.scheduleResourceId as string,

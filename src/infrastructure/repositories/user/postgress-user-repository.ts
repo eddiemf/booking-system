@@ -1,4 +1,4 @@
-import { UserEntity, type UserRepository } from '@app/domain/entities';
+import { User, type UserRepository } from '@app/domain/entities';
 import { StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import { eq } from 'drizzle-orm';
@@ -8,7 +8,7 @@ import { usersTable } from '../../db/schema';
 export class PostgressUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
 
-  async findById(id: string): PromiseResult<UserEntity | null, StorageError> {
+  async findById(id: string): PromiseResult<User | null, StorageError> {
     try {
       const rows = await this.db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
 
@@ -16,7 +16,7 @@ export class PostgressUserRepository implements UserRepository {
       if (!row) return ok(null);
 
       return ok(
-        UserEntity.reconstruct({
+        User.reconstruct({
           id: row.id,
           code: row.code,
           email: row.email,
@@ -28,7 +28,7 @@ export class PostgressUserRepository implements UserRepository {
     }
   }
 
-  async findByEmail(email: string): PromiseResult<UserEntity | null, StorageError> {
+  async findByEmail(email: string): PromiseResult<User | null, StorageError> {
     try {
       const rows = await this.db
         .select()
@@ -40,7 +40,7 @@ export class PostgressUserRepository implements UserRepository {
       if (!row) return ok(null);
 
       return ok(
-        UserEntity.reconstruct({
+        User.reconstruct({
           id: row.id,
           code: row.code,
           email: row.email,
@@ -52,7 +52,7 @@ export class PostgressUserRepository implements UserRepository {
     }
   }
 
-  async save(user: UserEntity): PromiseResult<UserEntity, StorageError> {
+  async save(user: User): PromiseResult<User, StorageError> {
     try {
       await this.db.insert(usersTable).values({
         id: user.id,

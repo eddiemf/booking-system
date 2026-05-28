@@ -1,5 +1,5 @@
 import type { ResourceRepository } from '@app/domain/entities';
-import { ResourceEntity } from '@app/domain/entities';
+import { Resource } from '@app/domain/entities';
 import { StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ describe('ListResources', () => {
   const useCase = new ListResources(resourceRepository);
 
   const establishmentCode = 'est123';
-  const mockResource = ResourceEntity.reconstruct({
+  const mockResource = Resource.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Alice',

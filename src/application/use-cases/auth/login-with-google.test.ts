@@ -1,4 +1,4 @@
-import { UserEntity, type UserRepository } from '@app/domain/entities';
+import { User, type UserRepository } from '@app/domain/entities';
 import { AuthenticationError, StorageError } from '@app/domain/errors';
 import type { GoogleAuthPort, JwtPort } from '@app/ports';
 import { fail, ok } from '@shared/result';
@@ -13,7 +13,7 @@ describe('LoginWithGoogle', () => {
 
   const validToken = 'valid-google-token';
   const googleUser = { email: 'alice@example.com', name: 'Alice' };
-  const existingUser = UserEntity.reconstruct({
+  const existingUser = User.reconstruct({
     id: 'uuid-user',
     code: 'usr123',
     email: 'alice@example.com',

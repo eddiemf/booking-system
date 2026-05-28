@@ -1,10 +1,10 @@
-import { ScheduleEntity } from '@app/domain/entities';
+import { Schedule } from '@app/domain/entities';
 import { describe, expect, it } from 'vitest';
 import { ScheduleMapper } from './schedule-mapper';
 
 describe('ScheduleMapper', () => {
   it('maps a ScheduleEntity to a ScheduleDTO', () => {
-    const entity = ScheduleEntity.reconstruct({
+    const entity = Schedule.reconstruct({
       id: '5',
       code: 'sch123',
       resourceId: '1',

@@ -1,10 +1,10 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
-  ServiceEntity,
-  ServiceOfferingEntity,
+  Service,
+  ServiceOffering,
   type ServiceOfferingRepository,
   type ServiceRepository,
 } from '@app/domain/entities';
@@ -36,14 +36,14 @@ describe('CreateServiceOffering', () => {
     slotIntervalMinutes: 30,
   };
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',
     userId,
   });
 
-  const mockService = ServiceEntity.reconstruct({
+  const mockService = Service.reconstruct({
     id: 'uuid-svc',
     code: 'svc123',
     name: 'Haircut',
@@ -53,7 +53,7 @@ describe('CreateServiceOffering', () => {
     establishmentCode: 'est123',
   });
 
-  const mockResource = ResourceEntity.reconstruct({
+  const mockResource = Resource.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Alice',
@@ -96,7 +96,7 @@ describe('CreateServiceOffering', () => {
   it('returns not-found error when resource belongs to another establishment', async () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    const otherEstablishmentResource = ResourceEntity.reconstruct({
+    const otherEstablishmentResource = Resource.reconstruct({
       id: 'uuid-res',
       code: 'res123',
       name: 'Alice',
@@ -140,7 +140,7 @@ describe('CreateServiceOffering', () => {
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.assign.mockResolvedValue(
       ok(
-        ServiceOfferingEntity.reconstruct({
+        ServiceOffering.reconstruct({
           id: 'uuid-link',
           code: 'link1',
           serviceId: 'uuid-svc',

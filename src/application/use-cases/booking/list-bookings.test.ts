@@ -1,7 +1,7 @@
 import {
-  BookingEntity,
+  Booking,
   type BookingRepository,
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
 } from '@app/domain/entities';
 import { StorageError } from '@app/domain/errors';
@@ -18,7 +18,7 @@ describe('ListBookings', () => {
   const userId = 'uuid-user';
   const establishmentCode = 'est123';
 
-  const mockBooking = BookingEntity.reconstruct({
+  const mockBooking = Booking.reconstruct({
     id: 'uuid-bkg',
     code: 'bkg1',
     customerId: userId,
@@ -49,7 +49,7 @@ describe('ListBookings', () => {
   });
 
   it('returns establishment bookings when user owns the establishment', async () => {
-    const mockEst = EstablishmentEntity.reconstruct({
+    const mockEst = Establishment.reconstruct({
       id: 'uuid-est',
       code: establishmentCode,
       name: 'Salon',
@@ -64,7 +64,7 @@ describe('ListBookings', () => {
   });
 
   it('returns customer bookings when user does not own the establishment', async () => {
-    const mockEst = EstablishmentEntity.reconstruct({
+    const mockEst = Establishment.reconstruct({
       id: 'uuid-est',
       code: establishmentCode,
       name: 'Salon',

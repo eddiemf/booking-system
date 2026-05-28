@@ -1,5 +1,5 @@
 import type { UserRepository } from '@app/domain/entities';
-import { UserEntity } from '@app/domain/entities';
+import { User } from '@app/domain/entities';
 import type { AuthenticationError, StorageError, ValidationError } from '@app/domain/errors';
 import type { GoogleAuthPort, JwtPort } from '@app/ports';
 import { fail, ok, type PromiseResult } from '@shared/result';
@@ -45,12 +45,12 @@ export class LoginWithGoogle {
   private async findOrCreateUser(
     email: string,
     name: string
-  ): PromiseResult<UserEntity, StorageError | ValidationError> {
+  ): PromiseResult<User, StorageError | ValidationError> {
     const existing = await this.userRepository.findByEmail(email);
     if (!existing.isOk) return existing;
     if (existing.data) return ok(existing.data);
 
-    const created = UserEntity.create({ email, name });
+    const created = User.create({ email, name });
     if (!created.isOk) return created;
 
     return this.userRepository.save(created.data);

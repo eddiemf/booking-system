@@ -1,4 +1,4 @@
-import { BookingEntity, type BookingRepository } from '@app/domain/entities';
+import { Booking, type BookingRepository } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +14,7 @@ describe('CancelBooking', () => {
   const futureStartsAt = new Date(Date.now() + 86400000).toISOString();
   const futureEndsAt = new Date(Date.now() + 90000000).toISOString();
 
-  const existingBooking = BookingEntity.reconstruct({
+  const existingBooking = Booking.reconstruct({
     id: 'uuid-bkg',
     code,
     customerId: userId,
@@ -35,7 +35,7 @@ describe('CancelBooking', () => {
     serviceDuration: 60,
   });
 
-  const cancelledBooking = BookingEntity.reconstruct({
+  const cancelledBooking = Booking.reconstruct({
     id: 'uuid-bkg',
     code,
     customerId: userId,
@@ -90,7 +90,7 @@ describe('CancelBooking', () => {
   });
 
   it('returns booking DTO with cancelled status on success', async () => {
-    const freshBooking = BookingEntity.reconstruct({
+    const freshBooking = Booking.reconstruct({
       id: 'uuid-bkg-fresh',
       code: 'bkg-fresh',
       customerId: userId,

@@ -23,7 +23,7 @@ interface ReconstructProps {
   endTime: string;
 }
 
-export class ScheduleEntity {
+export class Schedule {
   private constructor(
     private _id: string,
     private _code: string,
@@ -57,7 +57,7 @@ export class ScheduleEntity {
     dayOfWeek,
     startTime,
     endTime,
-  }: Props): Result<ScheduleEntity, ScheduleCreationError> {
+  }: Props): Result<Schedule, ScheduleCreationError> {
     const dayOfWeekResult = DayOfWeek.create(dayOfWeek, 'dayOfWeek');
     if (!dayOfWeekResult.isOk) return dayOfWeekResult;
 
@@ -65,7 +65,7 @@ export class ScheduleEntity {
     if (!timeRangeResult.isOk) return timeRangeResult;
 
     return ok(
-      new ScheduleEntity(
+      new Schedule(
         EntityId.generate(),
         EntityCode.generate(),
         resourceId,
@@ -82,8 +82,8 @@ export class ScheduleEntity {
     dayOfWeek,
     startTime,
     endTime,
-  }: ReconstructProps): ScheduleEntity {
-    return new ScheduleEntity(
+  }: ReconstructProps): Schedule {
+    return new Schedule(
       id,
       code,
       resourceId,

@@ -1,8 +1,8 @@
-import type { BookingEntity } from '@app/domain/entities';
+import type { Booking } from '@app/domain/entities';
 import type { BookingDTO } from '@app/dtos';
 
 export class BookingMapper {
-  static toDTO(booking: BookingEntity): BookingDTO {
+  static toDTO(booking: Booking): BookingDTO {
     return {
       id: booking.code,
       customerCode: booking.customerCode,

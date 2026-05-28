@@ -8,7 +8,7 @@ import { Price } from './price/price';
 
 export type ServiceOfferingCreationError = ValidationError;
 
-export class ServiceOfferingEntity {
+export class ServiceOffering {
   private constructor(
     private _id: string,
     private _code: string,
@@ -59,7 +59,7 @@ export class ServiceOfferingEntity {
     durationMinutes: number;
     slotIntervalMinutes: number;
     price?: number | undefined;
-  }): Result<ServiceOfferingEntity, ServiceOfferingCreationError> {
+  }): Result<ServiceOffering, ServiceOfferingCreationError> {
     const capacityResult = Capacity.create(props.maxCapacity ?? 1, 'maxCapacity');
     if (!capacityResult.isOk) return capacityResult;
 
@@ -73,7 +73,7 @@ export class ServiceOfferingEntity {
     if (!priceResult.isOk) return priceResult;
 
     return ok(
-      new ServiceOfferingEntity(
+      new ServiceOffering(
         EntityId.generate(),
         EntityCode.generate(),
         props.serviceId,
@@ -95,8 +95,8 @@ export class ServiceOfferingEntity {
     durationMinutes: number;
     slotIntervalMinutes: number;
     price: number;
-  }): ServiceOfferingEntity {
-    return new ServiceOfferingEntity(
+  }): ServiceOffering {
+    return new ServiceOffering(
       props.id,
       props.code,
       props.serviceId,

@@ -1,4 +1,4 @@
-import { BookingEntity, type BookingRepository } from '@app/domain/entities';
+import { Booking, type BookingRepository } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -12,7 +12,7 @@ describe('GetBooking', () => {
   const userId = 'uuid-user';
   const code = 'bkg123';
 
-  const existingBooking = BookingEntity.reconstruct({
+  const existingBooking = Booking.reconstruct({
     id: 'uuid-bkg',
     code,
     customerId: userId,

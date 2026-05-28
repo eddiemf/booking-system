@@ -1,14 +1,14 @@
 import { ValidationError } from '@app/domain/errors';
 import { describe, expect, it } from 'vitest';
-import { ScheduleEntity } from '../schedule/schedule-entity';
-import { ResourceEntity } from './resource-entity';
+import { Schedule } from '../schedule/schedule-entity';
+import { Resource } from './resource-entity';
 
 const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe('ResourceEntity', () => {
   describe('create()', () => {
     it('fails with empty name', () => {
-      const error = ResourceEntity.create({
+      const error = Resource.create({
         name: '',
         establishmentId: '1',
         establishmentCode: 'est123',
@@ -19,18 +19,18 @@ describe('ResourceEntity', () => {
     });
 
     it('creates a resource successfully', () => {
-      const entity = ResourceEntity.create({
+      const entity = Resource.create({
         name: 'Alice',
         establishmentId: '1',
         establishmentCode: 'est123',
       }).getData();
 
-      expect(entity).toBeInstanceOf(ResourceEntity);
+      expect(entity).toBeInstanceOf(Resource);
       expect(entity.establishmentId).toBe('1');
     });
 
     it('generates a UUIDv7 id', () => {
-      const entity = ResourceEntity.create({
+      const entity = Resource.create({
         name: 'Alice',
         establishmentId: '1',
         establishmentCode: 'est123',
@@ -40,7 +40,7 @@ describe('ResourceEntity', () => {
     });
 
     it('starts with an empty schedules list', () => {
-      const entity = ResourceEntity.create({
+      const entity = Resource.create({
         name: 'Alice',
         establishmentId: '1',
         establishmentCode: 'est123',
@@ -52,7 +52,7 @@ describe('ResourceEntity', () => {
 
   describe('reconstruct()', () => {
     it('restores all properties', () => {
-      const entity = ResourceEntity.reconstruct({
+      const entity = Resource.reconstruct({
         id: '42',
         code: 'res123',
         name: 'Room B',
@@ -68,7 +68,7 @@ describe('ResourceEntity', () => {
     });
 
     it('restores schedules when provided', () => {
-      const schedule = ScheduleEntity.reconstruct({
+      const schedule = Schedule.reconstruct({
         id: 'sched-1',
         code: 'sch1',
         resourceId: '42',
@@ -76,7 +76,7 @@ describe('ResourceEntity', () => {
         startTime: '09:00',
         endTime: '17:00',
       });
-      const entity = ResourceEntity.reconstruct({
+      const entity = Resource.reconstruct({
         id: '42',
         code: 'res123',
         name: 'Room B',
@@ -91,7 +91,7 @@ describe('ResourceEntity', () => {
   });
 
   describe('update()', () => {
-    const resource = ResourceEntity.reconstruct({
+    const resource = Resource.reconstruct({
       id: '42',
       code: 'res123',
       name: 'Old Name',
@@ -118,7 +118,7 @@ describe('ResourceEntity', () => {
   });
 
   describe('setSchedule()', () => {
-    const resource = ResourceEntity.reconstruct({
+    const resource = Resource.reconstruct({
       id: '42',
       code: 'res123',
       name: 'Room A',
@@ -148,14 +148,14 @@ describe('ResourceEntity', () => {
     });
 
     it('replaces existing schedules', () => {
-      const resourceWithSchedules = ResourceEntity.reconstruct({
+      const resourceWithSchedules = Resource.reconstruct({
         id: '42',
         code: 'res123',
         name: 'Room A',
         establishmentId: '5',
         establishmentCode: 'est123',
         schedules: [
-          ScheduleEntity.reconstruct({
+          Schedule.reconstruct({
             id: '1',
             code: 'sch1',
             resourceId: '42',

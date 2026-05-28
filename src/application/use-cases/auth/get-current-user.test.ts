@@ -1,4 +1,4 @@
-import { UserEntity, type UserRepository } from '@app/domain/entities';
+import { User, type UserRepository } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
@@ -9,7 +9,7 @@ describe('GetCurrentUser', () => {
   const userRepository = mock<UserRepository>();
   const useCase = new GetCurrentUser(userRepository);
 
-  const existingUser = UserEntity.reconstruct({
+  const existingUser = User.reconstruct({
     id: 'uuid-user',
     code: 'usr123',
     email: 'alice@example.com',

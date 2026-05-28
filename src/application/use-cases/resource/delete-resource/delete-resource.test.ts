@@ -1,7 +1,7 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
-  ResourceEntity,
+  Resource,
   type ResourceRepository,
 } from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
@@ -16,7 +16,7 @@ describe('DeleteResource', () => {
   const useCase = new DeleteResource(resourceRepository, establishmentRepository);
 
   const userId = 'uuid-user';
-  const existingResource = ResourceEntity.reconstruct({
+  const existingResource = Resource.reconstruct({
     id: 'uuid-res',
     code: 'res123',
     name: 'Alice',
@@ -24,7 +24,7 @@ describe('DeleteResource', () => {
     establishmentCode: 'est123',
   });
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',

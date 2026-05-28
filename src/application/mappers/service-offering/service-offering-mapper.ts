@@ -1,11 +1,11 @@
-import type { ResourceEntity, ServiceOfferingEntity } from '@app/domain/entities';
+import type { Resource, ServiceOffering } from '@app/domain/entities';
 import type { ServiceOfferingDTO } from '@app/dtos';
 
 export class ServiceOfferingMapper {
   static toDTO(
-    serviceOffering: ServiceOfferingEntity,
+    serviceOffering: ServiceOffering,
     serviceCode: string,
-    resource: ResourceEntity
+    resource: Resource
   ): ServiceOfferingDTO {
     return {
       id: serviceOffering.code,

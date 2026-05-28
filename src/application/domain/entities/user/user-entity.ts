@@ -18,7 +18,7 @@ interface ReconstructProps {
   name: string;
 }
 
-export class UserEntity {
+export class User {
   private constructor(
     private _id: string,
     private _code: string,
@@ -42,18 +42,18 @@ export class UserEntity {
     return this._name;
   }
 
-  static create({ email, name }: Props): Result<UserEntity, UserCreationError> {
+  static create({ email, name }: Props): Result<User, UserCreationError> {
     const emailResult = Email.create(email, 'email');
     if (!emailResult.isOk) return emailResult;
 
-    const nameError = UserEntity.requireName(name);
+    const nameError = User.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new UserEntity(EntityId.generate(), EntityCode.generate(), emailResult.data, name));
+    return ok(new User(EntityId.generate(), EntityCode.generate(), emailResult.data, name));
   }
 
-  static reconstruct({ id, code, email, name }: ReconstructProps): UserEntity {
-    return new UserEntity(id, code, Email.from(email), name);
+  static reconstruct({ id, code, email, name }: ReconstructProps): User {
+    return new User(id, code, Email.from(email), name);
   }
 
   private static requireName(name: string): ValidationError | null {

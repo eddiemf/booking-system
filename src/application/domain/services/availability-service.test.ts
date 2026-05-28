@@ -1,14 +1,14 @@
-import { ResourceEntity } from '@app/domain/entities/resource/resource-entity';
-import { ScheduleEntity } from '@app/domain/entities/schedule/schedule-entity';
-import { ServiceOfferingEntity } from '@app/domain/entities/service-offering/service-offering-entity';
+import { Resource } from '@app/domain/entities/resource/resource-entity';
+import { Schedule } from '@app/domain/entities/schedule/schedule-entity';
+import { ServiceOffering } from '@app/domain/entities/service-offering/service-offering-entity';
 import { describe, expect, it } from 'vitest';
 import { AvailabilityService } from './availability-service';
 
 describe('AvailabilityService', () => {
   const service = new AvailabilityService();
 
-  const buildResource = (schedules: ScheduleEntity[]) =>
-    ResourceEntity.reconstruct({
+  const buildResource = (schedules: Schedule[]) =>
+    Resource.reconstruct({
       id: 'uuid-res',
       code: 'res123',
       name: 'Alice',
@@ -18,7 +18,7 @@ describe('AvailabilityService', () => {
     });
 
   const buildOffering = (durationMinutes: number, slotIntervalMinutes: number) =>
-    ServiceOfferingEntity.reconstruct({
+    ServiceOffering.reconstruct({
       id: 'uuid-off',
       code: 'off1',
       serviceId: 'uuid-svc',
@@ -30,7 +30,7 @@ describe('AvailabilityService', () => {
     });
 
   const buildSchedule = (dayOfWeek: number, start: string, end: string) =>
-    ScheduleEntity.reconstruct({
+    Schedule.reconstruct({
       id: 'uuid-sch',
       code: 'sch1',
       resourceId: 'uuid-res',

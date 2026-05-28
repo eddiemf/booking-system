@@ -1,5 +1,5 @@
 import {
-  EstablishmentEntity,
+  Establishment,
   type EstablishmentRepository,
   type ServiceRepository,
 } from '@app/domain/entities';
@@ -17,7 +17,7 @@ describe('DeleteService', () => {
   const userId = 'uuid-user';
   const input = { code: 'svc123', establishmentCode: 'est123', userId };
 
-  const mockEstablishment = EstablishmentEntity.reconstruct({
+  const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
     code: 'est123',
     name: 'Salon',

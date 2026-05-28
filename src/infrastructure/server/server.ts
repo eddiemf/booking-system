@@ -31,6 +31,7 @@ export function createServer() {
   app.post('/establishments', requireAuth, (req, res) =>
     establishmentController.create(req as AuthenticatedRequest, res)
   );
+  app.get('/establishments', (req, res) => establishmentController.list(req, res));
   app.get('/establishments/:code', (req, res) => establishmentController.find(req, res));
   app.put('/establishments/:code', requireAuth, (req, res) =>
     establishmentController.update(req as AuthenticatedRequest, res)

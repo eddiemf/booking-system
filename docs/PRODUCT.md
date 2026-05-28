@@ -152,7 +152,17 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns `400` when `name` is missing.
   - [ ] Returns `401` when no auth token provided.
 
-#### Feature 2.2 — Get Establishment by ID `[done]`
+#### Feature 2.2 — List Establishments `[done]`
+
+- **Endpoint:** `GET /establishments`
+- **Notes:** Public endpoint. No auth required.
+- **Acceptance criteria:**
+  - [x] Returns a list of all establishments.
+  - [x] Returns an empty array when no establishments exist.
+  - [x] Each item includes `id` and `name`.
+  - [x] Supports `?limit=` and `?offset=` query params for pagination.
+
+#### Feature 2.3 — Get Establishment by ID `[done]`
 
 - **Endpoint:** `GET /establishments/:code`
 - **Notes:** Public endpoint. No auth required.
@@ -160,7 +170,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns the establishment data.
   - [x] Returns `404` when not found.
 
-#### Feature 2.3 — Update an Establishment `[done]`
+#### Feature 2.4 — Update an Establishment `[done]`
 
 - **Endpoint:** `PUT /establishments/:code`
 - **Acceptance criteria:**
@@ -170,7 +180,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner.
 
-#### Feature 2.4 — Delete an Establishment `[done]`
+#### Feature 2.5 — Delete an Establishment `[done]`
 
 - **Endpoint:** `DELETE /establishments/:code`
 - **Acceptance criteria:**

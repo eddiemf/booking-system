@@ -3,6 +3,7 @@ import type {
   CreateEstablishment,
   DeleteEstablishment,
   FindEstablishment,
+  ListEstablishments,
   UpdateEstablishment,
 } from '@app/use-cases';
 import { fail, ok } from '@shared/result';
@@ -19,11 +20,13 @@ describe('EstablishmentController', () => {
   const findEstablishmentMock = mock<FindEstablishment>();
   const updateEstablishmentMock = mock<UpdateEstablishment>();
   const deleteEstablishmentMock = mock<DeleteEstablishment>();
+  const listEstablishmentsMock = mock<ListEstablishments>();
   const controller = new EstablishmentController(
     createEstablishmentMock,
     findEstablishmentMock,
     updateEstablishmentMock,
-    deleteEstablishmentMock
+    deleteEstablishmentMock,
+    listEstablishmentsMock
   );
 
   const getAuthenticatedReq = (extra = {}) =>
@@ -285,6 +288,106 @@ describe('EstablishmentController', () => {
         message: 'Something went wrong. Try again later.',
         code: 'InternalServerError',
       });
+    });
+  });
+
+  describe('list()', () => {
+    it('returns 200 with list of establishment DTOs', async () => {
+      listEstablishmentsMock.execute.mockResolvedValue(ok([{ id: 'est123', name: 'Salon' }]));
+      const { res } = getMockRes();
+      const req = getMockReq();
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([{ id: 'est123', name: 'Salon' }]);
+    });
+
+    it('returns 200 with empty array when no establishments', async () => {
+      listEstablishmentsMock.execute.mockResolvedValue(ok([]));
+      const { res } = getMockRes();
+      const req = getMockReq();
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([]);
+    });
+
+    it('passes limit and offset from query params', async () => {
+      listEstablishmentsMock.execute.mockResolvedValue(ok([]));
+      const { res } = getMockRes();
+      const req = getMockReq({ query: { limit: '10', offset: '5' } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(listEstablishmentsMock.execute).toHaveBeenCalledWith({ limit: 10, offset: 5 });
+    });
+
+    it('uses default limit and offset when no query params', async () => {
+      listEstablishmentsMock.execute.mockResolvedValue(ok([]));
+      const { res } = getMockRes();
+      const req = getMockReq();
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(listEstablishmentsMock.execute).toHaveBeenCalledWith({ limit: 20, offset: 0 });
+    });
+
+    it('returns 400 when limit is negative', async () => {
+      const { res } = getMockRes();
+      const req = getMockReq({ query: { limit: '-5' } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when limit is not an integer', async () => {
+      const { res } = getMockRes();
+      const req = getMockReq({ query: { limit: 'abc' } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when offset is negative', async () => {
+      const { res } = getMockRes();
+      const req = getMockReq({ query: { offset: '-1' } });
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 500 when listEstablishments returns a storage error', async () => {
+      listEstablishmentsMock.execute.mockResolvedValue(fail(new StorageError('DB error')));
+      const { res } = getMockRes();
+      const req = getMockReq();
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('returns 500 when listEstablishments throws', async () => {
+      listEstablishmentsMock.execute.mockRejectedValue(new Error('Unexpected'));
+      const { res } = getMockRes();
+      const req = getMockReq();
+
+      // @ts-expect-error
+      await controller.list(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 

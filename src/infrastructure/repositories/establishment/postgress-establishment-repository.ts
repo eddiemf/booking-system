@@ -36,6 +36,34 @@ type EstablishmentRow = {
 export class PostgressEstablishmentRepository implements EstablishmentRepository {
   constructor(private readonly db: NodePgDatabase) {}
 
+  async findAll(limit: number, offset: number): PromiseResult<Establishment[], StorageError> {
+    try {
+      const rows = await this.db
+        .select({
+          id: establishmentsTable.id,
+          code: establishmentsTable.code,
+          name: establishmentsTable.name,
+          userId: establishmentsTable.userId,
+        })
+        .from(establishmentsTable)
+        .limit(limit)
+        .offset(offset);
+
+      return ok(
+        rows.map((row) =>
+          Establishment.reconstruct({
+            id: row.id,
+            code: row.code,
+            name: row.name,
+            userId: row.userId,
+          })
+        )
+      );
+    } catch (error) {
+      return fail(new StorageError('Failed to list establishments.'));
+    }
+  }
+
   async findByCode(code: string): PromiseResult<Establishment | null, StorageError> {
     try {
       const estRows = await this.db

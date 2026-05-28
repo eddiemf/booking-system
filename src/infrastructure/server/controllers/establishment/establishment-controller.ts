@@ -3,6 +3,7 @@ import type {
   CreateEstablishment,
   DeleteEstablishment,
   FindEstablishment,
+  ListEstablishments,
   UpdateEstablishment,
 } from '@app/use-cases';
 import type { Request, Response } from 'express';
@@ -22,11 +23,17 @@ export class EstablishmentController extends Controller {
     name: z.string(),
   });
 
+  private readonly listEstablishmentsSchema = z.object({
+    limit: z.coerce.number().int().positive().default(20),
+    offset: z.coerce.number().int().min(0).default(0),
+  });
+
   constructor(
     private readonly createEstablishment: CreateEstablishment,
     private readonly findEstablishment: FindEstablishment,
     private readonly updateEstablishment: UpdateEstablishment,
-    private readonly deleteEstablishment: DeleteEstablishment
+    private readonly deleteEstablishment: DeleteEstablishment,
+    private readonly listEstablishments: ListEstablishments
   ) {
     super();
   }
@@ -83,6 +90,24 @@ export class EstablishmentController extends Controller {
         userId: req.user.userId,
       });
 
+      if (!result.isOk) return this.sendError(res, result);
+
+      return res.status(200).json(result.data);
+    } catch (error) {
+      return this.sendError(res);
+    }
+  }
+
+  async list(req: Request, res: Response<EstablishmentDTO[] | ErrorResponse>) {
+    try {
+      const validation = this.listEstablishmentsSchema.safeParse(req.query);
+      if (!validation.success) {
+        return this.sendZodError(res, validation.error);
+      }
+
+      const { limit, offset } = validation.data;
+
+      const result = await this.listEstablishments.execute({ limit, offset });
       if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);

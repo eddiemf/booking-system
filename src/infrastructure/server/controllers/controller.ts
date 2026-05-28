@@ -15,6 +15,7 @@ export abstract class Controller {
     ConflictError: 409,
     ForbiddenError: 403,
     AuthenticationError: 401,
+    InternalServerError: 500,
   };
 
   protected mapZodValidationError(error: z.ZodError): ErrorResponse {
@@ -31,13 +32,6 @@ export abstract class Controller {
     };
   }
 
-  protected getInternalServerError(): ErrorResponse {
-    return {
-      message: 'Something went wrong. Try again later.',
-      code: 'InternalServerError',
-    };
-  }
-
   protected mapErrorFromResult(
     result: ErrorResult<{ message: string; code: string }>
   ): ErrorResponse {
@@ -51,22 +45,18 @@ export abstract class Controller {
     res: Response,
     result?: ErrorResult<{ code: string; message: string }>
   ): Response {
-    const internalServerError = {
-      message: 'Something went wrong. Try again later.',
-      code: 'InternalServerError',
-    };
-
-    if (!result) return res.status(500).json(internalServerError);
-
-    const statusCode = Controller.ERROR_STATUS_MAP[result.error.code];
-    if (statusCode === undefined) {
+    const statusCode = Controller.ERROR_STATUS_MAP[result?.error.code || 'InternalServerError'];
+    if (!result || statusCode === undefined) {
       return res.status(500).json({
         message: 'Something went wrong. Try again later.',
         code: 'InternalServerError',
       });
     }
 
-    return res.status(statusCode).json(this.mapErrorFromResult(result));
+    return res.status(statusCode).json({
+      message: result.error.message,
+      code: result.error.code,
+    });
   }
 
   protected sendZodError(res: Response, error: z.ZodError): void {

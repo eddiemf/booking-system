@@ -1,5 +1,6 @@
 export * from './auth-dto';
 export * from './availability-dto';
+export * from './booking-dto';
 export * from './establishment-dto';
 export * from './resource-dto';
 export * from './schedule-dto';

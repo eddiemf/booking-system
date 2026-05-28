@@ -62,6 +62,34 @@ export const serviceOfferingsTable = pgTable(
   })
 );
 
+export const bookingsTable = pgTable('bookings', {
+  id: uuid().primaryKey(),
+  code: varchar({ length: 10 }).notNull().unique(),
+  customerId: uuid('customer_id')
+    .notNull()
+    .references(() => usersTable.id),
+  customerCode: varchar('customer_code', { length: 10 }).notNull(),
+  customerName: varchar('customer_name', { length: 255 }).notNull(),
+  establishmentId: uuid('establishment_id')
+    .notNull()
+    .references(() => establishmentsTable.id),
+  establishmentCode: varchar('establishment_code', { length: 10 }).notNull(),
+  serviceId: uuid('service_id')
+    .notNull()
+    .references(() => servicesTable.id),
+  serviceCode: varchar('service_code', { length: 10 }).notNull(),
+  serviceName: varchar('service_name', { length: 255 }).notNull(),
+  resourceId: uuid('resource_id')
+    .notNull()
+    .references(() => resourcesTable.id),
+  resourceCode: varchar('resource_code', { length: 10 }).notNull(),
+  resourceName: varchar('resource_name', { length: 255 }).notNull(),
+  startsAt: varchar('starts_at', { length: 30 }).notNull(),
+  endsAt: varchar('ends_at', { length: 30 }).notNull(),
+  status: varchar({ length: 20 }).notNull().default('confirmed'),
+  ...timestamps,
+});
+
 export const schedulesTable = pgTable('schedules', {
   id: uuid().primaryKey(),
   code: varchar({ length: 10 }).notNull().unique(),

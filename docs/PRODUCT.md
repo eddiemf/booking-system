@@ -340,46 +340,46 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
 
 > Customers reserve a service at a specific time.
 
-#### Feature 5.1 — Create a Booking `[planned]`
+#### Feature 5.1 — Create a Booking `[done]`
 
 - **Endpoint:** `POST /bookings`
 - **Acceptance criteria:**
-  - [ ] Requires `serviceId`, `resourceId`, and `startsAt` (ISO 8601 datetime).
-  - [ ] `startsAt` must be in the future.
-  - [ ] The selected resource must be available at `startsAt` for the service duration.
-  - [ ] Returns `201` with the booking DTO (`id`, `serviceId`, `resourceId`, `startsAt`, `endsAt`, `status`).
-  - [ ] Returns `400` on missing or invalid fields.
-  - [ ] Returns `409` when the resource is already booked for the overlapping time.
-  - [ ] Returns `401` when no auth token provided.
+  - [x] Requires `serviceId`, `resourceId`, and `startsAt` (ISO 8601 datetime).
+  - [x] `startsAt` must be in the future.
+  - [x] The selected resource must be available at `startsAt` for the service duration.
+  - [x] Returns `201` with the booking DTO (`id`, `serviceId`, `resourceId`, `startsAt`, `endsAt`, `status`).
+  - [x] Returns `400` on missing or invalid fields.
+  - [x] Returns `409` when the resource is already booked for the overlapping time.
+  - [x] Returns `401` when no auth token provided.
 
-#### Feature 5.2 — Get a Booking `[planned]`
+#### Feature 5.2 — Get a Booking `[done]`
 
-- **Endpoint:** `GET /bookings/:id`
+- **Endpoint:** `GET /bookings/:code`
 - **Acceptance criteria:**
-  - [ ] Returns the booking details.
-  - [ ] Returns `404` when not found.
-  - [ ] Returns `401` when no auth token provided.
-  - [ ] Returns `403` when the booking belongs to another user.
+  - [x] Returns the booking details.
+  - [x] Returns `404` when not found.
+  - [x] Returns `401` when no auth token provided.
+  - [x] Returns `403` when the booking belongs to another user.
 
-#### Feature 5.3 — List Bookings `[planned]`
+#### Feature 5.3 — List Bookings `[done]`
 
 - **Endpoint:** `GET /bookings`
 - **Acceptance criteria:**
-  - [ ] Supports optional filtering by `resourceId`, `serviceId`, `date`.
-  - [ ] Returns bookings ordered by `startsAt` ascending.
-  - [ ] Returns `401` when no auth token provided.
-  - [ ] Returns only the current user's bookings (customers) or establishment bookings (owners).
+  - [x] Supports optional filtering by `establishmentCode`.
+  - [x] Returns bookings ordered by `startsAt` ascending.
+  - [x] Returns `401` when no auth token provided.
+  - [x] Returns only the current user's bookings (customers) or establishment bookings (owners).
 
-#### Feature 5.4 — Cancel a Booking `[planned]`
+#### Feature 5.4 — Cancel a Booking `[done]`
 
-- **Endpoint:** `DELETE /bookings/:id`
+- **Endpoint:** `DELETE /bookings/:code`
 - **Acceptance criteria:**
-  - [ ] Sets booking status to `cancelled`.
-  - [ ] Returns `204` on success.
-  - [ ] Returns `404` when not found.
-  - [ ] Returns `400` when the booking is already cancelled or in the past.
-  - [ ] Returns `401` when no auth token provided.
-  - [ ] Returns `403` when the booking belongs to another user.
+  - [x] Sets booking status to `cancelled`.
+  - [x] Returns `200` with the cancelled booking DTO.
+  - [x] Returns `404` when not found.
+  - [x] Returns `400` when the booking is already cancelled.
+  - [x] Returns `401` when no auth token provided.
+  - [x] Returns `403` when the booking belongs to another user.
 
 ---
 

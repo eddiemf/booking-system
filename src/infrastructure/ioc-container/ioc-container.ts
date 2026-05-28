@@ -1,5 +1,7 @@
 import { AvailabilityService } from '@app/domain/services';
 import {
+  CancelBooking,
+  CreateBooking,
   CreateEstablishment,
   CreateResource,
   CreateService,
@@ -11,7 +13,9 @@ import {
   FindEstablishment,
   FindService,
   GetAvailability,
+  GetBooking,
   GetCurrentUser,
+  ListBookings,
   ListResources,
   ListServices,
   LoginWithApple,
@@ -26,6 +30,7 @@ import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { AppleAuthAdapter, GoogleAuthAdapter, JwtAdapter } from '../adapters';
 import {
+  PostgressBookingRepository,
   PostgressEstablishmentRepository,
   PostgressResourceRepository,
   PostgressScheduleRepository,
@@ -36,6 +41,7 @@ import {
 import {
   AuthController,
   AvailabilityController,
+  BookingController,
   EstablishmentController,
   ResourceController,
   ScheduleController,
@@ -58,6 +64,7 @@ export const createIocContainer = () => {
     resourceController: asClass(ResourceController).singleton(),
     scheduleController: asClass(ScheduleController).singleton(),
     serviceController: asClass(ServiceController).singleton(),
+    bookingController: asClass(BookingController).singleton(),
 
     // Use cases
     createEstablishment: asClass(CreateEstablishment).singleton(),
@@ -76,6 +83,10 @@ export const createIocContainer = () => {
     updateService: asClass(UpdateService).singleton(),
     createServiceOffering: asClass(CreateServiceOffering).singleton(),
     deleteServiceOffering: asClass(DeleteServiceOffering).singleton(),
+    createBooking: asClass(CreateBooking).singleton(),
+    getBooking: asClass(GetBooking).singleton(),
+    listBookings: asClass(ListBookings).singleton(),
+    cancelBooking: asClass(CancelBooking).singleton(),
     getAvailability: asClass(GetAvailability).singleton(),
 
     // Domain services
@@ -91,6 +102,7 @@ export const createIocContainer = () => {
     scheduleRepository: asClass(PostgressScheduleRepository).singleton(),
     serviceRepository: asClass(PostgressServiceRepository).singleton(),
     serviceOfferingRepository: asClass(PostgressServiceOfferingRepository).singleton(),
+    bookingRepository: asClass(PostgressBookingRepository).singleton(),
     userRepository: asClass(PostgressUserRepository).singleton(),
 
     // Ports / Adapters

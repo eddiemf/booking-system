@@ -13,6 +13,7 @@ export function createServer() {
   const resourceController = container.resolve('resourceController');
   const scheduleController = container.resolve('scheduleController');
   const serviceController = container.resolve('serviceController');
+  const bookingController = container.resolve('bookingController');
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -86,6 +87,20 @@ export function createServer() {
     '/establishments/:establishmentCode/services/:code/service-offerings/:resourceCode',
     requireAuth,
     (req, res) => serviceController.deleteOffering(req as AuthenticatedRequest, res)
+  );
+
+  // Booking routes
+  app.post('/bookings', requireAuth, (req, res) =>
+    bookingController.create(req as AuthenticatedRequest, res)
+  );
+  app.get('/bookings/:code', requireAuth, (req, res) =>
+    bookingController.get(req as AuthenticatedRequest, res)
+  );
+  app.get('/bookings', requireAuth, (req, res) =>
+    bookingController.list(req as AuthenticatedRequest, res)
+  );
+  app.delete('/bookings/:code', requireAuth, (req, res) =>
+    bookingController.cancel(req as AuthenticatedRequest, res)
   );
 
   // Availability routes (public)

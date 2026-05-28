@@ -11,6 +11,8 @@ export interface ResourceSlot {
   resourceName: string;
 }
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
 export class AvailabilityService {
   /**
    * Validate that the given date string is a valid future date.
@@ -29,6 +31,32 @@ export class AvailabilityService {
     }
 
     return ok(undefined);
+  }
+
+  /**
+   * Compute the ISO endsAt from startsAt + durationMinutes.
+   * Validates startsAt is a valid future ISO 8601 datetime.
+   */
+  resolveTimeSlot(
+    startsAt: string,
+    durationMinutes: number
+  ): Result<{ startsAt: string; endsAt: string }, ValidationError> {
+    if (!ISO_DATE_REGEX.test(startsAt)) {
+      return fail(new ValidationError('startsAt', 'Must be a valid ISO 8601 datetime string.'));
+    }
+
+    const startDate = new Date(startsAt);
+    if (isNaN(startDate.getTime())) {
+      return fail(new ValidationError('startsAt', 'Must be a valid date.'));
+    }
+
+    if (startDate <= new Date()) {
+      return fail(new ValidationError('startsAt', 'Must be in the future.'));
+    }
+
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+    return ok({ startsAt, endsAt: endDate.toISOString() });
   }
 
   /**

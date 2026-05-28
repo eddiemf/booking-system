@@ -290,7 +290,7 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [x] Returns an empty array when no services exist.
   - [x] Each item includes `id`, `name`, `description`, `duration`, and `establishmentCode`.
   - [x] Returns only services belonging to the given establishment.
-  - [ ] Returns `404` when the establishment does not exist (currently returns empty array).
+  - [x] Returns `404` when the establishment does not exist.
 
 #### Feature 1.3 — Get Service by ID `[done]`
 
@@ -749,6 +749,20 @@ interface BookingDTO {
 
 ---
 
+## MVP Fixes — Immediate Priority
+
+The following bugs and functional gaps were identified during the MVP code review. These must be fixed before launch.
+
+| # | Issue | Priority | Epic/Feature |
+|---|-------|----------|-------------|
+| 1 | **Availability shows booked slots** — `GetAvailability` generates slots from schedules without subtracting confirmed bookings for the resource on that date. Customers see unavailable slots. | Critical | Epic 4 (Availability) |
+| 2 | **Service description not persisted on update** — `description` changes are silently ignored in the repository `update()` method. | High | Epic 1 (Service) |
+| 3 | **Resource update returns entity with empty schedules** — `update()` reconstructs resource without loading schedules. | Medium | Epic 3 (Resource) |
+| 4 | **ListServices doesn't 404 on missing establishment** — Returns empty array instead of 404, inconsistent with other endpoints. | Medium | Epic 1 (Service) |
+| 5 | **SetSchedule doesn't validate overlapping entries** — Submitting overlapping windows for same day (e.g., 09-12 and 10-13) creates invalid schedule. | Medium | Epic 4 (Schedule) |
+| 6 | **Capacity is stored but never enforced** — `maxCapacity` is saved in DB but availability and booking logic treats all resources as capacity=1. Either implement multi-capacity booking or remove the field. | Medium | Epic 5 (Booking) |
+| 7 | **Missing pagination on ListResources, ListServices, ListBookings** — Inconsistent with ListEstablishments. Tolerable for MVP datasets but inconsistent. | Low | Epic 2/3/5 |
+
 ## Post-MVP Ideas
 
 These are out of scope for the MVP but can be prioritized in future iterations.
@@ -763,6 +777,8 @@ These are out of scope for the MVP but can be prioritized in future iterations.
 - **Admin panel** — Dashboard for establishment owners to manage everything.
 - **Multi-owner establishments** — Multiple users can manage the same establishment.
 - **Booking confirmation email** — Send confirmation after booking is created.
+- **Health check endpoint** — `GET /health` for monitoring/deployment.
+- **Schedule overlap validation** — Prevent overlapping time windows for same day on a resource.
 
 ---
 

@@ -40,6 +40,18 @@ export class TimeOfDay {
     return new TimeOfDay(value, TimeOfDay.parseMinutes(value));
   }
 
+  /**
+   * Construct from total minutes (0–1439). Useful for converting
+   * slot grid positions back to HH:MM display values.
+   */
+  static fromMinutes(minutes: number): TimeOfDay {
+    const hh = Math.floor(minutes / 60);
+    const mm = minutes % 60;
+    const value = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+
+    return new TimeOfDay(value, minutes);
+  }
+
   private static isValidFormat(value: string): boolean {
     if (!/^\d{2}:\d{2}$/.test(value)) return false;
     const sep = value.indexOf(':');

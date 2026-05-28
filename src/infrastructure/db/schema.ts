@@ -1,4 +1,4 @@
-import { integer, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgTable, unique, uuid, varchar } from 'drizzle-orm/pg-core';
 import { timestamps } from './timestamps';
 
 export const usersTable = pgTable('users', {
@@ -40,6 +40,27 @@ export const resourcesTable = pgTable('resources', {
     .notNull()
     .references(() => establishmentsTable.id),
 });
+
+export const serviceOfferingsTable = pgTable(
+  'service_offerings',
+  {
+    id: uuid().primaryKey(),
+    code: varchar({ length: 10 }).notNull().unique(),
+    ...timestamps,
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => servicesTable.id),
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resourcesTable.id),
+    maxCapacity: integer('max_capacity').notNull().default(1),
+    durationMinutes: integer('duration_minutes').notNull(),
+    slotIntervalMinutes: integer('slot_interval_minutes').notNull(),
+  },
+  (table) => ({
+    uniqueServiceResource: unique().on(table.serviceId, table.resourceId),
+  })
+);
 
 export const schedulesTable = pgTable('schedules', {
   id: uuid().primaryKey(),

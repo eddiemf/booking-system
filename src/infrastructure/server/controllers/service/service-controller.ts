@@ -1,7 +1,9 @@
-import type { ServiceDTO } from '@app/dtos';
+import type { ServiceDTO, ServiceOfferingDTO } from '@app/dtos';
 import type {
   CreateService,
+  CreateServiceOffering,
   DeleteService,
+  DeleteServiceOffering,
   FindService,
   ListServices,
   UpdateService,
@@ -36,12 +38,29 @@ export class ServiceController extends Controller {
     duration: z.coerce.number(),
   });
 
+  private readonly createServiceOfferingSchema = z.object({
+    establishmentCode: z.string().min(1),
+    code: z.string().min(1),
+    resourceCode: z.string().min(1),
+    maxCapacity: z.coerce.number().int().positive().optional(),
+    durationMinutes: z.coerce.number().int().positive(),
+    slotIntervalMinutes: z.coerce.number().int().positive(),
+  });
+
+  private readonly deleteServiceOfferingSchema = z.object({
+    establishmentCode: z.string().min(1),
+    code: z.string().min(1),
+    resourceCode: z.string().min(1),
+  });
+
   constructor(
     private readonly createService: CreateService,
     private readonly listServices: ListServices,
     private readonly findService: FindService,
     private readonly updateService: UpdateService,
-    private readonly deleteService: DeleteService
+    private readonly deleteService: DeleteService,
+    private readonly createServiceOffering: CreateServiceOffering,
+    private readonly deleteServiceOffering: DeleteServiceOffering
   ) {
     super();
   }
@@ -160,6 +179,88 @@ export class ServiceController extends Controller {
       }
 
       return res.status(200).json(result.data);
+    } catch (error) {
+      return res.status(500).json(this.getInternalServerError());
+    }
+  }
+
+  async createOffering(
+    req: AuthenticatedRequest,
+    res: Response<ServiceOfferingDTO | ErrorResponse>
+  ) {
+    try {
+      const validation = this.createServiceOfferingSchema.safeParse({ ...req.params, ...req.body });
+      if (!validation.success) {
+        return res.status(400).json(this.mapZodValidationError(validation.error));
+      }
+
+      const {
+        establishmentCode,
+        code,
+        resourceCode,
+        maxCapacity,
+        durationMinutes,
+        slotIntervalMinutes,
+      } = validation.data;
+
+      const result = await this.createServiceOffering.execute({
+        serviceCode: code,
+        resourceCode,
+        establishmentCode,
+        userId: req.user.userId,
+        maxCapacity,
+        durationMinutes,
+        slotIntervalMinutes,
+      });
+
+      if (!result.isOk) {
+        if (result.error.code === 'NotFoundError') {
+          return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ConflictError') {
+          return res.status(409).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
+        }
+
+        return res.status(500).json(this.getInternalServerError());
+      }
+
+      return res.status(201).json(result.data);
+    } catch (error) {
+      return res.status(500).json(this.getInternalServerError());
+    }
+  }
+
+  async deleteOffering(req: AuthenticatedRequest, res: Response<ErrorResponse | void>) {
+    try {
+      const validation = this.deleteServiceOfferingSchema.safeParse({ ...req.params, ...req.body });
+      if (!validation.success) {
+        return res.status(400).json(this.mapZodValidationError(validation.error));
+      }
+
+      const { establishmentCode, code, resourceCode } = validation.data;
+
+      const result = await this.deleteServiceOffering.execute({
+        serviceCode: code,
+        resourceCode,
+        establishmentCode,
+        userId: req.user.userId,
+      });
+
+      if (!result.isOk) {
+        if (result.error.code === 'NotFoundError') {
+          return res.status(404).json(this.mapErrorFromResult(result));
+        }
+        if (result.error.code === 'ForbiddenError') {
+          return res.status(403).json(this.mapErrorFromResult(result));
+        }
+
+        return res.status(500).json(this.getInternalServerError());
+      }
+
+      return res.status(204).send();
     } catch (error) {
       return res.status(500).json(this.getInternalServerError());
     }

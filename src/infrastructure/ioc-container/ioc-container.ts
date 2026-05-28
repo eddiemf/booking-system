@@ -1,12 +1,16 @@
+import { AvailabilityService } from '@app/domain/services';
 import {
   CreateEstablishment,
   CreateResource,
   CreateService,
+  CreateServiceOffering,
   DeleteEstablishment,
   DeleteResource,
   DeleteService,
+  DeleteServiceOffering,
   FindEstablishment,
   FindService,
+  GetAvailability,
   GetCurrentUser,
   ListResources,
   ListServices,
@@ -25,11 +29,13 @@ import {
   PostgressEstablishmentRepository,
   PostgressResourceRepository,
   PostgressScheduleRepository,
+  PostgressServiceOfferingRepository,
   PostgressServiceRepository,
   PostgressUserRepository,
 } from '../repositories';
 import {
   AuthController,
+  AvailabilityController,
   EstablishmentController,
   ResourceController,
   ScheduleController,
@@ -47,6 +53,7 @@ export const createIocContainer = () => {
 
     // Controllers
     authController: asClass(AuthController).singleton(),
+    availabilityController: asClass(AvailabilityController).singleton(),
     establishmentController: asClass(EstablishmentController).singleton(),
     resourceController: asClass(ResourceController).singleton(),
     scheduleController: asClass(ScheduleController).singleton(),
@@ -67,6 +74,12 @@ export const createIocContainer = () => {
     findService: asClass(FindService).singleton(),
     listServices: asClass(ListServices).singleton(),
     updateService: asClass(UpdateService).singleton(),
+    createServiceOffering: asClass(CreateServiceOffering).singleton(),
+    deleteServiceOffering: asClass(DeleteServiceOffering).singleton(),
+    getAvailability: asClass(GetAvailability).singleton(),
+
+    // Domain services
+    availabilityService: asClass(AvailabilityService).singleton(),
 
     loginWithGoogle: asClass(LoginWithGoogle).singleton(),
     loginWithApple: asClass(LoginWithApple).singleton(),
@@ -77,6 +90,7 @@ export const createIocContainer = () => {
     resourceRepository: asClass(PostgressResourceRepository).singleton(),
     scheduleRepository: asClass(PostgressScheduleRepository).singleton(),
     serviceRepository: asClass(PostgressServiceRepository).singleton(),
+    serviceOfferingRepository: asClass(PostgressServiceOfferingRepository).singleton(),
     userRepository: asClass(PostgressUserRepository).singleton(),
 
     // Ports / Adapters

@@ -8,6 +8,7 @@ export function createServer() {
   const config = container.resolve('config');
 
   const authController = container.resolve('authController');
+  const availabilityController = container.resolve('availabilityController');
   const establishmentController = container.resolve('establishmentController');
   const resourceController = container.resolve('resourceController');
   const scheduleController = container.resolve('scheduleController');
@@ -73,6 +74,23 @@ export function createServer() {
   );
   app.delete('/establishments/:establishmentCode/services/:code', requireAuth, (req, res) =>
     serviceController.delete(req as AuthenticatedRequest, res)
+  );
+
+  // Service-Offering routes
+  app.post(
+    '/establishments/:establishmentCode/services/:code/service-offerings',
+    requireAuth,
+    (req, res) => serviceController.createOffering(req as AuthenticatedRequest, res)
+  );
+  app.delete(
+    '/establishments/:establishmentCode/services/:code/service-offerings/:resourceCode',
+    requireAuth,
+    (req, res) => serviceController.deleteOffering(req as AuthenticatedRequest, res)
+  );
+
+  // Availability routes (public)
+  app.get('/establishments/:establishmentCode/services/:serviceCode/availability', (req, res) =>
+    availabilityController.getSlots(req, res)
   );
 
   return app;

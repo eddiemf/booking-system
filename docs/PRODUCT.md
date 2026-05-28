@@ -16,6 +16,7 @@ Bookler is a booking platform that allows establishments (salons, clinics, studi
 | **Establishment** | A business that offers bookable services. Belongs to a User (owner). |
 | **Service** | Something an establishment offers (e.g., "60-min massage"). Has a name, description, and fixed duration (in minutes). |
 | **Resource** | A bookable asset required to deliver a service — either an **employee** or a **room/space**. Belongs to an establishment. |
+| **ServiceOffering** | A n-to-n link between a Service and a Resource. Represents that a service can be delivered by a specific resource. |
 | **Schedule** | Defines the regular working hours for a resource (days of week + time range). |
 | **Booking** | A reservation made by a customer for a specific service, resource, and time slot. |
 | **Customer** | A user who makes bookings. |
@@ -26,7 +27,7 @@ Bookler is a booking platform that allows establishments (salons, clinics, studi
 User (owner)
   └── Establishment
         ├── Service (offered by establishment)
-        │     └── Resource (required to deliver it)
+        │     └── Resource (n-to-n: any service can be assigned any resource)
         └── Resource
               └── Schedule (regular availability)
 
@@ -239,6 +240,25 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
+#### Feature 1.6 — Create Service Offering `[done]`
+
+- **Endpoint:** `POST /establishments/:establishmentCode/services/:code/service-offerings`
+- **Notes:** A Service Offering represents the combination of a service with a specific resource.
+- **Acceptance criteria:**
+  - [x] Requires `resourceCode` in the body.
+  - [x] Returns `201` with the service offering DTO containing `id`, `serviceCode`, `resourceCode`, `resourceName`.
+  - [x] Returns `404` when service or resource does not exist in the establishment.
+  - [x] Returns `409` when resource is already associated with the service.
+  - [x] Returns `403` when user is not the owner of the establishment.
+
+#### Feature 1.7 — Delete Service Offering `[done]`
+
+- **Endpoint:** `DELETE /establishments/:establishmentCode/services/:code/service-offerings/:resourceCode`
+- **Acceptance criteria:**
+  - [x] Returns `204` on success.
+  - [x] Returns `404` when the service offering does not exist.
+  - [x] Returns `403` when user is not the owner of the establishment.
+
 ---
 
 ### Epic 3: Resource Management
@@ -300,16 +320,19 @@ The MVP delivers a functional end-to-end flow: an owner sets up an establishment
   - [ ] Returns `401` when no auth token provided.
   - [ ] Returns `403` when user is not the owner of the establishment.
 
-#### Feature 4.2 — Get Available Slots `[planned]`
+#### Feature 4.2 — Get Available Slots `[done]`
 
-- **Endpoint:** `GET /services/:serviceCode/availability?date=YYYY-MM-DD`
+- **Endpoint:** `GET /establishments/:establishmentCode/services/:serviceCode/availability?date=YYYY-MM-DD`
 - **Notes:** Public endpoint. No auth required.
 - **Acceptance criteria:**
-  - [ ] Returns a list of available time slots for the given service and date.
-  - [ ] Slots are derived from resource schedules minus existing bookings.
-  - [ ] Slot duration matches the service duration.
-  - [ ] Returns an empty list when no resources are available.
-  - [ ] Returns `400` when `date` is missing or in the past.
+  - [x] Returns a list of available time slots for the given service and date.
+  - [x] Slots are derived from resource schedules minus existing bookings.
+  - [x] Slot duration matches the service duration.
+  - [x] Returns an empty list when no resources are assigned to the service.
+  - [x] Returns `400` when `date` is missing or in the past.
+  - [x] Returns `404` when the service does not exist.
+  - [x] Each slot includes `startTime`, `endTime`, `resourceCode`, and `resourceName`.
+  - [x] Only resources linked to the service via Service-Resource assignments are considered.
 
 ---
 

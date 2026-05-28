@@ -274,7 +274,64 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 12. Aggregates
+## 12. Variable Naming
+
+Never use single-letter variable names. Never abbreviate domain terms.
+
+**Bad:**
+```
+const c = constraint;
+const l = link;
+const est = establishment;
+const svc = service;
+const res = resource;
+const sch = schedule;
+const ra = rangeA;
+```
+
+**Good:**
+```
+const constraint = ...;
+const establishment = ...;
+const serviceRepository = ...;
+```
+
+**Allowed exceptions:**
+- `i`, `j` for loop indices — only when the loop body is ≤3 lines and no other approach fits
+- `ok`/`fail` from the Result pattern — these are established conventions
+
+**Rules:**
+- If you type a domain concept, spell it out: `establishment`, `resource`, `schedule`, `capacity`, `constraint`
+- If a variable name exceeds ~30 chars, extract a meaningful abbreviation once (e.g., `repo` instead of `repository`) — but only for infrastructure-level concepts, never domain entities
+- Test variables must follow the same rules
+
+---
+
+## 13. Domain Services
+
+When business logic spans multiple entities or value objects and doesn't naturally belong to any single one, extract a **domain service** in `src/application/domain/services/`.
+
+A domain service is:
+- **Stateless** — no mutable state, no instance fields
+- **Pure logic** — no repositories, no I/O, no framework imports. Returns domain types or primitives, never DTOs.
+- **Testable in isolation** — instantiate and assert, no mocking needed
+
+**When to create one:**
+- Algorithm involves multiple entities/VOs (e.g., intersecting schedules from different sources)
+- Computation doesn't fit naturally as a method on any single entity
+- The logic is complex enough to deserve its own unit tests
+
+**When NOT to create one:**
+- If the logic cleanly belongs to one entity or VO → put it there as a method
+- If the logic is pure orchestration (call repo A, call repo B, map) → keep it in the use case
+
+**Location:** `src/application/domain/services/<name>-service.ts`
+
+Use cases construct or receive domain services via DI and call them during `execute()`. The use case remains the orchestrator: call repositories, call domain services, map results to DTOs.
+
+---
+
+## 14. Aggregates
 
 - `ResourceEntity` is aggregate root for scheduling
 - `ScheduleEntity` instances are **only** created through `resource.setSchedule(entries)` — never construct `ScheduleEntity` directly in use cases
@@ -283,7 +340,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 13. Testing Conventions
+## 15. Testing Conventions
 
 - Test files: `.test.ts` alongside the implementation file
 - Every entity, VO, mapper, use case, and controller must have a test file
@@ -294,7 +351,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 14. Imports & Aliases
+## 16. Imports & Aliases
 
 ```typescript
 @app/*        → src/application/*
@@ -308,7 +365,7 @@ All extend `AppError<ErrorCodeType>` with discriminated `code` union. Never crea
 
 ---
 
-## 15. DI / IoC Container
+## 17. DI / IoC Container
 
 - Awilix with `InjectionMode.CLASSIC`
 - Constructor parameter names = container registration names (they must match)
@@ -319,7 +376,7 @@ When changing constructor parameter names → update container registrations acc
 
 ---
 
-## 16. Code Style (from biome.json & tsconfig)
+## 18. Code Style (from biome.json & tsconfig)
 
 - Single quotes, semicolons always, trailing commas es5
 - 100 line width, space indentation (2 spaces)
@@ -329,7 +386,7 @@ When changing constructor parameter names → update container registrations acc
 
 ---
 
-## 17. No Non-Null Assertions
+## 19. No Non-Null Assertions
 
 Never use TypeScript's non-null assertion operator (`!`) to access values that might be `undefined`, especially on `req.user` or any property inferred from middleware. Instead:
 
@@ -341,7 +398,7 @@ This ensures type safety without escape hatches.
 
 ---
 
-## 18. No `as never` Escape Hatches in Tests
+## 20. No `as never` Escape Hatches in Tests
 
 Never use `as never` to bypass type mismatches in mock objects. This hides real type errors.
 
@@ -367,7 +424,7 @@ establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
 
 ---
 
-## 19. What NOT To Do
+## 21. What NOT To Do
 
 - Do not add features beyond what was asked
 - Do not add "flexibility" or "configurability" that wasn't requested

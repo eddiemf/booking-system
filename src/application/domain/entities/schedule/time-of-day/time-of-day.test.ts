@@ -58,6 +58,42 @@ describe('TimeOfDay', () => {
     });
   });
 
+  describe('fromMinutes()', () => {
+    it('converts 0 to 00:00', () => {
+      const time = TimeOfDay.fromMinutes(0);
+
+      expect(time.value).toBe('00:00');
+      expect(time.toMinutes()).toBe(0);
+    });
+
+    it('converts 60 to 01:00', () => {
+      const time = TimeOfDay.fromMinutes(60);
+
+      expect(time.value).toBe('01:00');
+      expect(time.toMinutes()).toBe(60);
+    });
+
+    it('converts 570 to 09:30', () => {
+      const time = TimeOfDay.fromMinutes(570);
+
+      expect(time.value).toBe('09:30');
+      expect(time.toMinutes()).toBe(570);
+    });
+
+    it('converts 1439 to 23:59', () => {
+      const time = TimeOfDay.fromMinutes(1439);
+
+      expect(time.value).toBe('23:59');
+      expect(time.toMinutes()).toBe(1439);
+    });
+
+    it('pads single-digit hours and minutes', () => {
+      const time = TimeOfDay.fromMinutes(7);
+
+      expect(time.value).toBe('00:07');
+    });
+  });
+
   describe('toMinutes()', () => {
     it('converts HH:MM to total minutes', () => {
       expect(TimeOfDay.from('00:00').toMinutes()).toBe(0);

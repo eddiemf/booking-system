@@ -1,0 +1,80 @@
+import { ValidationError } from '@app/domain/errors';
+import { fail, ok, type Result } from '@shared/result';
+import type { ResourceEntity } from '../entities/resource/resource-entity';
+import { TimeOfDay } from '../entities/schedule/time-of-day/time-of-day';
+import type { ServiceOfferingEntity } from '../entities/service-offering/service-offering-entity';
+
+export interface ResourceSlot {
+  startTime: string;
+  endTime: string;
+  resourceCode: string;
+  resourceName: string;
+}
+
+export class AvailabilityService {
+  /**
+   * Validate that the given date string is a valid future date.
+   */
+  validateDate(date: string): Result<void, ValidationError> {
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return fail(new ValidationError('date', 'Must be a valid date.'));
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (parsedDate < today) {
+      return fail(new ValidationError('date', 'Must not be in the past.'));
+    }
+
+    return ok(undefined);
+  }
+
+  /**
+   * Generate available time slots for a resource + offering on a given date.
+   *
+   * Pipeline:
+   * 1. Filter schedules for the given dayOfWeek → get base windows
+   * 2. For each window, generate grid start times at slotInterval granularity
+   * 3. Filter out start times where the block (duration) would exceed the window end
+   */
+  generateResourceSlots({
+    date,
+    offering,
+    resource,
+  }: {
+    date: string;
+    resource: ResourceEntity;
+    offering: ServiceOfferingEntity;
+  }): ResourceSlot[] {
+    const slots: ResourceSlot[] = [];
+    const dayOfWeek = new Date(date).getDay();
+    const durationMinutes = offering.durationMinutes.toMinutes();
+    const slotIntervalMinutes = offering.slotIntervalMinutes.toMinutes();
+    const resourceCode = resource.code;
+    const resourceName = resource.name;
+
+    const windows = resource.schedules.filter((schedule) => schedule.dayOfWeek.value === dayOfWeek);
+
+    for (const window of windows) {
+      const windowStart = window.timeRange.start.toMinutes();
+      const windowEnd = window.timeRange.end.toMinutes();
+
+      for (
+        let time = windowStart;
+        time + durationMinutes <= windowEnd;
+        time += slotIntervalMinutes
+      ) {
+        slots.push({
+          startTime: TimeOfDay.fromMinutes(time).value,
+          endTime: TimeOfDay.fromMinutes(time + durationMinutes).value,
+          resourceCode,
+          resourceName,
+        });
+      }
+    }
+
+    return slots;
+  }
+}

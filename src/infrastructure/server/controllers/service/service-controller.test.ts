@@ -1,7 +1,9 @@
 import { ConflictError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import type {
   CreateService,
+  CreateServiceOffering,
   DeleteService,
+  DeleteServiceOffering,
   FindService,
   ListServices,
   UpdateService,
@@ -34,12 +36,16 @@ describe('ServiceController', () => {
   const findServiceMock = mock<FindService>();
   const updateServiceMock = mock<UpdateService>();
   const deleteServiceMock = mock<DeleteService>();
+  const createServiceOfferingMock = mock<CreateServiceOffering>();
+  const deleteServiceOfferingMock = mock<DeleteServiceOffering>();
   const controller = new ServiceController(
     createServiceMock,
     listServicesMock,
     findServiceMock,
     updateServiceMock,
-    deleteServiceMock
+    deleteServiceMock,
+    createServiceOfferingMock,
+    deleteServiceOfferingMock
   );
 
   const getAuthenticatedReq = (extra = {}) =>

@@ -1,7 +1,7 @@
 import { ResourceEntity, type ResourceRepository, ScheduleEntity } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { isForeignKeyViolation } from '../../db/errors';
 import { establishmentsTable, resourcesTable, schedulesTable } from '../../db/schema';
@@ -66,6 +66,40 @@ export class PostgressResourceRepository implements ResourceRepository {
       return ok(this.groupResourceRows(rows));
     } catch (error) {
       return fail(new StorageError('Failed to list resources.'));
+    }
+  }
+
+  async findByIds(
+    ids: string[],
+    establishmentCode: string
+  ): PromiseResult<ResourceEntity[], StorageError> {
+    try {
+      if (ids.length === 0) return ok([]);
+
+      const rows = await this.db
+        .select({
+          id: resourcesTable.id,
+          code: resourcesTable.code,
+          name: resourcesTable.name,
+          establishmentId: resourcesTable.establishmentId,
+          establishmentCode: establishmentsTable.code,
+          scheduleId: schedulesTable.id,
+          scheduleCode: schedulesTable.code,
+          scheduleDayOfWeek: schedulesTable.dayOfWeek,
+          scheduleStartTime: schedulesTable.startTime,
+          scheduleEndTime: schedulesTable.endTime,
+          scheduleResourceId: schedulesTable.resourceId,
+        })
+        .from(resourcesTable)
+        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
+        .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
+        .where(
+          and(inArray(resourcesTable.id, ids), eq(establishmentsTable.code, establishmentCode))
+        );
+
+      return ok(this.groupResourceRows(rows));
+    } catch (error) {
+      return fail(new StorageError('Failed to find resources.'));
     }
   }
 

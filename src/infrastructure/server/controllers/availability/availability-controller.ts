@@ -19,26 +19,18 @@ export class AvailabilityController extends Controller {
     try {
       const validation = this.availabilitySchema.safeParse({ ...req.params, ...req.query });
       if (!validation.success) {
-        return res.status(400).json(this.mapZodValidationError(validation.error));
+        return this.sendZodError(res, validation.error);
       }
 
       const { serviceCode, establishmentCode, date } = validation.data;
 
       const result = await this.getAvailability.execute({ serviceCode, establishmentCode, date });
 
-      if (!result.isOk) {
-        if (result.error.code === 'ValidationError') {
-          return res.status(400).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);
     } catch {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 }

@@ -35,24 +35,18 @@ export class EstablishmentController extends Controller {
     try {
       const validation = this.establishmentSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json(this.mapZodValidationError(validation.error));
+        return this.sendZodError(res, validation.error);
       }
 
       const { name } = validation.data;
 
       const result = await this.createEstablishment.execute({ name, userId: req.user.userId });
 
-      if (!result.isOk) {
-        if (result.error.code === 'ValidationError') {
-          return res.status(400).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(201).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -60,23 +54,17 @@ export class EstablishmentController extends Controller {
     try {
       const paramsValidation = this.codeParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
-        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+        return this.sendZodError(res, paramsValidation.error);
       }
       const { code } = paramsValidation.data;
 
       const result = await this.findEstablishment.execute({ code });
 
-      if (!result.isOk) {
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -84,7 +72,7 @@ export class EstablishmentController extends Controller {
     try {
       const validation = this.updateEstablishmentSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
-        return res.status(400).json(this.mapZodValidationError(validation.error));
+        return this.sendZodError(res, validation.error);
       }
 
       const { code, name } = validation.data;
@@ -95,23 +83,11 @@ export class EstablishmentController extends Controller {
         userId: req.user.userId,
       });
 
-      if (!result.isOk) {
-        if (result.error.code === 'ValidationError') {
-          return res.status(400).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ForbiddenError') {
-          return res.status(403).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -119,7 +95,7 @@ export class EstablishmentController extends Controller {
     try {
       const paramsValidation = this.codeParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
-        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+        return this.sendZodError(res, paramsValidation.error);
       }
       const { code } = paramsValidation.data;
 
@@ -128,23 +104,11 @@ export class EstablishmentController extends Controller {
         userId: req.user.userId,
       });
 
-      if (!result.isOk) {
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ConflictError') {
-          return res.status(409).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ForbiddenError') {
-          return res.status(403).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(204).send();
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 }

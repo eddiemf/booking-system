@@ -39,7 +39,7 @@ export class ResourceController extends Controller {
     try {
       const validation = this.createResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
-        return res.status(400).json(this.mapZodValidationError(validation.error));
+        return this.sendZodError(res, validation.error);
       }
 
       const { establishmentCode, name } = validation.data;
@@ -50,23 +50,11 @@ export class ResourceController extends Controller {
         userId: req.user.userId,
       });
 
-      if (!result.isOk) {
-        if (result.error.code === 'ValidationError') {
-          return res.status(400).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ForbiddenError') {
-          return res.status(403).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(201).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -74,23 +62,17 @@ export class ResourceController extends Controller {
     try {
       const paramsValidation = this.establishmentParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
-        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+        return this.sendZodError(res, paramsValidation.error);
       }
       const { establishmentCode } = paramsValidation.data;
 
       const result = await this.listResources.execute({ establishmentCode });
 
-      if (!result.isOk) {
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -98,7 +80,7 @@ export class ResourceController extends Controller {
     try {
       const validation = this.updateResourceSchema.safeParse({ ...req.params, ...req.body });
       if (!validation.success) {
-        return res.status(400).json(this.mapZodValidationError(validation.error));
+        return this.sendZodError(res, validation.error);
       }
 
       const { code, establishmentCode, name } = validation.data;
@@ -110,23 +92,11 @@ export class ResourceController extends Controller {
         userId: req.user.userId,
       });
 
-      if (!result.isOk) {
-        if (result.error.code === 'ValidationError') {
-          return res.status(400).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ForbiddenError') {
-          return res.status(403).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(200).json(result.data);
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 
@@ -134,7 +104,7 @@ export class ResourceController extends Controller {
     try {
       const paramsValidation = this.resourceParamsSchema.safeParse(req.params);
       if (!paramsValidation.success) {
-        return res.status(400).json(this.mapZodValidationError(paramsValidation.error));
+        return this.sendZodError(res, paramsValidation.error);
       }
       const { code, establishmentCode } = paramsValidation.data;
 
@@ -144,23 +114,11 @@ export class ResourceController extends Controller {
         userId: req.user.userId,
       });
 
-      if (!result.isOk) {
-        if (result.error.code === 'NotFoundError') {
-          return res.status(404).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ConflictError') {
-          return res.status(409).json(this.mapErrorFromResult(result));
-        }
-        if (result.error.code === 'ForbiddenError') {
-          return res.status(403).json(this.mapErrorFromResult(result));
-        }
-
-        return res.status(500).json(this.getInternalServerError());
-      }
+      if (!result.isOk) return this.sendError(res, result);
 
       return res.status(204).send();
     } catch (error) {
-      return res.status(500).json(this.getInternalServerError());
+      return this.sendError(res);
     }
   }
 }

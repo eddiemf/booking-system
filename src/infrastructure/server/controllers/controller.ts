@@ -1,5 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import type { ErrorResult } from '@shared/result/result';
+import type { Response } from 'express';
 import type z from 'zod';
 
 export interface ErrorResponse {
@@ -8,6 +9,14 @@ export interface ErrorResponse {
 }
 
 export abstract class Controller {
+  private static readonly ERROR_STATUS_MAP: Record<string, number> = {
+    ValidationError: 400,
+    NotFoundError: 404,
+    ConflictError: 409,
+    ForbiddenError: 403,
+    AuthenticationError: 401,
+  };
+
   protected mapZodValidationError(error: z.ZodError): ErrorResponse {
     const [issue] = error.issues;
     if (!issue) throw new Error('Unexpected validation error format');
@@ -36,5 +45,31 @@ export abstract class Controller {
       message: result.error.message,
       code: result.error.code,
     };
+  }
+
+  protected sendError(
+    res: Response,
+    result?: ErrorResult<{ code: string; message: string }>
+  ): Response {
+    const internalServerError = {
+      message: 'Something went wrong. Try again later.',
+      code: 'InternalServerError',
+    };
+
+    if (!result) return res.status(500).json(internalServerError);
+
+    const statusCode = Controller.ERROR_STATUS_MAP[result.error.code];
+    if (statusCode === undefined) {
+      return res.status(500).json({
+        message: 'Something went wrong. Try again later.',
+        code: 'InternalServerError',
+      });
+    }
+
+    return res.status(statusCode).json(this.mapErrorFromResult(result));
+  }
+
+  protected sendZodError(res: Response, error: z.ZodError): void {
+    res.status(400).json(this.mapZodValidationError(error));
   }
 }

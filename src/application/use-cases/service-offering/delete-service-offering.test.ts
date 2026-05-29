@@ -1,13 +1,11 @@
 import {
   Establishment,
   Resource,
-  type ResourceRepository,
   Service,
   type ServiceOfferingRepository,
-  type ServiceRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ResourceLoader, ServiceLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -15,13 +13,13 @@ import { DeleteServiceOffering } from './delete-service-offering';
 
 describe('DeleteServiceOffering', () => {
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
-  const serviceRepository = mock<ServiceRepository>();
-  const resourceRepository = mock<ResourceRepository>();
+  const serviceLoader = mock<ServiceLoader>();
+  const resourceLoader = mock<ResourceLoader>();
   const establishmentLoader = mock<EstablishmentLoader>();
   const useCase = new DeleteServiceOffering(
     serviceOfferingRepository,
-    serviceRepository,
-    resourceRepository,
+    serviceLoader,
+    resourceLoader,
     establishmentLoader
   );
 
@@ -72,8 +70,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns not-found error when service does not exist', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(null));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    serviceLoader.load.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
+    resourceLoader.load.mockResolvedValue(ok(mockResource));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 
@@ -82,8 +80,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns not-found error when resource does not exist', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(null));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    resourceLoader.load.mockResolvedValue(fail(new NotFoundError('Resource', 'res123')));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 
@@ -92,8 +90,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns not-found error when the link does not exist', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    resourceLoader.load.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(
       fail(new NotFoundError('ServiceOffering', 'uuid-svc:uuid-res'))
     );
@@ -105,8 +103,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns storage error when unassign fails', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    resourceLoader.load.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
@@ -116,8 +114,8 @@ describe('DeleteServiceOffering', () => {
 
   it('returns ok on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    resourceLoader.load.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(ok(undefined));
 
     const result = await useCase.execute(validInput);

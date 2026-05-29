@@ -1,7 +1,11 @@
 import type { ResourceRepository } from '@app/domain/entities';
-import type { ForbiddenError, StorageError, ValidationError } from '@app/domain/errors';
-import { NotFoundError } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type {
+  ForbiddenError,
+  NotFoundError,
+  StorageError,
+  ValidationError,
+} from '@app/domain/errors';
+import type { EstablishmentLoader, ResourceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
@@ -16,6 +20,7 @@ interface Input {
 export class UpdateResource {
   constructor(
     private readonly resourceRepository: ResourceRepository,
+    private readonly resourceLoader: ResourceLoader,
     private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
@@ -28,21 +33,14 @@ export class UpdateResource {
     ResourceDTO,
     ValidationError | StorageError | NotFoundError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
-      establishmentCode,
-      userId
-    );
+    const [establishmentResult, resourceResult] = await Promise.all([
+      this.establishmentLoader.loadOwnedByUser(establishmentCode, userId),
+      this.resourceLoader.load(code, establishmentCode),
+    ]);
     if (!establishmentResult.isOk) return establishmentResult;
-
-    const resourceResult = await this.resourceRepository.findByCode(code);
     if (!resourceResult.isOk) return resourceResult;
 
     const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', code));
-
-    if (resource.establishmentCode !== establishmentCode)
-      return fail(new NotFoundError('Resource', code));
-
     const updateValidation = resource.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 

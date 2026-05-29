@@ -4,22 +4,22 @@ import {
   Service,
   ServiceOffering,
   type ServiceOfferingRepository,
-  type ServiceRepository,
 } from '@app/domain/entities';
 import { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import type { AvailabilityService } from '@app/domain/services';
+import type { ServiceLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { GetAvailability } from './get-availability';
 
 describe('GetAvailability', () => {
-  const serviceRepository = mock<ServiceRepository>();
+  const serviceLoader = mock<ServiceLoader>();
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
   const resourceRepository = mock<ResourceRepository>();
   const availabilityService = mock<AvailabilityService>();
   const useCase = new GetAvailability(
-    serviceRepository,
+    serviceLoader,
     serviceOfferingRepository,
     resourceRepository,
     availabilityService
@@ -27,7 +27,37 @@ describe('GetAvailability', () => {
 
   const serviceCode = 'svc123';
   const establishmentCode = 'est123';
-  const date = '2026-06-03'; // Wednesday (dayOfWeek = 3)
+  const date = '2026-06-03';
+
+  const mockService = Service.reconstruct({
+    id: 'uuid-svc',
+    code: serviceCode,
+    name: 'Haircut',
+    description: '',
+    duration: 30,
+    establishmentId: 'uuid-est',
+    establishmentCode,
+  });
+
+  const mockOffering = ServiceOffering.reconstruct({
+    id: 'uuid-offering',
+    code: 'off1',
+    serviceId: 'uuid-svc',
+    resourceId: 'uuid-res',
+    maxCapacity: 1,
+    durationMinutes: 60,
+    slotIntervalMinutes: 30,
+    price: 0,
+  });
+
+  const mockResource = Resource.reconstruct({
+    id: 'uuid-res',
+    code: 'res123',
+    name: 'Alice',
+    establishmentId: 'uuid-est',
+    establishmentCode,
+    schedules: [],
+  });
 
   beforeEach(() => {
     availabilityService.validateDate.mockReturnValue(ok(undefined));
@@ -47,7 +77,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    serviceRepository.findByCode.mockResolvedValue(ok(null));
+    serviceLoader.load.mockResolvedValue(fail(new NotFoundError('Service', serviceCode)));
 
     const error = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -57,7 +87,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns storage error when service lookup fails', async () => {
-    serviceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
+    serviceLoader.load.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -67,16 +97,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns empty array when no resources are assigned to the service', async () => {
-    const service = Service.reconstruct({
-      id: 'uuid-svc',
-      code: serviceCode,
-      name: 'Haircut',
-      description: '',
-      duration: 30,
-      establishmentId: 'uuid-est',
-      establishmentCode,
-    });
-    serviceRepository.findByCode.mockResolvedValue(ok(service));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([]));
 
     const data = await useCase
@@ -87,30 +108,8 @@ describe('GetAvailability', () => {
   });
 
   it('returns available slots from resource schedules', async () => {
-    const service = Service.reconstruct({
-      id: 'uuid-svc',
-      code: serviceCode,
-      name: 'Haircut',
-      description: '',
-      duration: 60,
-      establishmentId: 'uuid-est',
-      establishmentCode,
-    });
-    serviceRepository.findByCode.mockResolvedValue(ok(service));
-
-    const offering = ServiceOffering.reconstruct({
-      id: 'uuid-offering',
-      code: 'off1',
-      serviceId: 'uuid-svc',
-      resourceId: 'uuid-res',
-      maxCapacity: 1,
-      durationMinutes: 60,
-      slotIntervalMinutes: 30,
-      price: 0,
-    });
-
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([offering]));
-
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
     availabilityService.generateResourceSlots.mockReturnValue([
       {
         startTime: '09:00',
@@ -127,17 +126,7 @@ describe('GetAvailability', () => {
         price: 0,
       },
     ]);
-
-    const resource = Resource.reconstruct({
-      id: 'uuid-res',
-      code: 'res123',
-      name: 'Alice',
-      establishmentId: 'uuid-est',
-      establishmentCode,
-      schedules: [],
-    });
-
-    resourceRepository.findByIds.mockResolvedValue(ok([resource]));
+    resourceRepository.findByIds.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -162,42 +151,10 @@ describe('GetAvailability', () => {
   });
 
   it('returns empty array when domain service returns no slots', async () => {
-    const service = Service.reconstruct({
-      id: 'uuid-svc',
-      code: serviceCode,
-      name: 'Haircut',
-      description: '',
-      duration: 30,
-      establishmentId: 'uuid-est',
-      establishmentCode,
-    });
-    serviceRepository.findByCode.mockResolvedValue(ok(service));
-
-    const emptyOffering = ServiceOffering.reconstruct({
-      id: 'uuid-offering',
-      code: 'off1',
-      serviceId: 'uuid-svc',
-      resourceId: 'uuid-res',
-      maxCapacity: 1,
-      durationMinutes: 60,
-      slotIntervalMinutes: 30,
-      price: 0,
-    });
-
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([emptyOffering]));
-
+    serviceLoader.load.mockResolvedValue(ok(mockService));
+    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
     availabilityService.generateResourceSlots.mockReturnValue([]);
-
-    const resource = Resource.reconstruct({
-      id: 'uuid-res',
-      code: 'res123',
-      name: 'Alice',
-      establishmentId: 'uuid-est',
-      establishmentCode,
-      schedules: [],
-    });
-
-    resourceRepository.findByIds.mockResolvedValue(ok([resource]));
+    resourceRepository.findByIds.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -207,18 +164,9 @@ describe('GetAvailability', () => {
   });
 
   it('returns slots from multiple resources', async () => {
-    const service = Service.reconstruct({
-      id: 'uuid-svc',
-      code: serviceCode,
-      name: 'Haircut',
-      description: '',
-      duration: 30,
-      establishmentId: 'uuid-est',
-      establishmentCode,
-    });
-    serviceRepository.findByCode.mockResolvedValue(ok(service));
+    serviceLoader.load.mockResolvedValue(ok(mockService));
 
-    const multiOffering1 = ServiceOffering.reconstruct({
+    const offering1 = ServiceOffering.reconstruct({
       id: 'l1',
       code: 'l1',
       serviceId: 'uuid-svc',
@@ -228,8 +176,7 @@ describe('GetAvailability', () => {
       slotIntervalMinutes: 30,
       price: 0,
     });
-
-    const multiOffering2 = ServiceOffering.reconstruct({
+    const offering2 = ServiceOffering.reconstruct({
       id: 'l2',
       code: 'l2',
       serviceId: 'uuid-svc',
@@ -239,10 +186,7 @@ describe('GetAvailability', () => {
       slotIntervalMinutes: 30,
       price: 0,
     });
-
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(
-      ok([multiOffering1, multiOffering2])
-    );
+    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([offering1, offering2]));
 
     availabilityService.generateResourceSlots
       .mockReturnValueOnce([
@@ -272,7 +216,6 @@ describe('GetAvailability', () => {
       establishmentCode,
       schedules: [],
     });
-
     const resource2 = Resource.reconstruct({
       id: 'uuid-res-2',
       code: 'res2',
@@ -281,7 +224,6 @@ describe('GetAvailability', () => {
       establishmentCode,
       schedules: [],
     });
-
     resourceRepository.findByIds.mockResolvedValue(ok([resource1, resource2]));
 
     const data = await useCase

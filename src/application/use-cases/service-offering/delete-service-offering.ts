@@ -3,8 +3,8 @@ import type {
   ServiceOfferingRepository,
   ServiceRepository,
 } from '@app/domain/entities';
-import { type ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader, ResourceLoader, ServiceLoader } from '@app/loaders';
 import { fail, type PromiseResult } from '@shared/result';
 
 type Input = {
@@ -17,8 +17,8 @@ type Input = {
 export class DeleteServiceOffering {
   constructor(
     private readonly serviceOfferingRepository: ServiceOfferingRepository,
-    private readonly serviceRepository: ServiceRepository,
-    private readonly resourceRepository: ResourceRepository,
+    private readonly serviceLoader: ServiceLoader,
+    private readonly resourceLoader: ResourceLoader,
     private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
@@ -35,18 +35,14 @@ export class DeleteServiceOffering {
     if (!establishmentResult.isOk) return establishmentResult;
 
     const [serviceResult, resourceResult] = await Promise.all([
-      this.serviceRepository.findByCode(serviceCode, establishmentCode),
-      this.resourceRepository.findByCode(resourceCode),
+      this.serviceLoader.load(serviceCode, establishmentCode),
+      this.resourceLoader.load(resourceCode, establishmentCode),
     ]);
-
     if (!serviceResult.isOk) return serviceResult;
     if (!resourceResult.isOk) return resourceResult;
 
     const service = serviceResult.data;
-    if (!service) return fail(new NotFoundError('Service', serviceCode));
-
     const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
 
     return this.serviceOfferingRepository.unassign(service.id, resource.id);
   }

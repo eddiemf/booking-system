@@ -1,17 +1,13 @@
-import type {
-  ResourceRepository,
-  ServiceOfferingRepository,
-  ServiceRepository,
-} from '@app/domain/entities';
+import type { ServiceOfferingRepository } from '@app/domain/entities';
 import { ServiceOffering } from '@app/domain/entities';
-import {
-  type ConflictError,
-  type ForbiddenError,
+import type {
+  ConflictError,
+  ForbiddenError,
   NotFoundError,
-  type StorageError,
-  type ValidationError,
+  StorageError,
+  ValidationError,
 } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ResourceLoader, ServiceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceOfferingDTO } from '../../dtos';
 import { ServiceOfferingMapper } from '../../mappers/service-offering';
@@ -30,8 +26,8 @@ type Input = {
 export class CreateServiceOffering {
   constructor(
     private readonly serviceOfferingRepository: ServiceOfferingRepository,
-    private readonly serviceRepository: ServiceRepository,
-    private readonly resourceRepository: ResourceRepository,
+    private readonly serviceLoader: ServiceLoader,
+    private readonly resourceLoader: ResourceLoader,
     private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
@@ -55,21 +51,14 @@ export class CreateServiceOffering {
     if (!establishmentResult.isOk) return establishmentResult;
 
     const [serviceResult, resourceResult] = await Promise.all([
-      this.serviceRepository.findByCode(serviceCode, establishmentCode),
-      this.resourceRepository.findByCode(resourceCode),
+      this.serviceLoader.load(serviceCode, establishmentCode),
+      this.resourceLoader.load(resourceCode, establishmentCode),
     ]);
-
     if (!serviceResult.isOk) return serviceResult;
     if (!resourceResult.isOk) return resourceResult;
 
     const service = serviceResult.data;
-    if (!service) return fail(new NotFoundError('Service', serviceCode));
-
     const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
-    if (resource.establishmentCode !== establishmentCode) {
-      return fail(new NotFoundError('Resource', resourceCode));
-    }
 
     const entity = ServiceOffering.create({
       serviceId: service.id,
@@ -84,6 +73,6 @@ export class CreateServiceOffering {
     const saveResult = await this.serviceOfferingRepository.assign(entity.data);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(ServiceOfferingMapper.toDTO(saveResult.data, serviceCode, resource));
+    return ok(ServiceOfferingMapper.toDTO(entity.data, serviceCode, resource));
   }
 }

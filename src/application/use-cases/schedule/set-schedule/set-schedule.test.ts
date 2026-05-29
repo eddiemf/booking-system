@@ -5,7 +5,7 @@ import {
   type ScheduleRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ResourceLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -15,7 +15,13 @@ describe('SetSchedule', () => {
   const resourceRepository = mock<ResourceRepository>();
   const scheduleRepository = mock<ScheduleRepository>();
   const establishmentLoader = mock<EstablishmentLoader>();
-  const useCase = new SetSchedule(resourceRepository, scheduleRepository, establishmentLoader);
+  const resourceLoader = mock<ResourceLoader>();
+  const useCase = new SetSchedule(
+    resourceRepository,
+    scheduleRepository,
+    establishmentLoader,
+    resourceLoader
+  );
 
   const userId = 'uuid-user';
   const resourceCode = 'res123';
@@ -53,27 +59,16 @@ describe('SetSchedule', () => {
 
   it('returns not-found error when resource does not exist', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(null));
+    resourceLoader.load.mockResolvedValue(fail(new NotFoundError('Resource', resourceCode)));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
     expect(error).toBeInstanceOf(NotFoundError);
   });
 
-  it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
-
-    const error = await useCase
-      .execute({ ...validInput, establishmentCode: 'other-est' })
-      .then((result) => result.getError());
-
-    expect(error).toBeInstanceOf(NotFoundError);
-  });
-
   it('returns storage error when findByCode fails', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
+    resourceLoader.load.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -82,7 +77,7 @@ describe('SetSchedule', () => {
 
   it('returns validation error for invalid entry', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    resourceLoader.load.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
       .execute({ ...validInput, entries: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] })
@@ -93,7 +88,7 @@ describe('SetSchedule', () => {
 
   it('returns storage error when replaceAll fails', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    resourceLoader.load.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -103,7 +98,7 @@ describe('SetSchedule', () => {
 
   it('returns schedule DTOs on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    resourceLoader.load.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
@@ -119,7 +114,7 @@ describe('SetSchedule', () => {
 
   it('returns empty array when entries is empty', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    resourceLoader.load.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
 
     const data = await useCase

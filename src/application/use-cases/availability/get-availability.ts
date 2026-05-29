@@ -1,10 +1,7 @@
-import type {
-  ResourceRepository,
-  ServiceOfferingRepository,
-  ServiceRepository,
-} from '@app/domain/entities';
-import { NotFoundError, type StorageError, type ValidationError } from '@app/domain/errors';
+import type { ResourceRepository, ServiceOfferingRepository } from '@app/domain/entities';
+import type { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
 import type { AvailabilityService } from '@app/domain/services';
+import type { ServiceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { AvailabilitySlotDTO } from '../../dtos';
 
@@ -18,7 +15,7 @@ type GetAvailabilityError = StorageError | NotFoundError;
 
 export class GetAvailability {
   constructor(
-    private readonly serviceRepository: ServiceRepository,
+    private readonly serviceLoader: ServiceLoader,
     private readonly serviceOfferingRepository: ServiceOfferingRepository,
     private readonly resourceRepository: ResourceRepository,
     private readonly availabilityService: AvailabilityService
@@ -32,9 +29,8 @@ export class GetAvailability {
     const dateValidation = this.availabilityService.validateDate(date);
     if (!dateValidation.isOk) return dateValidation;
 
-    const serviceResult = await this.serviceRepository.findByCode(serviceCode, establishmentCode);
+    const serviceResult = await this.serviceLoader.load(serviceCode, establishmentCode);
     if (!serviceResult.isOk) return serviceResult;
-    if (!serviceResult.data) return fail(new NotFoundError('Service', serviceCode));
 
     const offeringsResult = await this.serviceOfferingRepository.findByServiceCode(
       serviceCode,

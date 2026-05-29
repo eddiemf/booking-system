@@ -1,11 +1,12 @@
 import type { BookingRepository } from '@app/domain/entities';
-import {
+import type {
   ForbiddenError,
   NotFoundError,
-  type StorageError,
-  type ValidationError,
+  StorageError,
+  ValidationError,
 } from '@app/domain/errors';
-import { fail, ok, type PromiseResult } from '@shared/result';
+import type { BookingLoader } from '@app/loaders';
+import { ok, type PromiseResult } from '@shared/result';
 import type { BookingDTO } from '../../dtos';
 import { BookingMapper } from '../../mappers/booking';
 
@@ -17,16 +18,14 @@ interface Input {
 type CancelBookingError = StorageError | NotFoundError | ForbiddenError | ValidationError;
 
 export class CancelBooking {
-  constructor(private readonly bookingRepository: BookingRepository) {}
+  constructor(
+    private readonly bookingLoader: BookingLoader,
+    private readonly bookingRepository: BookingRepository
+  ) {}
 
   async execute({ code, userId }: Input): PromiseResult<BookingDTO, CancelBookingError> {
-    const result = await this.bookingRepository.findByCode(code);
+    const result = await this.bookingLoader.loadOwnedByUser(code, userId);
     if (!result.isOk) return result;
-    if (!result.data) return fail(new NotFoundError('Booking', code));
-
-    if (result.data.customerId !== userId) {
-      return fail(new ForbiddenError('You do not own this booking.'));
-    }
 
     const cancelResult = result.data.cancel();
     if (!cancelResult.isOk) return cancelResult;

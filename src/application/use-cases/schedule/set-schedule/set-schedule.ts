@@ -1,12 +1,12 @@
 import type { ResourceRepository, ScheduleRepository } from '@app/domain/entities';
-import {
-  type ForbiddenError,
+import type {
+  ForbiddenError,
   NotFoundError,
-  type StorageError,
-  type ValidationError,
+  StorageError,
+  ValidationError,
 } from '@app/domain/errors';
 import type { ScheduleDTO } from '@app/dtos';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ResourceLoader } from '@app/loaders';
 import { ScheduleMapper } from '@app/mappers';
 import { fail, ok, type PromiseResult } from '@shared/result';
 
@@ -29,7 +29,8 @@ export class SetSchedule {
   constructor(
     private readonly resourceRepository: ResourceRepository,
     private readonly scheduleRepository: ScheduleRepository,
-    private readonly establishmentLoader: EstablishmentLoader
+    private readonly establishmentLoader: EstablishmentLoader,
+    private readonly resourceLoader: ResourceLoader
   ) {}
 
   async execute({
@@ -38,20 +39,14 @@ export class SetSchedule {
     entries,
     userId,
   }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
-    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
-      establishmentCode,
-      userId
-    );
+    const [establishmentResult, resourceResult] = await Promise.all([
+      this.establishmentLoader.loadOwnedByUser(establishmentCode, userId),
+      this.resourceLoader.load(resourceCode, establishmentCode),
+    ]);
     if (!establishmentResult.isOk) return establishmentResult;
-
-    const resourceResult = await this.resourceRepository.findByCode(resourceCode);
     if (!resourceResult.isOk) return resourceResult;
 
     const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', resourceCode));
-    if (resource.establishmentCode !== establishmentCode)
-      return fail(new NotFoundError('Resource', resourceCode));
-
     const scheduleResult = resource.setSchedule(entries);
     if (!scheduleResult.isOk) return scheduleResult;
 

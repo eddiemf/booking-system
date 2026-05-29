@@ -1,6 +1,6 @@
 import { Establishment, Service, type ServiceRepository } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ServiceLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -8,8 +8,9 @@ import { UpdateService } from './update-service';
 
 describe('UpdateService', () => {
   const serviceRepository = mock<ServiceRepository>();
+  const serviceLoader = mock<ServiceLoader>();
   const establishmentLoader = mock<EstablishmentLoader>();
-  const useCase = new UpdateService(serviceRepository, establishmentLoader);
+  const useCase = new UpdateService(serviceRepository, serviceLoader, establishmentLoader);
 
   const userId = 'uuid-user';
   const validInput = {
@@ -40,7 +41,7 @@ describe('UpdateService', () => {
 
   it('returns validation error for invalid name', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(existingEntity));
+    serviceLoader.load.mockResolvedValue(ok(existingEntity));
 
     const error = await useCase
       .execute({ ...validInput, name: '' })
@@ -51,7 +52,7 @@ describe('UpdateService', () => {
 
   it('returns validation error for invalid duration', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(existingEntity));
+    serviceLoader.load.mockResolvedValue(ok(existingEntity));
 
     const error = await useCase
       .execute({ ...validInput, duration: 0 })
@@ -74,7 +75,7 @@ describe('UpdateService', () => {
 
   it('returns not-found error when service does not exist', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(null));
+    serviceLoader.load.mockResolvedValue(fail(new NotFoundError('Service', 'svc123')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -83,7 +84,7 @@ describe('UpdateService', () => {
 
   it('returns storage error when update fails', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(existingEntity));
+    serviceLoader.load.mockResolvedValue(ok(existingEntity));
     serviceRepository.update.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -93,7 +94,7 @@ describe('UpdateService', () => {
 
   it('returns updated service DTO on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(existingEntity));
+    serviceLoader.load.mockResolvedValue(ok(existingEntity));
     serviceRepository.update.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());

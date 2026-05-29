@@ -1,18 +1,21 @@
-import { Booking, type BookingRepository } from '@app/domain/entities';
+import { Booking } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { BookingLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { GetBooking } from './get-booking';
 
 describe('GetBooking', () => {
-  const bookingRepository = mock<BookingRepository>();
-  const useCase = new GetBooking(bookingRepository);
+  const bookingLoader = mock<BookingLoader>();
+  const useCase = new GetBooking(bookingLoader);
 
   const userId = 'uuid-user';
   const code = 'bkg123';
+  const futureStartsAt = new Date(Date.now() + 86400000).toISOString();
+  const futureEndsAt = new Date(Date.now() + 90000000).toISOString();
 
-  const existingBooking = Booking.reconstruct({
+  const mockBooking = Booking.reconstruct({
     id: 'uuid-bkg',
     code,
     customerId: userId,
@@ -26,15 +29,15 @@ describe('GetBooking', () => {
     resourceId: 'uuid-res',
     resourceCode: 'res123',
     resourceName: 'Bob',
-    startsAt: '2026-06-15T09:00:00Z',
-    endsAt: '2026-06-15T10:00:00Z',
+    startsAt: futureStartsAt,
+    endsAt: futureEndsAt,
     status: 'confirmed',
     servicePrice: 0,
     serviceDuration: 60,
   });
 
   it('returns not-found error when booking does not exist', async () => {
-    bookingRepository.findByCode.mockResolvedValue(ok(null));
+    bookingLoader.loadOwnedByUser.mockResolvedValue(fail(new NotFoundError('Booking', code)));
 
     const error = await useCase.execute({ code, userId }).then((r) => r.getError());
 
@@ -42,7 +45,9 @@ describe('GetBooking', () => {
   });
 
   it('returns forbidden error when user does not own the booking', async () => {
-    bookingRepository.findByCode.mockResolvedValue(ok(existingBooking));
+    bookingLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this booking.'))
+    );
 
     const error = await useCase.execute({ code, userId: 'other-user' }).then((r) => r.getError());
 
@@ -50,7 +55,7 @@ describe('GetBooking', () => {
   });
 
   it('returns storage error when repository fails', async () => {
-    bookingRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
+    bookingLoader.loadOwnedByUser.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute({ code, userId }).then((r) => r.getError());
 
@@ -58,12 +63,12 @@ describe('GetBooking', () => {
   });
 
   it('returns booking DTO on success', async () => {
-    bookingRepository.findByCode.mockResolvedValue(ok(existingBooking));
+    bookingLoader.loadOwnedByUser.mockResolvedValue(ok(mockBooking));
 
     const data = await useCase.execute({ code, userId }).then((r) => r.getData());
 
     expect(data).toBeDefined();
     expect(data.id).toBe(code);
-    expect(data.customerCode).toBe('usr123');
+    expect(data.status).toBe('confirmed');
   });
 });

@@ -1,11 +1,11 @@
 import type { ResourceRepository } from '@app/domain/entities';
-import {
-  type ConflictError,
-  type ForbiddenError,
+import type {
+  ConflictError,
+  ForbiddenError,
   NotFoundError,
-  type StorageError,
+  StorageError,
 } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ResourceLoader } from '@app/loaders';
 import { fail, type PromiseResult } from '@shared/result';
 
 type Input = { code: string; establishmentCode: string; userId: string };
@@ -13,6 +13,7 @@ type Input = { code: string; establishmentCode: string; userId: string };
 export class DeleteResource {
   constructor(
     private readonly resourceRepository: ResourceRepository,
+    private readonly resourceLoader: ResourceLoader,
     private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
@@ -27,14 +28,8 @@ export class DeleteResource {
     );
     if (!establishmentResult.isOk) return establishmentResult;
 
-    const resourceResult = await this.resourceRepository.findByCode(code);
+    const resourceResult = await this.resourceLoader.load(code, establishmentCode);
     if (!resourceResult.isOk) return resourceResult;
-
-    const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', code));
-
-    if (resource.establishmentCode !== establishmentCode)
-      return fail(new NotFoundError('Resource', code));
 
     return this.resourceRepository.delete(code);
   }

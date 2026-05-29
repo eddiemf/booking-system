@@ -1,11 +1,11 @@
 import type { ServiceRepository } from '@app/domain/entities';
-import {
-  type ForbiddenError,
+import type {
+  ForbiddenError,
   NotFoundError,
-  type StorageError,
-  type ValidationError,
+  StorageError,
+  ValidationError,
 } from '@app/domain/errors';
-import type { EstablishmentLoader } from '@app/loaders';
+import type { EstablishmentLoader, ServiceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
@@ -22,6 +22,7 @@ type Input = {
 export class UpdateService {
   constructor(
     private readonly serviceRepository: ServiceRepository,
+    private readonly serviceLoader: ServiceLoader,
     private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
@@ -36,18 +37,14 @@ export class UpdateService {
     ServiceDTO,
     StorageError | NotFoundError | ValidationError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
-      establishmentCode,
-      userId
-    );
+    const [establishmentResult, serviceResult] = await Promise.all([
+      this.establishmentLoader.loadOwnedByUser(establishmentCode, userId),
+      this.serviceLoader.load(code, establishmentCode),
+    ]);
     if (!establishmentResult.isOk) return establishmentResult;
-
-    const serviceResult = await this.serviceRepository.findByCode(code, establishmentCode);
     if (!serviceResult.isOk) return serviceResult;
 
     const service = serviceResult.data;
-    if (!service) return fail(new NotFoundError('Service', code));
-
     const updateValidation = service.update({ name, description, duration });
     if (!updateValidation.isOk) return updateValidation;
 

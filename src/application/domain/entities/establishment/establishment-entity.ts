@@ -2,8 +2,6 @@ import { ValidationError } from '@app/domain/errors';
 import { EntityCode } from '@app/domain/identity/entity-code';
 import { EntityId } from '@app/domain/identity/entity-id';
 import { fail, ok, type Result } from '@shared/result';
-import type { Resource } from '../resource/resource-entity';
-import type { Service } from '../service/service-entity';
 
 export type EstablishmentCreationError = ValidationError;
 
@@ -17,8 +15,6 @@ interface ReconstructProps {
   code: string;
   name: string;
   userId: string;
-  resources?: Resource[];
-  services?: Service[];
 }
 
 export class Establishment {
@@ -26,9 +22,7 @@ export class Establishment {
     private _id: string,
     private _code: string,
     private _name: string,
-    private _userId: string,
-    private _resources: Resource[],
-    private _services: Service[]
+    private _userId: string
   ) {}
 
   get id(): string {
@@ -47,19 +41,11 @@ export class Establishment {
     return this._userId;
   }
 
-  get resources(): Resource[] {
-    return this._resources;
-  }
-
-  get services(): Service[] {
-    return this._services;
-  }
-
   static create({ name, userId }: Props): Result<Establishment, EstablishmentCreationError> {
     const nameError = Establishment.requireName(name);
     if (nameError) return fail(nameError);
 
-    return ok(new Establishment(EntityId.generate(), EntityCode.generate(), name, userId, [], []));
+    return ok(new Establishment(EntityId.generate(), EntityCode.generate(), name, userId));
   }
 
   update({ name }: { name: string }): Result<Establishment, ValidationError> {
@@ -75,14 +61,7 @@ export class Establishment {
     return name ? null : new ValidationError('name', 'Value is required.');
   }
 
-  static reconstruct({
-    id,
-    code,
-    name,
-    userId,
-    resources = [],
-    services = [],
-  }: ReconstructProps): Establishment {
-    return new Establishment(id, code, name, userId, resources, services);
+  static reconstruct({ id, code, name, userId }: ReconstructProps): Establishment {
+    return new Establishment(id, code, name, userId);
   }
 }

@@ -4,16 +4,20 @@ import { ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
+interface Input {
+  limit: number;
+  offset: number;
+}
+
 export class ListEstablishments {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
 
-  async execute(input: {
-    limit: number;
-    offset: number;
-  }): PromiseResult<EstablishmentDTO[], StorageError> {
-    const result = await this.establishmentRepository.findAll(input.limit, input.offset);
+  async execute({ limit, offset }: Input): PromiseResult<EstablishmentDTO[], StorageError> {
+    const result = await this.establishmentRepository.findAll(limit, offset);
     if (!result.isOk) return result;
 
-    return ok(result.data.map(EstablishmentMapper.toDTO));
+    const establishments = result.data;
+
+    return ok(establishments.map(EstablishmentMapper.toDTO));
   }
 }

@@ -4,11 +4,11 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
-type Input = {
+interface Input {
   code: string;
   name: string;
   userId: string;
-};
+}
 
 export class UpdateEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
@@ -23,9 +23,10 @@ export class UpdateEstablishment {
   > {
     const findResult = await this.establishmentRepository.findByCode(code);
     if (!findResult.isOk) return findResult;
-    if (!findResult.data) return fail(new NotFoundError('Establishment', code));
 
     const establishment = findResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', code));
+
     if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
@@ -33,9 +34,9 @@ export class UpdateEstablishment {
     const updateValidation = establishment.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 
-    const updateResult = await this.establishmentRepository.update(code, establishment);
+    const updateResult = await this.establishmentRepository.update(establishment);
     if (!updateResult.isOk) return updateResult;
 
-    return ok(EstablishmentMapper.toDTO(updateResult.data));
+    return ok(EstablishmentMapper.toDTO(establishment));
   }
 }

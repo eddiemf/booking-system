@@ -60,16 +60,7 @@ describe('UpdateEstablishment', () => {
 
   it('returns the updated establishment DTO on success', async () => {
     establishmentRepository.findByCode.mockResolvedValue(ok(existing));
-    establishmentRepository.update.mockResolvedValue(
-      ok(
-        Establishment.reconstruct({
-          id: 'uuid-1',
-          code: 'abc123',
-          name: 'New Name',
-          userId,
-        })
-      )
-    );
+    establishmentRepository.update.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 

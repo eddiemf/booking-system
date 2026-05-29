@@ -4,9 +4,9 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
-type Input = {
+interface Input {
   code: string;
-};
+}
 
 export class FindEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
@@ -15,8 +15,9 @@ export class FindEstablishment {
     const result = await this.establishmentRepository.findByCode(code);
     if (!result.isOk) return result;
 
-    if (result.data === null) return fail(new NotFoundError('Establishment', code));
+    const establishment = result.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', code));
 
-    return ok(EstablishmentMapper.toDTO(result.data));
+    return ok(EstablishmentMapper.toDTO(establishment));
   }
 }

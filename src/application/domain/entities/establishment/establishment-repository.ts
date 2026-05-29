@@ -5,10 +5,7 @@ import type { Establishment } from './establishment-entity';
 export interface EstablishmentRepository {
   findAll(limit: number, offset: number): PromiseResult<Establishment[], StorageError>;
   findByCode(code: string): PromiseResult<Establishment | null, StorageError>;
-  save(establishment: Establishment): PromiseResult<Establishment, StorageError>;
-  update(
-    code: string,
-    establishment: Establishment
-  ): PromiseResult<Establishment, StorageError | NotFoundError>;
+  save(establishment: Establishment): PromiseResult<void, StorageError>;
+  update(establishment: Establishment): PromiseResult<void, StorageError | NotFoundError>;
   delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

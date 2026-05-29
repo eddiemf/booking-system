@@ -7,10 +7,10 @@ import {
 } from '@app/domain/errors';
 import { fail, type PromiseResult } from '@shared/result';
 
-type Input = {
+interface Input {
   code: string;
   userId: string;
-};
+}
 
 export class DeleteEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
@@ -21,8 +21,11 @@ export class DeleteEstablishment {
   }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError | ForbiddenError> {
     const findResult = await this.establishmentRepository.findByCode(code);
     if (!findResult.isOk) return findResult;
-    if (!findResult.data) return fail(new NotFoundError('Establishment', code));
-    if (findResult.data.userId !== userId) {
+
+    const establishment = findResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', code));
+
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 

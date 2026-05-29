@@ -8,10 +8,10 @@ import { ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
-type Input = {
+interface Input {
   name: string;
   userId: string;
-};
+}
 
 export class CreateEstablishment {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
@@ -23,11 +23,11 @@ export class CreateEstablishment {
     const establishmentResult = Establishment.create({ name, userId });
     if (!establishmentResult.isOk) return establishmentResult;
 
-    const entity = establishmentResult.data;
+    const establishment = establishmentResult.data;
 
-    const saveResult = await this.establishmentRepository.save(entity);
+    const saveResult = await this.establishmentRepository.save(establishment);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(EstablishmentMapper.toDTO(saveResult.data));
+    return ok(EstablishmentMapper.toDTO(establishment));
   }
 }

@@ -32,8 +32,8 @@ describe('CreateServiceOffering', () => {
     resourceCode: 'res123',
     establishmentCode: 'est123',
     userId,
-    durationMinutes: 60,
-    slotIntervalMinutes: 30,
+    duration: 60,
+    slotInterval: 30,
   };
 
   const mockEstablishment = Establishment.reconstruct({

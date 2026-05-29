@@ -43,8 +43,8 @@ export class ServiceController extends Controller {
     code: z.string().min(1),
     resourceCode: z.string().min(1),
     maxCapacity: z.coerce.number().int().positive().optional(),
-    durationMinutes: z.coerce.number().int().positive(),
-    slotIntervalMinutes: z.coerce.number().int().positive(),
+    duration: z.coerce.number().int().positive(),
+    slotInterval: z.coerce.number().int().positive(),
     price: z.coerce.number().int().min(0).optional(),
   });
 
@@ -163,15 +163,8 @@ export class ServiceController extends Controller {
         return this.sendZodError(res, validation.error);
       }
 
-      const {
-        establishmentCode,
-        code,
-        resourceCode,
-        maxCapacity,
-        durationMinutes,
-        slotIntervalMinutes,
-        price,
-      } = validation.data;
+      const { establishmentCode, code, resourceCode, maxCapacity, duration, slotInterval, price } =
+        validation.data;
 
       const result = await this.createServiceOffering.execute({
         serviceCode: code,
@@ -179,8 +172,8 @@ export class ServiceController extends Controller {
         establishmentCode,
         userId: req.user.userId,
         maxCapacity,
-        durationMinutes,
-        slotIntervalMinutes,
+        duration,
+        slotInterval,
         price,
       });
 

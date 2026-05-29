@@ -56,17 +56,17 @@ export class ServiceOffering {
     serviceId: string;
     resourceId: string;
     maxCapacity?: number | undefined;
-    durationMinutes: number;
-    slotIntervalMinutes: number;
+    duration: number;
+    slotInterval: number;
     price?: number | undefined;
   }): Result<ServiceOffering, ServiceOfferingCreationError> {
     const capacityResult = Capacity.create(props.maxCapacity ?? 1, 'maxCapacity');
     if (!capacityResult.isOk) return capacityResult;
 
-    const durationResult = Duration.create(props.durationMinutes, 'durationMinutes');
+    const durationResult = Duration.create(props.duration, 'Duration');
     if (!durationResult.isOk) return durationResult;
 
-    const intervalResult = Duration.create(props.slotIntervalMinutes, 'slotIntervalMinutes');
+    const intervalResult = Duration.create(props.slotInterval, 'slotInterval');
     if (!intervalResult.isOk) return intervalResult;
 
     const priceResult = Price.create(props.price ?? 0, 'price');

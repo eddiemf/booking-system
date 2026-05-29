@@ -1,8 +1,8 @@
 import type { UserRepository } from '@app/domain/entities';
 import { NotFoundError, type StorageError } from '@app/domain/errors';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import type { UserDTO } from '../../dtos';
-import { UserMapper } from '../../mappers/user';
+import type { UserDTO } from '../../../dtos';
+import { UserMapper } from '../../../mappers/user';
 
 type Input = {
   userId: string;

@@ -13,8 +13,8 @@ import {
 } from '@app/domain/errors';
 import type { AvailabilityService } from '@app/domain/services';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import type { BookingDTO } from '../../dtos';
-import { BookingMapper } from '../../mappers/booking';
+import type { BookingDTO } from '../../../dtos';
+import { BookingMapper } from '../../../mappers/booking';
 
 interface Input {
   serviceCode: string;

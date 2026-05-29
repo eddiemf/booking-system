@@ -3,7 +3,7 @@ import type { NotFoundError, StorageError, ValidationError } from '@app/domain/e
 import type { AvailabilityService } from '@app/domain/services';
 import type { ServiceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import type { AvailabilitySlotDTO } from '../../dtos';
+import type { AvailabilitySlotDTO } from '../../../dtos';
 
 type Input = {
   serviceCode: string;

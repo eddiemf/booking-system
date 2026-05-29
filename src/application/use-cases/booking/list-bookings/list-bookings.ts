@@ -1,8 +1,8 @@
 import type { BookingRepository, EstablishmentRepository } from '@app/domain/entities';
 import type { StorageError } from '@app/domain/errors';
 import { ok, type PromiseResult } from '@shared/result';
-import type { BookingDTO } from '../../dtos';
-import { BookingMapper } from '../../mappers/booking';
+import type { BookingDTO } from '../../../dtos';
+import { BookingMapper } from '../../../mappers/booking';
 
 interface Input {
   establishmentCode?: string | undefined;

@@ -9,8 +9,8 @@ import type {
 } from '@app/domain/errors';
 import type { EstablishmentLoader, ResourceLoader, ServiceLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import type { ServiceOfferingDTO } from '../../dtos';
-import { ServiceOfferingMapper } from '../../mappers/service-offering';
+import type { ServiceOfferingDTO } from '../../../dtos';
+import { ServiceOfferingMapper } from '../../../mappers/service-offering';
 
 type Input = {
   serviceCode: string;

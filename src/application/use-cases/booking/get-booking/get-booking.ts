@@ -1,8 +1,8 @@
 import type { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
 import type { BookingLoader } from '@app/loaders';
 import { ok, type PromiseResult } from '@shared/result';
-import type { BookingDTO } from '../../dtos';
-import { BookingMapper } from '../../mappers/booking';
+import type { BookingDTO } from '../../../dtos';
+import { BookingMapper } from '../../../mappers/booking';
 
 interface Input {
   code: string;

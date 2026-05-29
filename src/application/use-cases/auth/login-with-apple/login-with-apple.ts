@@ -3,8 +3,8 @@ import { User } from '@app/domain/entities';
 import type { AuthenticationError, StorageError, ValidationError } from '@app/domain/errors';
 import type { AppleAuthPort, JwtPort } from '@app/ports';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import type { AuthDTO } from '../../dtos/auth-dto';
-import { UserMapper } from '../../mappers/user';
+import type { AuthDTO } from '../../../dtos/auth-dto';
+import { UserMapper } from '../../../mappers/user';
 
 type Input = {
   token: string;

@@ -35,18 +35,21 @@ export class CreateService {
   > {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
+    if (!establishmentResult.data) {
       return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+    }
+
+    const establishment = establishmentResult.data;
+
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const establishmentId = establishmentResult.data.id;
     const serviceResult = Service.create({
       name,
       description,
       duration,
-      establishmentId,
+      establishmentId: establishment.id,
       establishmentCode,
     });
     if (!serviceResult.isOk) return serviceResult;

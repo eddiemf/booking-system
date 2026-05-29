@@ -41,12 +41,14 @@ export class UpdateResource {
 
     const establishment = establishmentResult.data;
     if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+
+    const resource = resourceResult.data;
+    if (!resource) return fail(new NotFoundError('Resource', code));
+
     if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const resource = resourceResult.data;
-    if (!resource) return fail(new NotFoundError('Resource', code));
     if (resource.establishmentCode !== establishmentCode)
       return fail(new NotFoundError('Resource', code));
 

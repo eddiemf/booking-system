@@ -31,20 +31,23 @@ export class CreateResource {
   > {
     const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data)
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishmentResult.data.userId !== userId) {
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 
-    const entityResult = Resource.create({
+    const creationResult = Resource.create({
       name,
-      establishmentId: establishmentResult.data.id,
-      establishmentCode: establishmentResult.data.code,
+      establishmentId: establishment.id,
+      establishmentCode: establishment.code,
     });
-    if (!entityResult.isOk) return entityResult;
+    if (!creationResult.isOk) return creationResult;
 
-    const saveResult = await this.resourceRepository.save(entityResult.data);
+    const resource = creationResult.data;
+    const saveResult = await this.resourceRepository.save(resource);
     if (!saveResult.isOk) return saveResult;
 
     return ok(ResourceMapper.toDTO(saveResult.data));

@@ -20,10 +20,13 @@ export class DeleteService {
     establishmentCode,
     userId,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError | ForbiddenError> {
-    const estResult = await this.establishmentRepository.findByCode(establishmentCode);
-    if (!estResult.isOk) return estResult;
-    if (!estResult.data) return fail(new NotFoundError('Establishment', establishmentCode));
-    if (estResult.data.userId !== userId) {
+    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    if (!establishmentResult.isOk) return establishmentResult;
+
+    const establishment = establishmentResult.data;
+    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+
+    if (establishment.userId !== userId) {
       return fail(new ForbiddenError('You do not own this establishment.'));
     }
 

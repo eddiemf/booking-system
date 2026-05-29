@@ -45,12 +45,13 @@ export class UpdateService {
 
     const establishment = establishmentResult.data;
     if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     const service = serviceResult.data;
     if (!service) return fail(new NotFoundError('Service', code));
+
+    if (establishment.userId !== userId) {
+      return fail(new ForbiddenError('You do not own this establishment.'));
+    }
 
     const updateValidation = service.update({ name, description, duration });
     if (!updateValidation.isOk) return updateValidation;

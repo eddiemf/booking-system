@@ -1,15 +1,12 @@
-import type {
-  EstablishmentRepository,
-  ResourceRepository,
-  ScheduleRepository,
-} from '@app/domain/entities';
+import type { ResourceRepository, ScheduleRepository } from '@app/domain/entities';
 import {
-  ForbiddenError,
+  type ForbiddenError,
   NotFoundError,
   type StorageError,
   type ValidationError,
 } from '@app/domain/errors';
 import type { ScheduleDTO } from '@app/dtos';
+import type { EstablishmentLoader } from '@app/loaders';
 import { ScheduleMapper } from '@app/mappers';
 import { fail, ok, type PromiseResult } from '@shared/result';
 
@@ -32,7 +29,7 @@ export class SetSchedule {
   constructor(
     private readonly resourceRepository: ResourceRepository,
     private readonly scheduleRepository: ScheduleRepository,
-    private readonly establishmentRepository: EstablishmentRepository
+    private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
   async execute({
@@ -41,19 +38,14 @@ export class SetSchedule {
     entries,
     userId,
   }: Input): PromiseResult<ScheduleDTO[], SetScheduleError> {
-    const [establishmentResult, resourceResult] = await Promise.all([
-      this.establishmentRepository.findByCode(establishmentCode),
-      this.resourceRepository.findByCode(resourceCode),
-    ]);
-
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!resourceResult.isOk) return resourceResult;
 
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
+    const resourceResult = await this.resourceRepository.findByCode(resourceCode);
+    if (!resourceResult.isOk) return resourceResult;
 
     const resource = resourceResult.data;
     if (!resource) return fail(new NotFoundError('Resource', resourceCode));
@@ -66,8 +58,6 @@ export class SetSchedule {
     const replaceResult = await this.scheduleRepository.replaceAll(resource.id, resource.schedules);
     if (!replaceResult.isOk) return replaceResult;
 
-    const schedules = replaceResult.data;
-
-    return ok(schedules.map(ScheduleMapper.toDTO));
+    return ok(resource.schedules.map(ScheduleMapper.toDTO));
   }
 }

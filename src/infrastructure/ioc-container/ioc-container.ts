@@ -1,4 +1,5 @@
 import { AvailabilityService } from '@app/domain/services';
+import { EstablishmentLoader } from '@app/loaders';
 import {
   CancelBooking,
   CreateBooking,
@@ -90,13 +91,15 @@ export const createIocContainer = () => {
     listBookings: asClass(ListBookings).singleton(),
     cancelBooking: asClass(CancelBooking).singleton(),
     getAvailability: asClass(GetAvailability).singleton(),
-
-    // Domain services
-    availabilityService: asClass(AvailabilityService).singleton(),
-
     loginWithGoogle: asClass(LoginWithGoogle).singleton(),
     loginWithApple: asClass(LoginWithApple).singleton(),
     getCurrentUser: asClass(GetCurrentUser).singleton(),
+
+    // Loaders
+    establishmentLoader: asClass(EstablishmentLoader).singleton(),
+
+    // Domain services
+    availabilityService: asClass(AvailabilityService).singleton(),
 
     // Repositories
     establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),

@@ -111,7 +111,7 @@ describe('CancelBooking', () => {
       serviceDuration: 60,
     });
     bookingRepository.findByCode.mockResolvedValue(ok(freshBooking));
-    bookingRepository.update.mockImplementation(async (entity) => ok(entity));
+    bookingRepository.update.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute({ code: 'bkg-fresh', userId }).then((r) => r.getData());
 

@@ -1,12 +1,11 @@
 import {
   Establishment,
-  type EstablishmentRepository,
   Resource,
   type ResourceRepository,
-  Schedule,
   type ScheduleRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -15,8 +14,8 @@ import { SetSchedule } from './set-schedule';
 describe('SetSchedule', () => {
   const resourceRepository = mock<ResourceRepository>();
   const scheduleRepository = mock<ScheduleRepository>();
-  const establishmentRepository = mock<EstablishmentRepository>();
-  const useCase = new SetSchedule(resourceRepository, scheduleRepository, establishmentRepository);
+  const establishmentLoader = mock<EstablishmentLoader>();
+  const useCase = new SetSchedule(resourceRepository, scheduleRepository, establishmentLoader);
 
   const userId = 'uuid-user';
   const resourceCode = 'res123';
@@ -30,17 +29,6 @@ describe('SetSchedule', () => {
 
   const validEntries = [{ dayOfWeek: 1, startTime: '09:00', endTime: '17:00' }];
 
-  const savedEntities = [
-    Schedule.reconstruct({
-      id: '1',
-      code: 'sch1',
-      resourceId: 'uuid-res',
-      dayOfWeek: 1,
-      startTime: '09:00',
-      endTime: '17:00',
-    }),
-  ];
-
   const establishmentCode = 'est123';
   const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
@@ -52,8 +40,9 @@ describe('SetSchedule', () => {
   const validInput = { resourceCode, establishmentCode, entries: validEntries, userId };
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this establishment.'))
+    );
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -63,7 +52,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -72,7 +61,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -83,7 +72,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns storage error when findByCode fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -92,7 +81,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns validation error for invalid entry', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -103,7 +92,7 @@ describe('SetSchedule', () => {
   });
 
   it('returns storage error when replaceAll fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     scheduleRepository.replaceAll.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -113,21 +102,25 @@ describe('SetSchedule', () => {
   });
 
   it('returns schedule DTOs on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
-    scheduleRepository.replaceAll.mockResolvedValue(ok(savedEntities));
+    scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
-    expect(data).toEqual([
-      { id: 'sch1', resourceId: 'uuid-res', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
-    ]);
+    expect(data).toHaveLength(1);
+    expect(data[0]).toMatchObject({
+      resourceId: 'uuid-res',
+      dayOfWeek: 1,
+      startTime: '09:00',
+      endTime: '17:00',
+    });
   });
 
   it('returns empty array when entries is empty', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
-    scheduleRepository.replaceAll.mockResolvedValue(ok([]));
+    scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
 
     const data = await useCase
       .execute({ ...validInput, entries: [] })

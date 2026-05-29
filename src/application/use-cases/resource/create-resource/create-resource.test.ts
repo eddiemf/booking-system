@@ -1,29 +1,18 @@
-import {
-  Establishment,
-  type EstablishmentRepository,
-  Resource,
-  type ResourceRepository,
-} from '@app/domain/entities';
+import { Establishment, type ResourceRepository } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { CreateResource } from './create-resource';
 
 describe('CreateResource', () => {
-  const establishmentRepository = mock<EstablishmentRepository>();
+  const establishmentLoader = mock<EstablishmentLoader>();
   const resourceRepository = mock<ResourceRepository>();
-  const useCase = new CreateResource(establishmentRepository, resourceRepository);
+  const useCase = new CreateResource(establishmentLoader, resourceRepository);
 
   const userId = 'uuid-user';
   const validInput = { name: 'Alice', establishmentCode: 'est123', userId };
-  const savedEntity = Resource.reconstruct({
-    id: 'uuid-res',
-    code: 'res123',
-    name: 'Alice',
-    establishmentId: 'uuid-est',
-    establishmentCode: 'est123',
-  });
 
   const mockEstablishment = Establishment.reconstruct({
     id: 'uuid-est',
@@ -33,7 +22,7 @@ describe('CreateResource', () => {
   });
 
   it('returns validation error for empty name', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
 
     const error = await useCase
       .execute({ ...validInput, name: '' })
@@ -43,7 +32,9 @@ describe('CreateResource', () => {
   });
 
   it('returns not-found error when establishment does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(null));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new NotFoundError('Establishment', 'est123'))
+    );
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
 
@@ -51,7 +42,9 @@ describe('CreateResource', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this establishment.'))
+    );
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -61,7 +54,7 @@ describe('CreateResource', () => {
   });
 
   it('returns storage error when save fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.save.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -70,15 +63,15 @@ describe('CreateResource', () => {
   });
 
   it('returns resource DTO on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.save.mockResolvedValue(ok(savedEntity));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
+    resourceRepository.save.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
-    expect(data).toEqual({
-      id: 'res123',
+    expect(data).toMatchObject({
       name: 'Alice',
       establishmentCode: 'est123',
     });
+    expect(typeof data.id).toBe('string');
   });
 });

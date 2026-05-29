@@ -1,11 +1,12 @@
 import type { EstablishmentRepository } from '@app/domain/entities';
-import {
-  type ConflictError,
+import type {
+  ConflictError,
   ForbiddenError,
   NotFoundError,
-  type StorageError,
+  StorageError,
 } from '@app/domain/errors';
-import { fail, type PromiseResult } from '@shared/result';
+import type { EstablishmentLoader } from '@app/loaders';
+import type { PromiseResult } from '@shared/result';
 
 interface Input {
   code: string;
@@ -13,21 +14,17 @@ interface Input {
 }
 
 export class DeleteEstablishment {
-  constructor(private readonly establishmentRepository: EstablishmentRepository) {}
+  constructor(
+    private readonly establishmentLoader: EstablishmentLoader,
+    private readonly establishmentRepository: EstablishmentRepository
+  ) {}
 
   async execute({
     code,
     userId,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError | ForbiddenError> {
-    const findResult = await this.establishmentRepository.findByCode(code);
-    if (!findResult.isOk) return findResult;
-
-    const establishment = findResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', code));
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
+    const result = await this.establishmentLoader.loadOwnedByUser(code, userId);
+    if (!result.isOk) return result;
 
     return this.establishmentRepository.delete(code);
   }

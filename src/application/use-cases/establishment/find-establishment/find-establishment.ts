@@ -1,6 +1,6 @@
-import type { EstablishmentRepository } from '@app/domain/entities';
-import { NotFoundError, type StorageError } from '@app/domain/errors';
-import { fail, ok, type PromiseResult } from '@shared/result';
+import type { NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
+import { ok, type PromiseResult } from '@shared/result';
 import type { EstablishmentDTO } from '../../../dtos';
 import { EstablishmentMapper } from '../../../mappers';
 
@@ -9,14 +9,13 @@ interface Input {
 }
 
 export class FindEstablishment {
-  constructor(private readonly establishmentRepository: EstablishmentRepository) {}
+  constructor(private readonly establishmentLoader: EstablishmentLoader) {}
 
   async execute({ code }: Input): PromiseResult<EstablishmentDTO, NotFoundError | StorageError> {
-    const result = await this.establishmentRepository.findByCode(code);
+    const result = await this.establishmentLoader.load(code);
     if (!result.isOk) return result;
 
     const establishment = result.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', code));
 
     return ok(EstablishmentMapper.toDTO(establishment));
   }

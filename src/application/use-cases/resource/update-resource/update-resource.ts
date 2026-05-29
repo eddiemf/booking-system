@@ -1,10 +1,7 @@
-import type { EstablishmentRepository, ResourceRepository } from '@app/domain/entities';
-import {
-  ForbiddenError,
-  NotFoundError,
-  type StorageError,
-  type ValidationError,
-} from '@app/domain/errors';
+import type { ResourceRepository } from '@app/domain/entities';
+import type { ForbiddenError, StorageError, ValidationError } from '@app/domain/errors';
+import { NotFoundError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
@@ -19,7 +16,7 @@ interface Input {
 export class UpdateResource {
   constructor(
     private readonly resourceRepository: ResourceRepository,
-    private readonly establishmentRepository: EstablishmentRepository
+    private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
   async execute({
@@ -31,23 +28,17 @@ export class UpdateResource {
     ResourceDTO,
     ValidationError | StorageError | NotFoundError | ForbiddenError
   > {
-    const [establishmentResult, resourceResult] = await Promise.all([
-      this.establishmentRepository.findByCode(establishmentCode),
-      this.resourceRepository.findByCode(code),
-    ]);
-
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!resourceResult.isOk) return resourceResult;
 
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    const resourceResult = await this.resourceRepository.findByCode(code);
+    if (!resourceResult.isOk) return resourceResult;
 
     const resource = resourceResult.data;
     if (!resource) return fail(new NotFoundError('Resource', code));
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     if (resource.establishmentCode !== establishmentCode)
       return fail(new NotFoundError('Resource', code));
@@ -55,11 +46,9 @@ export class UpdateResource {
     const updateValidation = resource.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 
-    const updateResult = await this.resourceRepository.update(code, resource);
+    const updateResult = await this.resourceRepository.update(resource);
     if (!updateResult.isOk) return updateResult;
 
-    const updatedResource = updateResult.data;
-
-    return ok(ResourceMapper.toDTO(updatedResource));
+    return ok(ResourceMapper.toDTO(resource));
   }
 }

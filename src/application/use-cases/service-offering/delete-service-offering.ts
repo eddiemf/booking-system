@@ -1,10 +1,10 @@
 import type {
-  EstablishmentRepository,
   ResourceRepository,
   ServiceOfferingRepository,
   ServiceRepository,
 } from '@app/domain/entities';
-import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
+import { type ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, type PromiseResult } from '@shared/result';
 
 type Input = {
@@ -19,7 +19,7 @@ export class DeleteServiceOffering {
     private readonly serviceOfferingRepository: ServiceOfferingRepository,
     private readonly serviceRepository: ServiceRepository,
     private readonly resourceRepository: ResourceRepository,
-    private readonly establishmentRepository: EstablishmentRepository
+    private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
   async execute({
@@ -28,21 +28,19 @@ export class DeleteServiceOffering {
     establishmentCode,
     userId,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ForbiddenError> {
-    const [establishmentResult, serviceResult, resourceResult] = await Promise.all([
-      this.establishmentRepository.findByCode(establishmentCode),
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
+    if (!establishmentResult.isOk) return establishmentResult;
+
+    const [serviceResult, resourceResult] = await Promise.all([
       this.serviceRepository.findByCode(serviceCode, establishmentCode),
       this.resourceRepository.findByCode(resourceCode),
     ]);
 
-    if (!establishmentResult.isOk) return establishmentResult;
     if (!serviceResult.isOk) return serviceResult;
     if (!resourceResult.isOk) return resourceResult;
-
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     const service = serviceResult.data;
     if (!service) return fail(new NotFoundError('Service', serviceCode));

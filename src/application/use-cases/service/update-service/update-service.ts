@@ -1,10 +1,11 @@
-import type { EstablishmentRepository, ServiceRepository } from '@app/domain/entities';
+import type { ServiceRepository } from '@app/domain/entities';
 import {
-  ForbiddenError,
+  type ForbiddenError,
   NotFoundError,
   type StorageError,
   type ValidationError,
 } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
@@ -21,7 +22,7 @@ type Input = {
 export class UpdateService {
   constructor(
     private readonly serviceRepository: ServiceRepository,
-    private readonly establishmentRepository: EstablishmentRepository
+    private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
   async execute({
@@ -35,23 +36,17 @@ export class UpdateService {
     ServiceDTO,
     StorageError | NotFoundError | ValidationError | ForbiddenError
   > {
-    const [establishmentResult, serviceResult] = await Promise.all([
-      this.establishmentRepository.findByCode(establishmentCode),
-      this.serviceRepository.findByCode(code, establishmentCode),
-    ]);
-
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!serviceResult.isOk) return serviceResult;
 
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+    const serviceResult = await this.serviceRepository.findByCode(code, establishmentCode);
+    if (!serviceResult.isOk) return serviceResult;
 
     const service = serviceResult.data;
     if (!service) return fail(new NotFoundError('Service', code));
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     const updateValidation = service.update({ name, description, duration });
     if (!updateValidation.isOk) return updateValidation;
@@ -59,8 +54,6 @@ export class UpdateService {
     const updateResult = await this.serviceRepository.update(code, establishmentCode, service);
     if (!updateResult.isOk) return updateResult;
 
-    const updatedService = updateResult.data;
-
-    return ok(ServiceMapper.toDTO(updatedService));
+    return ok(ServiceMapper.toDTO(service));
   }
 }

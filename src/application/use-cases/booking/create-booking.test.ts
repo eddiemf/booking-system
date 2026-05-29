@@ -167,7 +167,7 @@ describe('CreateBooking', () => {
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
     bookingRepository.findOverlapping.mockResolvedValue(ok([]));
-    bookingRepository.save.mockImplementation(async (entity) => ok(entity));
+    bookingRepository.save.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((r) => r.getData());
 

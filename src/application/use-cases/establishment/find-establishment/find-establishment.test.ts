@@ -1,16 +1,17 @@
-import { Establishment, type EstablishmentRepository } from '@app/domain/entities';
+import { Establishment } from '@app/domain/entities';
 import { NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { FindEstablishment } from './find-establishment';
 
 describe('FindEstablishment', () => {
-  const establishmentRepository = mock<EstablishmentRepository>();
-  const useCase = new FindEstablishment(establishmentRepository);
+  const establishmentLoader = mock<EstablishmentLoader>();
+  const useCase = new FindEstablishment(establishmentLoader);
 
   it('returns a not-found error when the establishment does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(null));
+    establishmentLoader.load.mockResolvedValue(fail(new NotFoundError('Establishment', 'abc123')));
 
     const error = await useCase.execute({ code: 'abc123' }).then((result) => result.getError());
 
@@ -20,7 +21,7 @@ describe('FindEstablishment', () => {
 
   it('returns a storage error when the repository fails', async () => {
     const error = new StorageError('Failed to find establishment.');
-    establishmentRepository.findByCode.mockResolvedValue(fail(error));
+    establishmentLoader.load.mockResolvedValue(fail(error));
 
     const result = await useCase.execute({ code: 'abc123' }).then((result) => result.getError());
 
@@ -28,7 +29,7 @@ describe('FindEstablishment', () => {
   });
 
   it('returns an establishment DTO when found', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(
+    establishmentLoader.load.mockResolvedValue(
       ok(
         Establishment.reconstruct({
           id: 'uuid-1',

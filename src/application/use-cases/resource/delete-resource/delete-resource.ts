@@ -1,10 +1,11 @@
-import type { EstablishmentRepository, ResourceRepository } from '@app/domain/entities';
+import type { ResourceRepository } from '@app/domain/entities';
 import {
   type ConflictError,
-  ForbiddenError,
+  type ForbiddenError,
   NotFoundError,
   type StorageError,
 } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, type PromiseResult } from '@shared/result';
 
 type Input = { code: string; establishmentCode: string; userId: string };
@@ -12,7 +13,7 @@ type Input = { code: string; establishmentCode: string; userId: string };
 export class DeleteResource {
   constructor(
     private readonly resourceRepository: ResourceRepository,
-    private readonly establishmentRepository: EstablishmentRepository
+    private readonly establishmentLoader: EstablishmentLoader
   ) {}
 
   async execute({
@@ -20,20 +21,14 @@ export class DeleteResource {
     establishmentCode,
     userId,
   }: Input): PromiseResult<void, StorageError | NotFoundError | ConflictError | ForbiddenError> {
-    const [establishmentResult, resourceResult] = await Promise.all([
-      this.establishmentRepository.findByCode(establishmentCode),
-      this.resourceRepository.findByCode(code),
-    ]);
-
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
     if (!establishmentResult.isOk) return establishmentResult;
+
+    const resourceResult = await this.resourceRepository.findByCode(code);
     if (!resourceResult.isOk) return resourceResult;
-
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     const resource = resourceResult.data;
     if (!resource) return fail(new NotFoundError('Resource', code));

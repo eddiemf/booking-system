@@ -1,10 +1,6 @@
-import {
-  Establishment,
-  type EstablishmentRepository,
-  Resource,
-  type ResourceRepository,
-} from '@app/domain/entities';
+import { Establishment, Resource, type ResourceRepository } from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -12,8 +8,8 @@ import { DeleteResource } from './delete-resource';
 
 describe('DeleteResource', () => {
   const resourceRepository = mock<ResourceRepository>();
-  const establishmentRepository = mock<EstablishmentRepository>();
-  const useCase = new DeleteResource(resourceRepository, establishmentRepository);
+  const establishmentLoader = mock<EstablishmentLoader>();
+  const useCase = new DeleteResource(resourceRepository, establishmentLoader);
 
   const userId = 'uuid-user';
   const existingResource = Resource.reconstruct({
@@ -34,7 +30,7 @@ describe('DeleteResource', () => {
   const validInput = { code: 'res123', establishmentCode: 'est123', userId };
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((result) => result.getError());
@@ -43,8 +39,9 @@ describe('DeleteResource', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
-    resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this establishment.'))
+    );
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -54,7 +51,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
 
     const error = await useCase
@@ -65,7 +62,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns conflict error when resource has future bookings', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(
       fail(new ConflictError('Resource has future bookings.'))
@@ -77,7 +74,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns storage error when delete fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(fail(new StorageError('DB error')));
 
@@ -87,7 +84,7 @@ describe('DeleteResource', () => {
   });
 
   it('returns ok on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceRepository.findByCode.mockResolvedValue(ok(existingResource));
     resourceRepository.delete.mockResolvedValue(ok(undefined));
 

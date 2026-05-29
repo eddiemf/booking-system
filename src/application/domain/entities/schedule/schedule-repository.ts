@@ -6,5 +6,5 @@ export interface ScheduleRepository {
   replaceAll(
     resourceId: string,
     entries: Schedule[]
-  ): PromiseResult<Schedule[], StorageError | NotFoundError>;
+  ): PromiseResult<void, StorageError | NotFoundError>;
 }

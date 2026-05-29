@@ -4,20 +4,21 @@ import {
   type ResourceRepository,
   type ResourceValidationError,
 } from '@app/domain/entities';
-import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
+import type { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok, type PromiseResult } from '@shared/result';
 import type { ResourceDTO } from '../../../dtos';
 import { ResourceMapper } from '../../../mappers';
 
-type Input = {
+interface Input {
   name: string;
   establishmentCode: string;
   userId: string;
-};
+}
 
 export class CreateResource {
   constructor(
-    private readonly establishmentRepository: EstablishmentRepository,
+    private readonly establishmentLoader: EstablishmentLoader,
     private readonly resourceRepository: ResourceRepository
   ) {}
 
@@ -29,16 +30,10 @@ export class CreateResource {
     ResourceDTO,
     ResourceValidationError | StorageError | NotFoundError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
-    if (!establishmentResult.isOk) return establishmentResult;
+    const result = await this.establishmentLoader.loadOwnedByUser(establishmentCode, userId);
+    if (!result.isOk) return result;
 
-    const establishment = establishmentResult.data;
-    if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
-
+    const establishment = result.data;
     const creationResult = Resource.create({
       name,
       establishmentId: establishment.id,
@@ -50,6 +45,6 @@ export class CreateResource {
     const saveResult = await this.resourceRepository.save(resource);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(ResourceMapper.toDTO(saveResult.data));
+    return ok(ResourceMapper.toDTO(resource));
   }
 }

@@ -3,10 +3,10 @@ import type { PromiseResult } from '@shared/result';
 import type { Resource } from './resource-entity';
 
 export interface ResourceRepository {
-  save(resource: Resource): PromiseResult<Resource, StorageError | NotFoundError>;
+  save(resource: Resource): PromiseResult<void, StorageError | NotFoundError>;
   findAll(establishmentCode: string): PromiseResult<Resource[], StorageError>;
   findByIds(ids: string[], establishmentCode: string): PromiseResult<Resource[], StorageError>;
   findByCode(code: string): PromiseResult<Resource | null, StorageError>;
-  update(code: string, resource: Resource): PromiseResult<Resource, StorageError | NotFoundError>;
+  update(resource: Resource): PromiseResult<void, StorageError | NotFoundError>;
   delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError>;
 }

@@ -1,11 +1,7 @@
-import {
-  type EstablishmentRepository,
-  Service,
-  type ServiceRepository,
-  type ServiceValidationError,
-} from '@app/domain/entities';
-import { ForbiddenError, NotFoundError, type StorageError } from '@app/domain/errors';
-import { fail, ok, type PromiseResult } from '@shared/result';
+import { Service, type ServiceRepository, type ServiceValidationError } from '@app/domain/entities';
+import type { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
+import { ok, type PromiseResult } from '@shared/result';
 import type { ServiceDTO } from '../../../dtos';
 import { ServiceMapper } from '../../../mappers';
 
@@ -19,7 +15,7 @@ type Input = {
 
 export class CreateService {
   constructor(
-    private readonly establishmentRepository: EstablishmentRepository,
+    private readonly establishmentLoader: EstablishmentLoader,
     private readonly serviceRepository: ServiceRepository
   ) {}
 
@@ -33,17 +29,13 @@ export class CreateService {
     ServiceDTO,
     ServiceValidationError | StorageError | NotFoundError | ForbiddenError
   > {
-    const establishmentResult = await this.establishmentRepository.findByCode(establishmentCode);
+    const establishmentResult = await this.establishmentLoader.loadOwnedByUser(
+      establishmentCode,
+      userId
+    );
     if (!establishmentResult.isOk) return establishmentResult;
-    if (!establishmentResult.data) {
-      return fail(new NotFoundError('Establishment', establishmentCode));
-    }
 
     const establishment = establishmentResult.data;
-
-    if (establishment.userId !== userId) {
-      return fail(new ForbiddenError('You do not own this establishment.'));
-    }
 
     const serviceResult = Service.create({
       name,
@@ -58,6 +50,6 @@ export class CreateService {
     const saveResult = await this.serviceRepository.save(service);
     if (!saveResult.isOk) return saveResult;
 
-    return ok(ServiceMapper.toDTO(saveResult.data));
+    return ok(ServiceMapper.toDTO(service));
   }
 }

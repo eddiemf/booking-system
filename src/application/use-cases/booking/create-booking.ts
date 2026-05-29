@@ -107,8 +107,6 @@ export class CreateBooking {
     const saveResult = await this.bookingRepository.save(entityResult.data);
     if (!saveResult.isOk) return saveResult;
 
-    const savedBooking = saveResult.data;
-
-    return ok(BookingMapper.toDTO(savedBooking));
+    return ok(BookingMapper.toDTO(entityResult.data));
   }
 }

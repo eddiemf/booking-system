@@ -1,6 +1,5 @@
 import {
   Establishment,
-  type EstablishmentRepository,
   Resource,
   type ResourceRepository,
   Service,
@@ -8,6 +7,7 @@ import {
   type ServiceRepository,
 } from '@app/domain/entities';
 import { ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -17,12 +17,12 @@ describe('DeleteServiceOffering', () => {
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
   const serviceRepository = mock<ServiceRepository>();
   const resourceRepository = mock<ResourceRepository>();
-  const establishmentRepository = mock<EstablishmentRepository>();
+  const establishmentLoader = mock<EstablishmentLoader>();
   const useCase = new DeleteServiceOffering(
     serviceOfferingRepository,
     serviceRepository,
     resourceRepository,
-    establishmentRepository
+    establishmentLoader
   );
 
   const userId = 'uuid-user';
@@ -59,9 +59,9 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this establishment.'))
+    );
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -71,7 +71,7 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(null));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
 
@@ -81,7 +81,7 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
@@ -91,7 +91,7 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns not-found error when the link does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(
@@ -104,7 +104,7 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns storage error when unassign fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(fail(new StorageError('DB error')));
@@ -115,7 +115,7 @@ describe('DeleteServiceOffering', () => {
   });
 
   it('returns ok on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.unassign.mockResolvedValue(ok(undefined));

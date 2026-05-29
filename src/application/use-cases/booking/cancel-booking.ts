@@ -34,6 +34,6 @@ export class CancelBooking {
     const updateResult = await this.bookingRepository.update(result.data);
     if (!updateResult.isOk) return updateResult;
 
-    return ok(BookingMapper.toDTO(updateResult.data));
+    return ok(BookingMapper.toDTO(result.data));
   }
 }

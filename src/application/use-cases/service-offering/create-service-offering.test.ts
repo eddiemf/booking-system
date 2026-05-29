@@ -1,6 +1,5 @@
 import {
   Establishment,
-  type EstablishmentRepository,
   Resource,
   type ResourceRepository,
   Service,
@@ -9,6 +8,7 @@ import {
   type ServiceRepository,
 } from '@app/domain/entities';
 import { ConflictError, ForbiddenError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { EstablishmentLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -18,12 +18,12 @@ describe('CreateServiceOffering', () => {
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
   const serviceRepository = mock<ServiceRepository>();
   const resourceRepository = mock<ResourceRepository>();
-  const establishmentRepository = mock<EstablishmentRepository>();
+  const establishmentLoader = mock<EstablishmentLoader>();
   const useCase = new CreateServiceOffering(
     serviceOfferingRepository,
     serviceRepository,
     resourceRepository,
-    establishmentRepository
+    establishmentLoader
   );
 
   const userId = 'uuid-user';
@@ -62,9 +62,9 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns forbidden error when user is not the owner', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
-    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
-    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(
+      fail(new ForbiddenError('You do not own this establishment.'))
+    );
 
     const error = await useCase
       .execute({ ...validInput, userId: 'other-user' })
@@ -74,7 +74,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns not-found error when service does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(null));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
 
@@ -84,7 +84,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns not-found error when resource does not exist', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(null));
 
@@ -94,7 +94,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns not-found error when resource belongs to another establishment', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     const otherEstablishmentResource = Resource.reconstruct({
       id: 'uuid-res',
@@ -111,7 +111,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns conflict error when already assigned', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.assign.mockResolvedValue(
@@ -124,7 +124,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns storage error when assign fails', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.assign.mockResolvedValue(fail(new StorageError('DB error')));
@@ -135,7 +135,7 @@ describe('CreateServiceOffering', () => {
   });
 
   it('returns DTO on success', async () => {
-    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
+    establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.assign.mockResolvedValue(

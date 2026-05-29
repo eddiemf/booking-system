@@ -3,14 +3,14 @@ import type { PromiseResult } from '@shared/result';
 import type { Service } from './service-entity';
 
 export interface ServiceRepository {
-  save(service: Service): PromiseResult<Service, StorageError | NotFoundError>;
+  save(service: Service): PromiseResult<void, StorageError | NotFoundError>;
   findAll(establishmentCode: string): PromiseResult<Service[], StorageError>;
   findByCode(code: string, establishmentCode: string): PromiseResult<Service | null, StorageError>;
   update(
     code: string,
     establishmentCode: string,
     service: Service
-  ): PromiseResult<Service, StorageError | NotFoundError>;
+  ): PromiseResult<void, StorageError | NotFoundError>;
   delete(
     code: string,
     establishmentCode: string

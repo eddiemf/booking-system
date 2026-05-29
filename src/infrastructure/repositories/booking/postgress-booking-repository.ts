@@ -1,57 +1,36 @@
 import { Booking, type BookingRepository } from '@app/domain/entities';
-import { type ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import { type ConflictError, type NotFoundError, StorageError } from '@app/domain/errors';
+import type { PrismaClient } from '@prisma/client';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { and, eq, gt, lt } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { bookingsTable } from '../../db/schema';
-
-type BookingRow = {
-  id: string;
-  code: string;
-  customerId: string;
-  customerCode: string;
-  customerName: string;
-  establishmentId: string;
-  establishmentCode: string;
-  serviceId: string;
-  serviceCode: string;
-  serviceName: string;
-  resourceId: string;
-  resourceCode: string;
-  resourceName: string;
-  startsAt: string;
-  endsAt: string;
-  status: string;
-  servicePrice: number;
-  serviceDuration: number;
-};
 
 export class PostgressBookingRepository implements BookingRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(private readonly db: PrismaClient) {}
 
-  async save(booking: Booking): PromiseResult<Booking, StorageError | ConflictError> {
+  async save(booking: Booking): PromiseResult<void, StorageError | ConflictError> {
     try {
-      await this.db.insert(bookingsTable).values({
-        id: booking.id,
-        code: booking.code,
-        customerId: booking.customerId,
-        customerCode: booking.customerCode,
-        customerName: booking.customerName,
-        establishmentId: booking.establishmentId,
-        establishmentCode: booking.establishmentCode,
-        serviceId: booking.serviceId,
-        serviceCode: booking.serviceCode,
-        serviceName: booking.serviceName,
-        resourceId: booking.resourceId,
-        resourceCode: booking.resourceCode,
-        resourceName: booking.resourceName,
-        startsAt: booking.startsAt,
-        endsAt: booking.endsAt,
-        status: booking.status,
-        servicePrice: booking.servicePrice,
-        serviceDuration: booking.serviceDuration,
+      await this.db.booking.create({
+        data: {
+          id: booking.id,
+          code: booking.code,
+          customerId: booking.customerId,
+          customerCode: booking.customerCode,
+          customerName: booking.customerName,
+          establishmentId: booking.establishmentId,
+          establishmentCode: booking.establishmentCode,
+          serviceId: booking.serviceId,
+          serviceCode: booking.serviceCode,
+          serviceName: booking.serviceName,
+          resourceId: booking.resourceId,
+          resourceCode: booking.resourceCode,
+          resourceName: booking.resourceName,
+          startsAt: booking.startsAt,
+          endsAt: booking.endsAt,
+          status: booking.status,
+          servicePrice: booking.servicePrice,
+          serviceDuration: booking.serviceDuration,
+        },
       });
-      return ok(booking);
+      return ok(undefined);
     } catch {
       return fail(new StorageError('Failed to save booking.'));
     }
@@ -59,13 +38,10 @@ export class PostgressBookingRepository implements BookingRepository {
 
   async findByCode(code: string): PromiseResult<Booking | null, StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(bookingsTable)
-        .where(eq(bookingsTable.code, code))
-        .limit(1);
+      const row = await this.db.booking.findFirst({
+        where: { code },
+      });
 
-      const row = rows[0];
       if (!row) return ok(null);
 
       return ok(this.toEntity(row));
@@ -76,11 +52,10 @@ export class PostgressBookingRepository implements BookingRepository {
 
   async findByCustomer(customerId: string): PromiseResult<Booking[], StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(bookingsTable)
-        .where(eq(bookingsTable.customerId, customerId))
-        .orderBy(bookingsTable.startsAt);
+      const rows = await this.db.booking.findMany({
+        where: { customerId },
+        orderBy: { startsAt: 'asc' },
+      });
 
       return ok(rows.map(this.toEntity));
     } catch {
@@ -90,11 +65,10 @@ export class PostgressBookingRepository implements BookingRepository {
 
   async findByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(bookingsTable)
-        .where(eq(bookingsTable.establishmentCode, establishmentCode))
-        .orderBy(bookingsTable.startsAt);
+      const rows = await this.db.booking.findMany({
+        where: { establishmentCode },
+        orderBy: { startsAt: 'asc' },
+      });
 
       return ok(rows.map(this.toEntity));
     } catch {
@@ -108,17 +82,14 @@ export class PostgressBookingRepository implements BookingRepository {
     endsAt: string
   ): PromiseResult<Booking[], StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(bookingsTable)
-        .where(
-          and(
-            eq(bookingsTable.resourceId, resourceId),
-            eq(bookingsTable.status, 'confirmed'),
-            lt(bookingsTable.startsAt, endsAt),
-            gt(bookingsTable.endsAt, startsAt)
-          )
-        );
+      const rows = await this.db.booking.findMany({
+        where: {
+          resourceId,
+          status: 'confirmed',
+          startsAt: { lt: endsAt },
+          endsAt: { gt: startsAt },
+        },
+      });
 
       return ok(rows.map(this.toEntity));
     } catch {
@@ -126,24 +97,38 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async update(booking: Booking): PromiseResult<Booking, StorageError | NotFoundError> {
+  async update(booking: Booking): PromiseResult<void, StorageError | NotFoundError> {
     try {
-      const rows = await this.db
-        .update(bookingsTable)
-        .set({ status: booking.status })
-        .where(eq(bookingsTable.code, booking.code))
-        .returning();
-
-      const row = rows[0];
-      if (!row) return fail(new NotFoundError('Booking', booking.code));
-
-      return ok(this.toEntity(row));
+      await this.db.booking.update({
+        where: { code: booking.code },
+        data: { status: booking.status },
+      });
+      return ok(undefined);
     } catch {
       return fail(new StorageError('Failed to update booking.'));
     }
   }
 
-  private toEntity(row: BookingRow): Booking {
+  private toEntity(row: {
+    id: string;
+    code: string;
+    customerId: string;
+    customerCode: string;
+    customerName: string;
+    establishmentId: string;
+    establishmentCode: string;
+    serviceId: string;
+    serviceCode: string;
+    serviceName: string;
+    resourceId: string;
+    resourceCode: string;
+    resourceName: string;
+    startsAt: string;
+    endsAt: string;
+    status: string;
+    servicePrice: number;
+    serviceDuration: number;
+  }): Booking {
     return Booking.reconstruct({
       id: row.id,
       code: row.code,

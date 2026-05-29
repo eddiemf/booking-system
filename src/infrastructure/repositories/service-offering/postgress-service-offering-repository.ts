@@ -1,32 +1,27 @@
 import { ServiceOffering, type ServiceOfferingRepository } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { PrismaClient } from '@prisma/client';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { and, eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { isUniqueViolation } from '../../db/errors';
-import {
-  establishmentsTable,
-  resourcesTable,
-  serviceOfferingsTable,
-  servicesTable,
-} from '../../db/schema';
 
 export class PostgressServiceOfferingRepository implements ServiceOfferingRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(private readonly db: PrismaClient) {}
 
   async assign(
     serviceOffering: ServiceOffering
   ): PromiseResult<ServiceOffering, StorageError | NotFoundError | ConflictError> {
     try {
-      await this.db.insert(serviceOfferingsTable).values({
-        id: serviceOffering.id,
-        code: serviceOffering.code,
-        serviceId: serviceOffering.serviceId,
-        resourceId: serviceOffering.resourceId,
-        maxCapacity: serviceOffering.maxCapacity.value,
-        durationMinutes: serviceOffering.durationMinutes.toMinutes(),
-        slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
-        price: serviceOffering.price.value,
+      await this.db.serviceOffering.create({
+        data: {
+          id: serviceOffering.id,
+          code: serviceOffering.code,
+          serviceId: serviceOffering.serviceId,
+          resourceId: serviceOffering.resourceId,
+          maxCapacity: serviceOffering.maxCapacity.value,
+          durationMinutes: serviceOffering.durationMinutes.toMinutes(),
+          slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
+          price: serviceOffering.price.value,
+        },
       });
       return ok(serviceOffering);
     } catch (error) {
@@ -42,18 +37,15 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
     resourceId: string
   ): PromiseResult<void, StorageError | NotFoundError> {
     try {
-      const rows = await this.db
-        .delete(serviceOfferingsTable)
-        .where(
-          and(
-            eq(serviceOfferingsTable.serviceId, serviceId),
-            eq(serviceOfferingsTable.resourceId, resourceId)
-          )
-        )
-        .returning({ id: serviceOfferingsTable.id });
-      if (!rows[0]) return fail(new NotFoundError('ServiceOffering', `${serviceId}:${resourceId}`));
+      const result = await this.db.serviceOffering.deleteMany({
+        where: { serviceId, resourceId },
+      });
+
+      if (result.count === 0) {
+        return fail(new NotFoundError('ServiceOffering', `${serviceId}:${resourceId}`));
+      }
       return ok(undefined);
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to unassign resource from service.'));
     }
   }
@@ -63,26 +55,15 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: serviceOfferingsTable.id,
-          code: serviceOfferingsTable.code,
-          serviceId: serviceOfferingsTable.serviceId,
-          resourceId: serviceOfferingsTable.resourceId,
-          maxCapacity: serviceOfferingsTable.maxCapacity,
-          durationMinutes: serviceOfferingsTable.durationMinutes,
-          slotIntervalMinutes: serviceOfferingsTable.slotIntervalMinutes,
-          price: serviceOfferingsTable.price,
-        })
-        .from(serviceOfferingsTable)
-        .innerJoin(servicesTable, eq(serviceOfferingsTable.serviceId, servicesTable.id))
-        .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
-        .where(
-          and(eq(servicesTable.code, serviceCode), eq(establishmentsTable.code, establishmentCode))
-        );
+      const service = await this.db.service.findFirst({
+        where: { code: serviceCode, establishment: { code: establishmentCode } },
+        include: { serviceOfferings: true },
+      });
+
+      if (!service) return ok([]);
 
       return ok(
-        rows.map((row) =>
+        service.serviceOfferings.map((row) =>
           ServiceOffering.reconstruct({
             id: row.id,
             code: row.code,
@@ -95,7 +76,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
           })
         )
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to find service-resource links.'));
     }
   }
@@ -105,29 +86,15 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: serviceOfferingsTable.id,
-          code: serviceOfferingsTable.code,
-          serviceId: serviceOfferingsTable.serviceId,
-          resourceId: serviceOfferingsTable.resourceId,
-          maxCapacity: serviceOfferingsTable.maxCapacity,
-          durationMinutes: serviceOfferingsTable.durationMinutes,
-          slotIntervalMinutes: serviceOfferingsTable.slotIntervalMinutes,
-          price: serviceOfferingsTable.price,
-        })
-        .from(serviceOfferingsTable)
-        .innerJoin(resourcesTable, eq(serviceOfferingsTable.resourceId, resourcesTable.id))
-        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
-        .where(
-          and(
-            eq(resourcesTable.code, resourceCode),
-            eq(establishmentsTable.code, establishmentCode)
-          )
-        );
+      const resource = await this.db.resource.findFirst({
+        where: { code: resourceCode, establishment: { code: establishmentCode } },
+        include: { serviceOfferings: true },
+      });
+
+      if (!resource) return ok([]);
 
       return ok(
-        rows.map((row) =>
+        resource.serviceOfferings.map((row) =>
           ServiceOffering.reconstruct({
             id: row.id,
             code: row.code,
@@ -140,7 +107,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
           })
         )
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to find resource-service links.'));
     }
   }

@@ -65,7 +65,7 @@ describe('UpdateEstablishment', () => {
 
   it('returns the updated establishment DTO on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(existing));
-    establishmentRepository.update.mockResolvedValue(ok(undefined));
+    establishmentRepository.update.mockResolvedValue(ok(existing));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 

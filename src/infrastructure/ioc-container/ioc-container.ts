@@ -28,8 +28,8 @@ import {
   UpdateService,
 } from '@app/use-cases';
 import { getConfig } from '@config/config';
+import { PrismaClient } from '@prisma/client';
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
-import { drizzle } from 'drizzle-orm/node-postgres';
 import { AppleAuthAdapter, GoogleAuthAdapter, JwtAdapter } from '../adapters';
 import {
   PostgressBookingRepository,
@@ -122,7 +122,7 @@ export const createIocContainer = () => {
       .singleton(),
 
     // Database
-    db: asValue(drizzle(config.database.url)),
+    db: asValue(new PrismaClient()),
   });
 
   return container;

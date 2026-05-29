@@ -99,7 +99,7 @@ describe('SetSchedule', () => {
   it('returns schedule DTOs on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceLoader.load.mockResolvedValue(ok(existingResource));
-    scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
+    scheduleRepository.replaceAll.mockResolvedValue(ok([]));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
@@ -115,7 +115,7 @@ describe('SetSchedule', () => {
   it('returns empty array when entries is empty', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceLoader.load.mockResolvedValue(ok(existingResource));
-    scheduleRepository.replaceAll.mockResolvedValue(ok(undefined));
+    scheduleRepository.replaceAll.mockResolvedValue(ok([]));
 
     const data = await useCase
       .execute({ ...validInput, entries: [] })

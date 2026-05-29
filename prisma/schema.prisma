@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id    String @id @default(uuid()) @db.Uuid
+  code  String @unique
+  email String @unique
+  name  String
+
+  bookings        Booking[]
+  establishments  Establishment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("users")
+}
+
+model Establishment {
+  id     String @id @default(uuid()) @db.Uuid
+  code   String @unique
+  name   String
+  userId String @map("user_id") @db.Uuid
+
+  user     User       @relation(fields: [userId], references: [id])
+  resources Resource[]
+  services  Service[]
+  bookings  Booking[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("establishments")
+}
+
+model Service {
+  id              String @id @default(uuid()) @db.Uuid
+  code            String @unique
+  name            String
+  description     String?
+  duration        Int
+  establishmentId String @map("establishment_id") @db.Uuid
+
+  establishment   Establishment          @relation(fields: [establishmentId], references: [id])
+  serviceOfferings ServiceOffering[]
+  bookings        Booking[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("services")
+}
+
+model Resource {
+  id              String @id @default(uuid()) @db.Uuid
+  code            String @unique
+  name            String
+  establishmentId String @map("establishment_id") @db.Uuid
+
+  establishment   Establishment       @relation(fields: [establishmentId], references: [id])
+  schedules       Schedule[]
+  serviceOfferings ServiceOffering[]
+  bookings        Booking[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("resources")
+}
+
+model ServiceOffering {
+  id                 String @id @default(uuid()) @db.Uuid
+  code               String @unique
+  serviceId          String @map("service_id") @db.Uuid
+  resourceId         String @map("resource_id") @db.Uuid
+  maxCapacity        Int    @default(1) @map("max_capacity")
+  durationMinutes    Int    @map("duration_minutes")
+  slotIntervalMinutes Int   @map("slot_interval_minutes")
+  price              Int    @default(0)
+
+  service  Service  @relation(fields: [serviceId], references: [id])
+  resource Resource @relation(fields: [resourceId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([serviceId, resourceId])
+  @@map("service_offerings")
+}
+
+model Booking {
+  id                String @id @default(uuid()) @db.Uuid
+  code              String @unique
+  customerId        String @map("customer_id") @db.Uuid
+  customerCode      String @map("customer_code")
+  customerName      String @map("customer_name")
+  establishmentId   String @map("establishment_id") @db.Uuid
+  establishmentCode String @map("establishment_code")
+  serviceId         String @map("service_id") @db.Uuid
+  serviceCode       String @map("service_code")
+  serviceName       String @map("service_name")
+  resourceId        String @map("resource_id") @db.Uuid
+  resourceCode      String @map("resource_code")
+  resourceName      String @map("resource_name")
+  startsAt          String @map("starts_at")
+  endsAt            String @map("ends_at")
+  servicePrice      Int    @default(0) @map("service_price")
+  serviceDuration   Int    @default(0) @map("service_duration")
+  status            String @default("confirmed")
+
+  customer      User          @relation(fields: [customerId], references: [id])
+  establishment Establishment @relation(fields: [establishmentId], references: [id])
+  service       Service       @relation(fields: [serviceId], references: [id])
+  resource      Resource      @relation(fields: [resourceId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("bookings")
+}
+
+model Schedule {
+  id         String @id @default(uuid()) @db.Uuid
+  code       String @unique
+  dayOfWeek  Int    @map("day_of_week")
+  startTime  String @map("start_time")
+  endTime    String @map("end_time")
+  resourceId String @map("resource_id") @db.Uuid
+
+  resource Resource @relation(fields: [resourceId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("schedules")
+}

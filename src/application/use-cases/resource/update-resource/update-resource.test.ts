@@ -74,7 +74,7 @@ describe('UpdateResource', () => {
   it('returns updated resource DTO on success', async () => {
     establishmentLoader.loadOwnedByUser.mockResolvedValue(ok(mockEstablishment));
     resourceLoader.load.mockResolvedValue(ok(existingEntity));
-    resourceRepository.update.mockResolvedValue(ok(undefined));
+    resourceRepository.update.mockResolvedValue(ok(existingEntity));
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 

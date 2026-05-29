@@ -1,18 +1,17 @@
 import { User, type UserRepository } from '@app/domain/entities';
 import { StorageError } from '@app/domain/errors';
+import type { PrismaClient } from '@prisma/client';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { usersTable } from '../../db/schema';
 
 export class PostgressUserRepository implements UserRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(private readonly db: PrismaClient) {}
 
   async findById(id: string): PromiseResult<User | null, StorageError> {
     try {
-      const rows = await this.db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
+      const row = await this.db.user.findFirst({
+        where: { id },
+      });
 
-      const row = rows[0];
       if (!row) return ok(null);
 
       return ok(
@@ -23,20 +22,17 @@ export class PostgressUserRepository implements UserRepository {
           name: row.name,
         })
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to find user.'));
     }
   }
 
   async findByEmail(email: string): PromiseResult<User | null, StorageError> {
     try {
-      const rows = await this.db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.email, email))
-        .limit(1);
+      const row = await this.db.user.findFirst({
+        where: { email },
+      });
 
-      const row = rows[0];
       if (!row) return ok(null);
 
       return ok(
@@ -47,21 +43,23 @@ export class PostgressUserRepository implements UserRepository {
           name: row.name,
         })
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to find user.'));
     }
   }
 
   async save(user: User): PromiseResult<User, StorageError> {
     try {
-      await this.db.insert(usersTable).values({
-        id: user.id,
-        code: user.code,
-        email: user.email.value,
-        name: user.name,
+      await this.db.user.create({
+        data: {
+          id: user.id,
+          code: user.code,
+          email: user.email.value,
+          name: user.name,
+        },
       });
       return ok(user);
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to save user.'));
     }
   }

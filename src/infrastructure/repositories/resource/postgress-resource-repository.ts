@@ -1,37 +1,23 @@
 import { Resource, type ResourceRepository, Schedule } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { PrismaClient } from '@prisma/client';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { and, eq, inArray } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { isForeignKeyViolation } from '../../db/errors';
-import { establishmentsTable, resourcesTable, schedulesTable } from '../../db/schema';
-
-type ResourceRow = {
-  id: string;
-  code: string;
-  name: string;
-  establishmentId: string;
-  establishmentCode: string;
-  scheduleId: string | null;
-  scheduleCode: string | null;
-  scheduleDayOfWeek: number | null;
-  scheduleStartTime: string | null;
-  scheduleEndTime: string | null;
-  scheduleResourceId: string | null;
-};
+import { isForeignKeyViolation, isNotFound } from '../../db/errors';
 
 export class PostgressResourceRepository implements ResourceRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(private readonly db: PrismaClient) {}
 
-  async save(resource: Resource): PromiseResult<Resource, StorageError | NotFoundError> {
+  async save(resource: Resource): PromiseResult<void, StorageError | NotFoundError> {
     try {
-      await this.db.insert(resourcesTable).values({
-        id: resource.id,
-        code: resource.code,
-        name: resource.name,
-        establishmentId: resource.establishmentId,
+      await this.db.resource.create({
+        data: {
+          id: resource.id,
+          code: resource.code,
+          name: resource.name,
+          establishmentId: resource.establishmentId,
+        },
       });
-      return ok(resource);
+      return ok(undefined);
     } catch (error) {
       if (isForeignKeyViolation(error)) {
         return fail(new NotFoundError('Establishment', resource.establishmentId));
@@ -42,27 +28,39 @@ export class PostgressResourceRepository implements ResourceRepository {
 
   async findAll(establishmentCode: string): PromiseResult<Resource[], StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: resourcesTable.id,
-          code: resourcesTable.code,
-          name: resourcesTable.name,
-          establishmentId: resourcesTable.establishmentId,
-          establishmentCode: establishmentsTable.code,
-          scheduleId: schedulesTable.id,
-          scheduleCode: schedulesTable.code,
-          scheduleDayOfWeek: schedulesTable.dayOfWeek,
-          scheduleStartTime: schedulesTable.startTime,
-          scheduleEndTime: schedulesTable.endTime,
-          scheduleResourceId: schedulesTable.resourceId,
-        })
-        .from(resourcesTable)
-        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
-        .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
-        .where(eq(establishmentsTable.code, establishmentCode));
+      const result = await this.db.establishment.findFirst({
+        where: { code: establishmentCode },
+        include: {
+          resources: {
+            include: { schedules: true },
+          },
+        },
+      });
 
-      return ok(this.groupResourceRows(rows));
-    } catch (error) {
+      if (!result) return ok([]);
+
+      return ok(
+        result.resources.map((res) =>
+          Resource.reconstruct({
+            id: res.id,
+            code: res.code,
+            name: res.name,
+            establishmentId: res.establishmentId,
+            establishmentCode,
+            schedules: res.schedules.map((sch) =>
+              Schedule.reconstruct({
+                id: sch.id,
+                code: sch.code,
+                resourceId: sch.resourceId,
+                dayOfWeek: sch.dayOfWeek,
+                startTime: sch.startTime,
+                endTime: sch.endTime,
+              })
+            ),
+          })
+        )
+      );
+    } catch {
       return fail(new StorageError('Failed to list resources.'));
     }
   }
@@ -74,58 +72,69 @@ export class PostgressResourceRepository implements ResourceRepository {
     try {
       if (ids.length === 0) return ok([]);
 
-      const rows = await this.db
-        .select({
-          id: resourcesTable.id,
-          code: resourcesTable.code,
-          name: resourcesTable.name,
-          establishmentId: resourcesTable.establishmentId,
-          establishmentCode: establishmentsTable.code,
-          scheduleId: schedulesTable.id,
-          scheduleCode: schedulesTable.code,
-          scheduleDayOfWeek: schedulesTable.dayOfWeek,
-          scheduleStartTime: schedulesTable.startTime,
-          scheduleEndTime: schedulesTable.endTime,
-          scheduleResourceId: schedulesTable.resourceId,
-        })
-        .from(resourcesTable)
-        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
-        .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
-        .where(
-          and(inArray(resourcesTable.id, ids), eq(establishmentsTable.code, establishmentCode))
-        );
+      const resources = await this.db.resource.findMany({
+        where: {
+          id: { in: ids },
+          establishment: { code: establishmentCode },
+        },
+        include: { schedules: true },
+      });
 
-      return ok(this.groupResourceRows(rows));
-    } catch (error) {
+      return ok(
+        resources.map((res) =>
+          Resource.reconstruct({
+            id: res.id,
+            code: res.code,
+            name: res.name,
+            establishmentId: res.establishmentId,
+            establishmentCode,
+            schedules: res.schedules.map((sch) =>
+              Schedule.reconstruct({
+                id: sch.id,
+                code: sch.code,
+                resourceId: sch.resourceId,
+                dayOfWeek: sch.dayOfWeek,
+                startTime: sch.startTime,
+                endTime: sch.endTime,
+              })
+            ),
+          })
+        )
+      );
+    } catch {
       return fail(new StorageError('Failed to find resources.'));
     }
   }
 
   async findByCode(code: string): PromiseResult<Resource | null, StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: resourcesTable.id,
-          code: resourcesTable.code,
-          name: resourcesTable.name,
-          establishmentId: resourcesTable.establishmentId,
-          establishmentCode: establishmentsTable.code,
-          scheduleId: schedulesTable.id,
-          scheduleCode: schedulesTable.code,
-          scheduleDayOfWeek: schedulesTable.dayOfWeek,
-          scheduleStartTime: schedulesTable.startTime,
-          scheduleEndTime: schedulesTable.endTime,
-          scheduleResourceId: schedulesTable.resourceId,
-        })
-        .from(resourcesTable)
-        .innerJoin(establishmentsTable, eq(resourcesTable.establishmentId, establishmentsTable.id))
-        .leftJoin(schedulesTable, eq(schedulesTable.resourceId, resourcesTable.id))
-        .where(eq(resourcesTable.code, code));
+      const resource = await this.db.resource.findFirst({
+        where: { code },
+        include: { schedules: true, establishment: { select: { code: true } } },
+      });
 
-      if (rows.length === 0) return ok(null);
-      const resources = this.groupResourceRows(rows);
-      return ok(resources[0] ?? null);
-    } catch (error) {
+      if (!resource) return ok(null);
+
+      return ok(
+        Resource.reconstruct({
+          id: resource.id,
+          code: resource.code,
+          name: resource.name,
+          establishmentId: resource.establishmentId,
+          establishmentCode: resource.establishment.code,
+          schedules: resource.schedules.map((sch) =>
+            Schedule.reconstruct({
+              id: sch.id,
+              code: sch.code,
+              resourceId: sch.resourceId,
+              dayOfWeek: sch.dayOfWeek,
+              startTime: sch.startTime,
+              endTime: sch.endTime,
+            })
+          ),
+        })
+      );
+    } catch {
       return fail(new StorageError('Failed to find resource.'));
     }
   }
@@ -135,74 +144,41 @@ export class PostgressResourceRepository implements ResourceRepository {
     resource: Resource
   ): PromiseResult<Resource, StorageError | NotFoundError> {
     try {
-      const rows = await this.db
-        .update(resourcesTable)
-        .set({ name: resource.name })
-        .where(eq(resourcesTable.code, code))
-        .returning({
-          id: resourcesTable.id,
-          code: resourcesTable.code,
-          establishmentId: resourcesTable.establishmentId,
-        });
-      if (!rows[0]) return fail(new NotFoundError('Resource', code));
+      const row = await this.db.resource.update({
+        where: { code },
+        data: { name: resource.name },
+      });
       return ok(
         Resource.reconstruct({
-          id: rows[0].id,
-          code: rows[0].code,
-          name: resource.name,
-          establishmentId: rows[0].establishmentId,
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          establishmentId: row.establishmentId,
           establishmentCode: resource.establishmentCode,
         })
       );
     } catch (error) {
+      if (isNotFound(error)) {
+        return fail(new NotFoundError('Resource', code));
+      }
       return fail(new StorageError('Failed to update resource.'));
     }
   }
 
   async delete(code: string): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
     try {
-      const rows = await this.db
-        .delete(resourcesTable)
-        .where(eq(resourcesTable.code, code))
-        .returning({ id: resourcesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Resource', code));
+      await this.db.resource.delete({
+        where: { code },
+      });
       return ok(undefined);
     } catch (error) {
+      if (isNotFound(error)) {
+        return fail(new NotFoundError('Resource', code));
+      }
       if (isForeignKeyViolation(error)) {
         return fail(new ConflictError('Resource has future bookings.'));
       }
       return fail(new StorageError('Failed to delete resource.'));
     }
-  }
-
-  private groupResourceRows(rows: ResourceRow[]): Resource[] {
-    const map = new Map<string, { meta: ResourceRow; scheduleRows: ResourceRow[] }>();
-    for (const row of rows) {
-      if (!map.has(row.id)) {
-        map.set(row.id, { meta: row, scheduleRows: [] });
-      }
-      if (row.scheduleId) {
-        map.get(row.id)?.scheduleRows.push(row);
-      }
-    }
-    return Array.from(map.values()).map(({ meta, scheduleRows }) =>
-      Resource.reconstruct({
-        id: meta.id,
-        code: meta.code,
-        name: meta.name,
-        establishmentId: meta.establishmentId,
-        establishmentCode: meta.establishmentCode,
-        schedules: scheduleRows.map((scheduleRow) =>
-          Schedule.reconstruct({
-            id: scheduleRow.scheduleId as string,
-            code: scheduleRow.scheduleCode as string,
-            resourceId: scheduleRow.scheduleResourceId as string,
-            dayOfWeek: scheduleRow.scheduleDayOfWeek as number,
-            startTime: scheduleRow.scheduleStartTime as string,
-            endTime: scheduleRow.scheduleEndTime as string,
-          })
-        ),
-      })
-    );
   }
 }

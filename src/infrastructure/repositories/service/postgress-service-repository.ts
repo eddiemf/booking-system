@@ -1,25 +1,25 @@
 import { Service, type ServiceRepository } from '@app/domain/entities';
 import { ConflictError, NotFoundError, StorageError } from '@app/domain/errors';
+import type { PrismaClient } from '@prisma/client';
 import { fail, ok, type PromiseResult } from '@shared/result';
-import { and, eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { isForeignKeyViolation } from '../../db/errors';
-import { establishmentsTable, servicesTable } from '../../db/schema';
+import { isForeignKeyViolation, isNotFound } from '../../db/errors';
 
 export class PostgressServiceRepository implements ServiceRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(private readonly db: PrismaClient) {}
 
-  async save(service: Service): PromiseResult<Service, StorageError | NotFoundError> {
+  async save(service: Service): PromiseResult<void, StorageError | NotFoundError> {
     try {
-      await this.db.insert(servicesTable).values({
-        id: service.id,
-        code: service.code,
-        name: service.name,
-        description: service.description,
-        duration: service.duration.toMinutes(),
-        establishmentId: service.establishmentId,
+      await this.db.service.create({
+        data: {
+          id: service.id,
+          code: service.code,
+          name: service.name,
+          description: service.description,
+          duration: service.duration.toMinutes(),
+          establishmentId: service.establishmentId,
+        },
       });
-      return ok(service);
+      return ok(undefined);
     } catch (error) {
       if (isForeignKeyViolation(error)) {
         return fail(new NotFoundError('Establishment', service.establishmentId));
@@ -30,21 +30,15 @@ export class PostgressServiceRepository implements ServiceRepository {
 
   async findAll(establishmentCode: string): PromiseResult<Service[], StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: servicesTable.id,
-          code: servicesTable.code,
-          name: servicesTable.name,
-          description: servicesTable.description,
-          duration: servicesTable.duration,
-          establishmentId: servicesTable.establishmentId,
-          establishmentCode: establishmentsTable.code,
-        })
-        .from(servicesTable)
-        .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
-        .where(eq(establishmentsTable.code, establishmentCode));
+      const result = await this.db.establishment.findFirst({
+        where: { code: establishmentCode },
+        include: { services: true },
+      });
+
+      if (!result) return ok([]);
+
       return ok(
-        rows.map((row) =>
+        result.services.map((row) =>
           Service.reconstruct({
             id: row.id,
             code: row.code,
@@ -52,11 +46,11 @@ export class PostgressServiceRepository implements ServiceRepository {
             description: row.description ?? '',
             duration: row.duration,
             establishmentId: row.establishmentId,
-            establishmentCode: row.establishmentCode,
+            establishmentCode,
           })
         )
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to list services.'));
     }
   }
@@ -66,21 +60,20 @@ export class PostgressServiceRepository implements ServiceRepository {
     establishmentCode: string
   ): PromiseResult<Service | null, StorageError> {
     try {
-      const rows = await this.db
-        .select({
-          id: servicesTable.id,
-          code: servicesTable.code,
-          name: servicesTable.name,
-          description: servicesTable.description,
-          duration: servicesTable.duration,
-          establishmentId: servicesTable.establishmentId,
-          establishmentCode: establishmentsTable.code,
-        })
-        .from(servicesTable)
-        .innerJoin(establishmentsTable, eq(servicesTable.establishmentId, establishmentsTable.id))
-        .where(and(eq(servicesTable.code, code), eq(establishmentsTable.code, establishmentCode)));
-      if (!rows[0]) return ok(null);
-      const row = rows[0];
+      const result = await this.db.establishment.findFirst({
+        where: { code: establishmentCode },
+        include: {
+          services: {
+            where: { code },
+          },
+        },
+      });
+
+      if (!result) return ok(null);
+
+      const row = result.services[0];
+      if (!row) return ok(null);
+
       return ok(
         Service.reconstruct({
           id: row.id,
@@ -89,10 +82,10 @@ export class PostgressServiceRepository implements ServiceRepository {
           description: row.description ?? '',
           duration: row.duration,
           establishmentId: row.establishmentId,
-          establishmentCode: row.establishmentCode,
+          establishmentCode,
         })
       );
-    } catch (error) {
+    } catch {
       return fail(new StorageError('Failed to find service.'));
     }
   }
@@ -101,44 +94,26 @@ export class PostgressServiceRepository implements ServiceRepository {
     code: string,
     establishmentCode: string,
     service: Service
-  ): PromiseResult<Service, StorageError | NotFoundError> {
+  ): PromiseResult<void, StorageError | NotFoundError> {
     try {
-      const establishmentSubquery = this.db
-        .select({ id: establishmentsTable.id })
-        .from(establishmentsTable)
-        .where(eq(establishmentsTable.code, establishmentCode));
+      const result = await this.db.establishment.findFirst({
+        where: { code: establishmentCode },
+        select: { id: true },
+      });
 
-      const rows = await this.db
-        .update(servicesTable)
-        .set({
+      if (!result) return fail(new NotFoundError('Establishment', establishmentCode));
+
+      await this.db.service.updateMany({
+        where: { code, establishmentId: result.id },
+        data: {
           name: service.name,
           description: service.description,
           duration: service.duration.toMinutes(),
-        })
-        .where(
-          and(
-            eq(servicesTable.code, code),
-            eq(servicesTable.establishmentId, establishmentSubquery)
-          )
-        )
-        .returning({
-          id: servicesTable.id,
-          code: servicesTable.code,
-          establishmentId: servicesTable.establishmentId,
-        });
-      if (!rows[0]) return fail(new NotFoundError('Service', code));
-      return ok(
-        Service.reconstruct({
-          id: rows[0].id,
-          code: rows[0].code,
-          name: service.name,
-          description: service.description,
-          duration: service.duration.toMinutes(),
-          establishmentId: rows[0].establishmentId,
-          establishmentCode: service.establishmentCode,
-        })
-      );
-    } catch (error) {
+        },
+      });
+
+      return ok(undefined);
+    } catch {
       return fail(new StorageError('Failed to update service.'));
     }
   }
@@ -148,21 +123,18 @@ export class PostgressServiceRepository implements ServiceRepository {
     establishmentCode: string
   ): PromiseResult<void, StorageError | NotFoundError | ConflictError> {
     try {
-      const establishmentSubquery = this.db
-        .select({ id: establishmentsTable.id })
-        .from(establishmentsTable)
-        .where(eq(establishmentsTable.code, establishmentCode));
+      const establishment = await this.db.establishment.findFirst({
+        where: { code: establishmentCode },
+        select: { id: true },
+      });
 
-      const rows = await this.db
-        .delete(servicesTable)
-        .where(
-          and(
-            eq(servicesTable.code, code),
-            eq(servicesTable.establishmentId, establishmentSubquery)
-          )
-        )
-        .returning({ id: servicesTable.id });
-      if (!rows[0]) return fail(new NotFoundError('Service', code));
+      if (!establishment) return fail(new NotFoundError('Establishment', establishmentCode));
+
+      const result = await this.db.service.deleteMany({
+        where: { code, establishmentId: establishment.id },
+      });
+
+      if (result.count === 0) return fail(new NotFoundError('Service', code));
       return ok(undefined);
     } catch (error) {
       if (isForeignKeyViolation(error)) {

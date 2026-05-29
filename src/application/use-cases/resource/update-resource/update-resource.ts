@@ -44,7 +44,7 @@ export class UpdateResource {
     const updateValidation = resource.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 
-    const updateResult = await this.resourceRepository.update(resource);
+    const updateResult = await this.resourceRepository.update(code, resource);
     if (!updateResult.isOk) return updateResult;
 
     return ok(ResourceMapper.toDTO(resource));

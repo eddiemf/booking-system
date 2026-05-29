@@ -32,7 +32,7 @@ export class UpdateEstablishment {
     const updateValidation = establishment.update({ name });
     if (!updateValidation.isOk) return updateValidation;
 
-    const updateResult = await this.establishmentRepository.update(establishment);
+    const updateResult = await this.establishmentRepository.update(code, establishment);
     if (!updateResult.isOk) return updateResult;
 
     return ok(EstablishmentMapper.toDTO(establishment));

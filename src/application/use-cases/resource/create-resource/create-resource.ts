@@ -1,5 +1,4 @@
 import {
-  type EstablishmentRepository,
   Resource,
   type ResourceRepository,
   type ResourceValidationError,

@@ -1,4 +1,5 @@
 import {
+  Booking,
   type BookingRepository,
   Resource,
   type ResourceRepository,
@@ -133,7 +134,27 @@ describe('CreateBooking', () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
-    bookingRepository.findOverlapping.mockResolvedValue(ok([{ id: 'overlap' } as never]));
+    const overlappingBooking = Booking.reconstruct({
+      id: 'overlap',
+      code: 'overlap',
+      customerId: 'other',
+      customerCode: 'other',
+      customerName: 'Other',
+      establishmentId: 'uuid-est',
+      establishmentCode: 'est123',
+      serviceId: 'uuid-svc',
+      serviceCode: 'svc1',
+      serviceName: 'Other',
+      resourceId: 'uuid-res',
+      resourceCode: 'res',
+      resourceName: 'Other',
+      startsAt: '2026-06-15T09:00:00Z',
+      endsAt: '2026-06-15T10:00:00Z',
+      status: 'confirmed',
+      servicePrice: 0,
+      serviceDuration: 60,
+    });
+    bookingRepository.findOverlapping.mockResolvedValue(ok([overlappingBooking]));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 

@@ -15,6 +15,7 @@ describe('EstablishmentLoader', () => {
     code: 'est123',
     name: 'Salon',
     userId,
+    timezone: 'UTC',
   });
 
   describe('load()', () => {

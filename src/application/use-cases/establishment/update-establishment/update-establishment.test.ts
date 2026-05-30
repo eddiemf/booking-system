@@ -69,6 +69,6 @@ describe('UpdateEstablishment', () => {
 
     const data = await useCase.execute(validInput).then((result) => result.getData());
 
-    expect(data).toEqual({ id: 'abc123', name: 'New Name' });
+    expect(data).toEqual({ id: 'abc123', name: 'New Name', timezone: 'UTC' });
   });
 });

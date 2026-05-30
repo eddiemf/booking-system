@@ -42,6 +42,6 @@ describe('FindEstablishment', () => {
 
     const data = await useCase.execute({ code: 'abc123' }).then((result) => result.getData());
 
-    expect(data).toEqual({ id: 'abc123', name: 'My Salon' });
+    expect(data).toEqual({ id: 'abc123', name: 'My Salon', timezone: 'UTC' });
   });
 });

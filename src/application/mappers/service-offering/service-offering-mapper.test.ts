@@ -33,8 +33,8 @@ describe('ServiceOfferingMapper', () => {
         resourceCode: 'res123',
         resourceName: 'Alice',
         maxCapacity: 5,
-        durationMinutes: 60,
-        slotIntervalMinutes: 30,
+        duration: 60,
+        slotInterval: 30,
         price: 5000,
       });
     });

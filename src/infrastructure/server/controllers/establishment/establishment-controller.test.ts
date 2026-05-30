@@ -15,7 +15,7 @@ import { EstablishmentController } from './establishment-controller';
 describe('EstablishmentController', () => {
   const code = 'testcode01';
   const mockedValidInput = { name: 'My Salon' };
-  const mockedEstablishmentDTO = { id: code, name: 'My Salon' };
+  const mockedEstablishmentDTO = { id: code, name: 'My Salon', timezone: 'UTC' };
   const createEstablishmentMock = mock<CreateEstablishment>();
   const findEstablishmentMock = mock<FindEstablishment>();
   const updateEstablishmentMock = mock<UpdateEstablishment>();
@@ -61,6 +61,7 @@ describe('EstablishmentController', () => {
 
       expect(createEstablishmentMock.execute).toHaveBeenCalledWith({
         name: 'My Salon',
+        timezone: undefined,
         userId: 'uuid-user',
       });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -218,6 +219,7 @@ describe('EstablishmentController', () => {
       expect(updateEstablishmentMock.execute).toHaveBeenCalledWith({
         code,
         name: 'My Salon',
+        timezone: undefined,
         userId: 'uuid-user',
       });
       expect(res.status).toHaveBeenCalledWith(200);
@@ -293,7 +295,9 @@ describe('EstablishmentController', () => {
 
   describe('list()', () => {
     it('returns 200 with list of establishment DTOs', async () => {
-      listEstablishmentsMock.execute.mockResolvedValue(ok([{ id: 'est123', name: 'Salon' }]));
+      listEstablishmentsMock.execute.mockResolvedValue(
+        ok([{ id: 'est123', name: 'Salon', timezone: 'UTC' }])
+      );
       const { res } = getMockRes();
       const req = getMockReq();
 
@@ -301,7 +305,7 @@ describe('EstablishmentController', () => {
       await controller.list(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith([{ id: 'est123', name: 'Salon' }]);
+      expect(res.json).toHaveBeenCalledWith([{ id: 'est123', name: 'Salon', timezone: 'UTC' }]);
     });
 
     it('returns 200 with empty array when no establishments', async () => {

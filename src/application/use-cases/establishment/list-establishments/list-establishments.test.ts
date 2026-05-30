@@ -32,7 +32,7 @@ describe('ListEstablishments', () => {
 
     const data = await useCase.execute({ limit: 10, offset: 0 }).then((result) => result.getData());
 
-    expect(data).toEqual([{ id: 'est123', name: 'Salon' }]);
+    expect(data).toEqual([{ id: 'est123', name: 'Salon', timezone: 'UTC' }]);
   });
 
   it('returns an empty array when no establishments exist', async () => {

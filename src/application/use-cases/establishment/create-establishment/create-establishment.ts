@@ -11,6 +11,7 @@ import { EstablishmentMapper } from '../../../mappers';
 interface Input {
   name: string;
   userId: string;
+  timezone?: string | undefined;
 }
 
 export class CreateEstablishment {
@@ -19,8 +20,9 @@ export class CreateEstablishment {
   async execute({
     name,
     userId,
+    timezone,
   }: Input): PromiseResult<EstablishmentDTO, EstablishmentCreationError | StorageError> {
-    const establishmentResult = Establishment.create({ name, userId });
+    const establishmentResult = Establishment.create({ name, userId, timezone });
     if (!establishmentResult.isOk) return establishmentResult;
 
     const establishment = establishmentResult.data;

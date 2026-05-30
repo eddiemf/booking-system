@@ -8,6 +8,7 @@ import { EstablishmentMapper } from '../../../mappers';
 interface Input {
   code: string;
   name: string;
+  timezone?: string | undefined;
   userId: string;
 }
 
@@ -20,6 +21,7 @@ export class UpdateEstablishment {
   async execute({
     code,
     name,
+    timezone,
     userId,
   }: Input): PromiseResult<
     EstablishmentDTO,
@@ -29,7 +31,7 @@ export class UpdateEstablishment {
     if (!result.isOk) return result;
 
     const establishment = result.data;
-    const updateValidation = establishment.update({ name });
+    const updateValidation = establishment.update({ name, timezone });
     if (!updateValidation.isOk) return updateValidation;
 
     const updateResult = await this.establishmentRepository.update(code, establishment);

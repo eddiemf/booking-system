@@ -10,12 +10,13 @@ describe('EstablishmentMapper', () => {
         code: 'abc123',
         name: 'My Salon',
         userId: 'uuid-user',
+        timezone: 'Europe/Warsaw',
       });
 
       const dto = EstablishmentMapper.toDTO(entity);
 
       expect(dto).not.toBeInstanceOf(Establishment);
-      expect(dto).toEqual({ id: 'abc123', name: 'My Salon' });
+      expect(dto).toEqual({ id: 'abc123', name: 'My Salon', timezone: 'Europe/Warsaw' });
     });
   });
 });

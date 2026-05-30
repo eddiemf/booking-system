@@ -1,5 +1,5 @@
 import { AvailabilityService } from '@app/domain/services';
-import { EstablishmentLoader } from '@app/loaders';
+import { BookingLoader, EstablishmentLoader, ResourceLoader, ServiceLoader } from '@app/loaders';
 import {
   CancelBooking,
   CreateBooking,
@@ -96,7 +96,10 @@ export const createIocContainer = () => {
     getCurrentUser: asClass(GetCurrentUser).singleton(),
 
     // Loaders
+    bookingLoader: asClass(BookingLoader).singleton(),
     establishmentLoader: asClass(EstablishmentLoader).singleton(),
+    resourceLoader: asClass(ResourceLoader).singleton(),
+    serviceLoader: asClass(ServiceLoader).singleton(),
 
     // Domain services
     availabilityService: asClass(AvailabilityService).singleton(),

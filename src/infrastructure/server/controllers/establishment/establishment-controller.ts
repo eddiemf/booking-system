@@ -14,6 +14,7 @@ import { Controller, type ErrorResponse } from '../controller';
 export class EstablishmentController extends Controller {
   private readonly establishmentSchema = z.object({
     name: z.string(),
+    timezone: z.string().optional(),
   });
 
   private readonly codeParamsSchema = z.object({ code: z.string().min(1) });
@@ -21,6 +22,7 @@ export class EstablishmentController extends Controller {
   private readonly updateEstablishmentSchema = z.object({
     code: z.string().min(1),
     name: z.string(),
+    timezone: z.string().optional(),
   });
 
   private readonly listEstablishmentsSchema = z.object({
@@ -45,9 +47,13 @@ export class EstablishmentController extends Controller {
         return this.sendZodError(res, validation.error);
       }
 
-      const { name } = validation.data;
+      const { name, timezone } = validation.data;
 
-      const result = await this.createEstablishment.execute({ name, userId: req.user.userId });
+      const result = await this.createEstablishment.execute({
+        name,
+        timezone,
+        userId: req.user.userId,
+      });
 
       if (!result.isOk) return this.sendError(res, result);
 
@@ -82,11 +88,12 @@ export class EstablishmentController extends Controller {
         return this.sendZodError(res, validation.error);
       }
 
-      const { code, name } = validation.data;
+      const { code, name, timezone } = validation.data;
 
       const result = await this.updateEstablishment.execute({
         code,
         name,
+        timezone,
         userId: req.user.userId,
       });
 

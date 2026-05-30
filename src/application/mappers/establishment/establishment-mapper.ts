@@ -6,6 +6,7 @@ export class EstablishmentMapper {
     return {
       id: establishment.code,
       name: establishment.name,
+      timezone: establishment.timezone,
     };
   }
 }

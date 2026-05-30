@@ -11,6 +11,33 @@ describe('EstablishmentEntity', () => {
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
     });
 
+    it('fails with invalid timezone format', () => {
+      const error = Establishment.create({
+        name: 'Salon',
+        userId: 'uuid-user',
+        timezone: 'invalid',
+      }).getError();
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toContain('timezone');
+    });
+
+    it('creates with default UTC timezone when not provided', () => {
+      const data = Establishment.create({ name: 'My Salon', userId: 'uuid-user' }).getData();
+
+      expect(data.timezone).toBe('UTC');
+    });
+
+    it('creates with provided timezone', () => {
+      const data = Establishment.create({
+        name: 'Warsaw Salon',
+        userId: 'uuid-user',
+        timezone: 'Europe/Warsaw',
+      }).getData();
+
+      expect(data.timezone).toBe('Europe/Warsaw');
+    });
+
     it('creates a valid establishment', () => {
       const data = Establishment.create({ name: 'My Salon', userId: 'uuid-user' }).getData();
 
@@ -27,6 +54,7 @@ describe('EstablishmentEntity', () => {
       code: 'abc123',
       name: 'Old Name',
       userId: 'uuid-user',
+      timezone: 'UTC',
     });
 
     it('fails with empty name', () => {
@@ -34,6 +62,20 @@ describe('EstablishmentEntity', () => {
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toBe('Invalid value for field: name. Value is required.');
+    });
+
+    it('updates timezone when provided', () => {
+      const updated = establishment
+        .update({ name: 'New Name', timezone: 'America/New_York' })
+        .getData();
+
+      expect(updated.timezone).toBe('America/New_York');
+    });
+
+    it('keeps existing timezone when not provided', () => {
+      const updated = establishment.update({ name: 'New Name' }).getData();
+
+      expect(updated.timezone).toBe('America/New_York');
     });
 
     it('mutates the entity in place and returns it', () => {

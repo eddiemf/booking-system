@@ -22,6 +22,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
             code: row.code,
             name: row.name,
             userId: row.userId,
+            timezone: row.timezone,
           })
         )
       );
@@ -44,6 +45,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           code,
           name: result.name,
           userId: result.userId,
+          timezone: result.timezone,
         })
       );
     } catch {
@@ -58,6 +60,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           id: establishment.id,
           code: establishment.code,
           name: establishment.name,
+          timezone: establishment.timezone,
           userId: establishment.userId,
         },
       });
@@ -74,7 +77,10 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
     try {
       const row = await this.db.establishment.update({
         where: { code },
-        data: { name: establishment.name },
+        data: {
+          name: establishment.name,
+          timezone: establishment.timezone,
+        },
       });
       return ok(
         Establishment.reconstruct({
@@ -82,6 +88,7 @@ export class PostgressEstablishmentRepository implements EstablishmentRepository
           code: row.code,
           name: row.name,
           userId: row.userId,
+          timezone: row.timezone,
         })
       );
     } catch (error) {

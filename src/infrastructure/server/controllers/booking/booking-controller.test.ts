@@ -28,8 +28,8 @@ describe('BookingController', () => {
     resourceCode: 'res1',
     resourceName: 'Bob',
     establishmentCode: 'est123',
-    startsAt: '2026-06-15T09:00:00Z',
-    endsAt: '2026-06-15T10:00:00Z',
+    startsAt: '2026-06-15T07:00:00.000Z',
+    endsAt: '2026-06-15T08:00:00.000Z',
     status: 'confirmed',
     servicePrice: 0,
     serviceDuration: 60,
@@ -46,12 +46,37 @@ describe('BookingController', () => {
       serviceCode: 'svc1',
       resourceCode: 'res1',
       establishmentCode: 'est123',
-      startsAt: '2026-06-15T09:00:00Z',
+      date: '2026-06-15',
+      startTime: '09:00',
     };
 
     it('returns 400 when serviceCode is missing', async () => {
       const { res } = getMockRes();
       const req = getAuthenticatedReq({ body: { ...validBody, serviceCode: undefined } });
+
+      // @ts-expect-error
+      await controller.create(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when date format is invalid', async () => {
+      const { res } = getMockRes();
+      const req = getAuthenticatedReq({
+        body: { ...validBody, date: 'not-a-date' },
+      });
+
+      // @ts-expect-error
+      await controller.create(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when startTime format is invalid', async () => {
+      const { res } = getMockRes();
+      const req = getAuthenticatedReq({
+        body: { ...validBody, startTime: 'not-a-time' },
+      });
 
       // @ts-expect-error
       await controller.create(req, res);

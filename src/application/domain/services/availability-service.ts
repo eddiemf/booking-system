@@ -1,6 +1,5 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
-import type { Booking } from '../entities/booking/booking-entity';
 import type { Resource } from '../entities/resource/resource-entity';
 import { TimeOfDay } from '../entities/schedule/time-of-day/time-of-day';
 import type { ServiceOffering } from '../entities/service-offering/service-offering-entity';
@@ -11,6 +10,15 @@ export interface ResourceSlot {
   resourceCode: string;
   resourceName: string;
   price: number;
+}
+
+/**
+ * Pre-converted booking expressed as minutes-since-midnight
+ * in the establishment's local time for the target date.
+ */
+export interface BookingMinutes {
+  startMinutes: number;
+  endMinutes: number;
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
@@ -43,6 +51,8 @@ export class AvailabilityService {
     startsAt: string,
     offering: ServiceOffering
   ): Result<{ startsAt: string; endsAt: string }, ValidationError> {
+    const now = new Date();
+
     if (!ISO_DATE_REGEX.test(startsAt)) {
       return fail(new ValidationError('startsAt', 'Must be a valid ISO 8601 datetime string.'));
     }
@@ -52,7 +62,7 @@ export class AvailabilityService {
       return fail(new ValidationError('startsAt', 'Must be a valid date.'));
     }
 
-    if (startDate <= new Date()) {
+    if (startDate <= now) {
       return fail(new ValidationError('startsAt', 'Must be in the future.'));
     }
 
@@ -64,10 +74,14 @@ export class AvailabilityService {
   /**
    * Generate available time slots for a resource + offering on a given date.
    *
+   * Schedule windows come from resource.schedules (wall-clock times).
+   * Bookings must be pre-converted to local wall-clock minutes via BookingMinutes.
+   *
    * Pipeline:
    * 1. Filter schedules for the given dayOfWeek → get base windows
    * 2. For each window, generate grid start times at slotInterval granularity
    * 3. Filter out start times where the block (duration) would exceed the window end
+   * 4. Filter out slots that overlap with existing bookings
    */
   generateResourceSlots({
     date,
@@ -78,10 +92,10 @@ export class AvailabilityService {
     date: string;
     resource: Resource;
     offering: ServiceOffering;
-    bookings?: Booking[];
+    bookings?: BookingMinutes[];
   }): ResourceSlot[] {
     const slots: ResourceSlot[] = [];
-    const dayOfWeek = new Date(date).getDay();
+    const dayOfWeek = new Date(date + 'T12:00:00Z').getUTCDay();
     const duration = offering.duration.toMinutes();
     const slotIntervalMinutes = offering.slotInterval.toMinutes();
     const resourceCode = resource.code;
@@ -111,14 +125,9 @@ export class AvailabilityService {
     return slots;
   }
 
-  private isOverlapping(bookings: Booking[], slotStart: number, slotEnd: number): boolean {
-    return bookings.some((booking) => {
-      const bookingStartDate = new Date(booking.startsAt);
-      const bookingEndDate = new Date(booking.endsAt);
-      const bookingStart = bookingStartDate.getUTCHours() * 60 + bookingStartDate.getUTCMinutes();
-      const bookingEnd = bookingEndDate.getUTCHours() * 60 + bookingEndDate.getUTCMinutes();
-
-      return slotStart < bookingEnd && slotEnd > bookingStart;
-    });
+  private isOverlapping(bookings: BookingMinutes[], slotStart: number, slotEnd: number): boolean {
+    return bookings.some(
+      (booking) => slotStart < booking.endMinutes && slotEnd > booking.startMinutes
+    );
   }
 }

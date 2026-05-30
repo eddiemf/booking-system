@@ -10,7 +10,8 @@ export class BookingController extends Controller {
     serviceCode: z.string().min(1),
     resourceCode: z.string().min(1),
     establishmentCode: z.string().min(1),
-    startsAt: z.string().min(1),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:MM format'),
   });
 
   private readonly codeParamsSchema = z.object({ code: z.string().min(1) });
@@ -35,13 +36,14 @@ export class BookingController extends Controller {
         return this.sendZodError(res, validation.error);
       }
 
-      const { serviceCode, resourceCode, establishmentCode, startsAt } = validation.data;
+      const { serviceCode, resourceCode, establishmentCode, date, startTime } = validation.data;
 
       const result = await this.createBooking.execute({
         serviceCode,
         resourceCode,
         establishmentCode,
-        startsAt,
+        date,
+        startTime,
         userId: req.user.userId,
         userCode: req.user.userCode,
         userName: req.user.email,

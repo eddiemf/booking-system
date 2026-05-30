@@ -140,8 +140,8 @@ describe('CreateServiceOffering', () => {
       serviceCode: 'svc123',
       resourceName: 'Alice',
       maxCapacity: 1,
-      durationMinutes: 30,
-      slotIntervalMinutes: 30,
+      duration: 30,
+      slotInterval: 30,
       price: 50,
     });
   });
@@ -177,8 +177,8 @@ describe('CreateServiceOffering', () => {
       serviceCode: 'svc123',
       resourceName: 'Alice',
       maxCapacity: 1,
-      durationMinutes: 60,
-      slotIntervalMinutes: 30,
+      duration: 60,
+      slotInterval: 30,
       price: 0,
     });
   });

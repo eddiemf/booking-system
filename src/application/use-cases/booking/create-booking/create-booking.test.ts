@@ -1,6 +1,8 @@
 import {
   Booking,
   type BookingRepository,
+  Establishment,
+  type EstablishmentRepository,
   Resource,
   type ResourceRepository,
   Service,
@@ -20,12 +22,14 @@ describe('CreateBooking', () => {
   const serviceRepository = mock<ServiceRepository>();
   const resourceRepository = mock<ResourceRepository>();
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
+  const establishmentRepository = mock<EstablishmentRepository>();
   const availabilityService = mock<AvailabilityService>();
   const useCase = new CreateBooking(
     bookingRepository,
     serviceRepository,
     resourceRepository,
     serviceOfferingRepository,
+    establishmentRepository,
     availabilityService
   );
 
@@ -35,8 +39,18 @@ describe('CreateBooking', () => {
   const userId = 'uuid-user';
   const userCode = 'usr123';
   const userName = 'Alice';
+  const date = '2026-06-15';
+  const startTime = '09:00';
   const futureStartsAt = new Date(Date.now() + 86400000).toISOString();
   const futureEndsAt = new Date(Date.now() + 86400000 + 3600000).toISOString();
+
+  const mockEstablishment = Establishment.reconstruct({
+    id: 'uuid-est',
+    code: establishmentCode,
+    name: 'Salon',
+    userId,
+    timezone: 'Europe/Warsaw',
+  });
 
   const mockService = Service.reconstruct({
     id: 'uuid-svc',
@@ -71,13 +85,15 @@ describe('CreateBooking', () => {
     serviceCode,
     resourceCode,
     establishmentCode,
-    startsAt: futureStartsAt,
+    date,
+    startTime,
     userId,
     userCode,
     userName,
   };
 
   beforeEach(() => {
+    establishmentRepository.findByCode.mockResolvedValue(ok(mockEstablishment));
     availabilityService.resolveTimeSlot.mockReturnValue(
       ok({ startsAt: futureStartsAt, endsAt: futureEndsAt })
     );
@@ -124,6 +140,17 @@ describe('CreateBooking', () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
     serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([]));
+
+    const error = await useCase.execute(validInput).then((r) => r.getError());
+
+    expect(error).toBeInstanceOf(NotFoundError);
+  });
+
+  it('returns not-found error when establishment does not exist', async () => {
+    serviceRepository.findByCode.mockResolvedValue(ok(mockService));
+    resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    establishmentRepository.findByCode.mockResolvedValue(ok(null));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 

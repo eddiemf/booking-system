@@ -1,4 +1,3 @@
-import { Booking } from '@app/domain/entities/booking/booking-entity';
 import { Resource } from '@app/domain/entities/resource/resource-entity';
 import { Schedule } from '@app/domain/entities/schedule/schedule-entity';
 import { ServiceOffering } from '@app/domain/entities/service-offering/service-offering-entity';
@@ -197,32 +196,14 @@ describe('AvailabilityService', () => {
       const resource = buildResource([buildSchedule(3, '09:00', '12:00')]);
       const offering = buildOffering(60, 60);
 
-      const booking = Booking.reconstruct({
-        id: 'uuid-bkg',
-        code: 'bkg1',
-        customerId: 'uuid-cust',
-        customerCode: 'usr123',
-        customerName: 'John',
-        establishmentId: 'uuid-est',
-        establishmentCode: 'est123',
-        serviceId: 'uuid-svc',
-        serviceCode: 'svc1',
-        serviceName: 'Service',
-        resourceId: 'uuid-res',
-        resourceCode: 'res123',
-        resourceName: 'Alice',
-        startsAt: '2026-06-03T10:00:00.000Z',
-        endsAt: '2026-06-03T10:30:00.000Z',
-        status: 'confirmed',
-        servicePrice: 0,
-        serviceDuration: 30,
-      });
+      // Booking from 10:00 to 10:30 in local wall-clock minutes
+      const bookings = [{ startMinutes: 600, endMinutes: 630 }]; // 10:00-10:30
 
       const slots = service.generateResourceSlots({
         date: wednesday,
         resource,
         offering,
-        bookings: [booking],
+        bookings,
       });
 
       // Without booking: 09:00, 10:00, 11:00 → 3 slots

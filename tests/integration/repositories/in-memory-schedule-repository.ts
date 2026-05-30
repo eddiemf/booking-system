@@ -4,19 +4,9 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 
 export class InMemoryScheduleRepository implements ScheduleRepository {
   private _schedules = new Map<string, Schedule>();
-  private _lastError?: StorageError;
-
-  setError(error: StorageError) {
-    this._lastError = error;
-  }
-
-  clearError() {
-    this._lastError = undefined;
-  }
 
   clear() {
     this._schedules.clear();
-    this._lastError = undefined;
   }
 
   getByResourceId(resourceId: string): Schedule[] {
@@ -27,8 +17,6 @@ export class InMemoryScheduleRepository implements ScheduleRepository {
     resourceId: string,
     entries: Schedule[]
   ): PromiseResult<Schedule[], StorageError> {
-    if (this._lastError) return fail(this._lastError);
-
     for (const [id, schedule] of this._schedules.entries()) {
       if (schedule.resourceId === resourceId) {
         this._schedules.delete(id);

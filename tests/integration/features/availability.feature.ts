@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { registerUser } from '../helpers/auth';
+import { setupFullScenario } from '../helpers/scenario';
 import {
-  registerUser,
   seedEstablishment,
   seedResource,
   seedSchedule,
   seedService,
   seedServiceOffering,
-} from '../helpers';
+} from '../helpers/seeds';
 import { createTestContext } from '../setup';
 
 describe('Availability Feature', () => {
@@ -17,21 +18,13 @@ describe('Availability Feature', () => {
   });
 
   describe('Get Available Slots', () => {
-    async function setupFullScenario() {
-      const { user, token } = await registerUser(ctx.container, 'owner@test.com', 'Owner');
-      const est = await seedEstablishment(ctx.container, 'Salon', user.id, 'UTC');
-      const resource = await seedResource(ctx.container, 'Alice', est.id, est.code);
-      const service = await seedService(ctx.container, 'Haircut', 60, est.id, est.code);
-      await seedServiceOffering(ctx.container, service.id, resource.id, 60, 60);
-      await seedSchedule(ctx.container, resource.id, 3, '09:00', '12:00'); // Wednesday
-      return { user, token, est, resource, service };
-    }
-
     it('GET .../availability?date=YYYY-MM-DD — returns slots from schedule', async () => {
-      const { est, service } = await setupFullScenario();
+      const { establishment, service } = await setupFullScenario(ctx.container, {
+        scheduleEntries: [{ dayOfWeek: 3, startTime: '09:00', endTime: '12:00' }],
+      });
       // 2026-06-03 is a Wednesday
       const res = await ctx.request.get(
-        `/establishments/${est.code}/services/${service.code}/availability?date=2026-06-03`
+        `/establishments/${establishment.code}/services/${service.code}/availability?date=2026-06-03`
       );
 
       expect(res.status).toBe(200);
@@ -65,10 +58,12 @@ describe('Availability Feature', () => {
     });
 
     it('GET .../availability — empty when no schedule matches day', async () => {
-      const { est, service } = await setupFullScenario();
+      const { establishment, service } = await setupFullScenario(ctx.container, {
+        scheduleEntries: [{ dayOfWeek: 3, startTime: '09:00', endTime: '12:00' }],
+      });
       // Resource has schedule only on Wednesday (3). Ask for Monday (1).
       const res = await ctx.request.get(
-        `/establishments/${est.code}/services/${service.code}/availability?date=2026-06-01`
+        `/establishments/${establishment.code}/services/${service.code}/availability?date=2026-06-01`
       );
 
       expect(res.status).toBe(200);
@@ -92,8 +87,18 @@ describe('Availability Feature', () => {
         establishment.code
       );
       // duration=30, slotInterval=15
-      await seedServiceOffering(ctx.container, service.id, resource.id, 30, 15);
-      await seedSchedule(ctx.container, resource.id, 3, '09:00', '10:00'); // 60 min window
+      await seedServiceOffering(ctx.container, {
+        serviceId: service.id,
+        resourceId: resource.id,
+        durationMinutes: 30,
+        slotIntervalMinutes: 15,
+        serviceCode: service.code,
+      });
+      await seedSchedule(ctx.container, resource.id, {
+        dayOfWeek: 3,
+        startTime: '09:00',
+        endTime: '10:00',
+      }); // 60 min window
 
       const res = await ctx.request.get(
         `/establishments/${establishment.code}/services/${service.code}/availability?date=2026-06-03`
@@ -142,10 +147,30 @@ describe('Availability Feature', () => {
         establishment.id,
         establishment.code
       );
-      await seedServiceOffering(ctx.container, service.id, res1.id, 60, 60);
-      await seedServiceOffering(ctx.container, service.id, res2.id, 60, 60);
-      await seedSchedule(ctx.container, res1.id, 3, '09:00', '10:00');
-      await seedSchedule(ctx.container, res2.id, 3, '10:00', '11:00');
+      await seedServiceOffering(ctx.container, {
+        serviceId: service.id,
+        resourceId: res1.id,
+        durationMinutes: 60,
+        slotIntervalMinutes: 60,
+        serviceCode: service.code,
+      });
+      await seedServiceOffering(ctx.container, {
+        serviceId: service.id,
+        resourceId: res2.id,
+        durationMinutes: 60,
+        slotIntervalMinutes: 60,
+        serviceCode: service.code,
+      });
+      await seedSchedule(ctx.container, res1.id, {
+        dayOfWeek: 3,
+        startTime: '09:00',
+        endTime: '10:00',
+      });
+      await seedSchedule(ctx.container, res2.id, {
+        dayOfWeek: 3,
+        startTime: '10:00',
+        endTime: '11:00',
+      });
 
       const res = await ctx.request.get(
         `/establishments/${establishment.code}/services/${service.code}/availability?date=2026-06-03`

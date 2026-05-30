@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { registerUser } from '../helpers';
+import { registerUser } from '../helpers/auth';
 import { createTestContext } from '../setup';
 
 describe('Services Feature', () => {
@@ -16,6 +16,19 @@ describe('Services Feature', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'My Salon' });
     return { user, token, estCode: estRes.body.id };
+  }
+
+  async function setupServiceOfferingScenario() {
+    const { user, token, estCode } = await createOwnerAndEstablishment();
+    const svcRes = await ctx.request
+      .post(`/establishments/${estCode}/services`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Haircut', duration: 60 });
+    const resRes = await ctx.request
+      .post(`/establishments/${estCode}/resources`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Alice' });
+    return { user, token, estCode, svcCode: svcRes.body.id, resCode: resRes.body.id };
   }
 
   // ── Create Service ──
@@ -230,21 +243,8 @@ describe('Services Feature', () => {
   // ── Create Service Offering ──
 
   describe('Create Service Offering', () => {
-    async function setupScenario() {
-      const { user, token, estCode } = await createOwnerAndEstablishment();
-      const svcRes = await ctx.request
-        .post(`/establishments/${estCode}/services`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Haircut', duration: 60 });
-      const resRes = await ctx.request
-        .post(`/establishments/${estCode}/resources`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Alice' });
-      return { user, token, estCode, svcCode: svcRes.body.id, resCode: resRes.body.id };
-    }
-
     it('POST .../service-offerings — returns 201 with DTO (all fields)', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
 
       const res = await ctx.request
         .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
@@ -267,7 +267,7 @@ describe('Services Feature', () => {
     });
 
     it('POST .../service-offerings — returns 201 with defaults', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
 
       const res = await ctx.request
         .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
@@ -280,7 +280,7 @@ describe('Services Feature', () => {
     });
 
     it('POST .../service-offerings — returns 404 for non-existent service', async () => {
-      const { token, estCode, resCode } = await setupScenario();
+      const { token, estCode, resCode } = await setupServiceOfferingScenario();
 
       const res = await ctx.request
         .post(`/establishments/${estCode}/services/nonexistent/service-offerings`)
@@ -291,7 +291,7 @@ describe('Services Feature', () => {
     });
 
     it('POST .../service-offerings — returns 409 when already assigned', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
       await ctx.request
         .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
         .set('Authorization', `Bearer ${token}`)
@@ -306,7 +306,7 @@ describe('Services Feature', () => {
     });
 
     it('POST .../service-offerings — returns 400 for non-positive duration', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
 
       const res = await ctx.request
         .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
@@ -316,8 +316,19 @@ describe('Services Feature', () => {
       expect(res.status).toBe(400);
     });
 
+    it('POST .../service-offerings — returns 400 for negative duration', async () => {
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
+
+      const res = await ctx.request
+        .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ resourceCode: resCode, duration: -5, slotInterval: 30 });
+
+      expect(res.status).toBe(400);
+    });
+
     it('POST .../service-offerings — returns 403 when not owner', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
       const other = await registerUser(ctx.container, 'other@test.com', 'Other');
 
       const res = await ctx.request
@@ -332,25 +343,13 @@ describe('Services Feature', () => {
   // ── Delete Service Offering ──
 
   describe('Delete Service Offering', () => {
-    async function setupScenario() {
-      const { user, token, estCode } = await createOwnerAndEstablishment();
-      const svcRes = await ctx.request
-        .post(`/establishments/${estCode}/services`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Haircut', duration: 60 });
-      const resRes = await ctx.request
-        .post(`/establishments/${estCode}/resources`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Alice' });
-      await ctx.request
-        .post(`/establishments/${estCode}/services/${svcRes.body.id}/service-offerings`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ resourceCode: resRes.body.id, duration: 30, slotInterval: 30 });
-      return { token, estCode, svcCode: svcRes.body.id, resCode: resRes.body.id };
-    }
-
     it('DELETE .../service-offerings/:resCode — returns 204', async () => {
-      const { token, estCode, svcCode, resCode } = await setupScenario();
+      const { token, estCode, svcCode, resCode } = await setupServiceOfferingScenario();
+      // Create the offering first
+      await ctx.request
+        .post(`/establishments/${estCode}/services/${svcCode}/service-offerings`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ resourceCode: resCode, duration: 30, slotInterval: 30 });
 
       const res = await ctx.request
         .delete(`/establishments/${estCode}/services/${svcCode}/service-offerings/${resCode}`)
@@ -360,7 +359,7 @@ describe('Services Feature', () => {
     });
 
     it('DELETE .../service-offerings/:resCode — returns 404 when not found', async () => {
-      const { token, estCode, svcCode } = await setupScenario();
+      const { token, estCode, svcCode } = await setupServiceOfferingScenario();
 
       const res = await ctx.request
         .delete(`/establishments/${estCode}/services/${svcCode}/service-offerings/nonexistent`)

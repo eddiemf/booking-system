@@ -4,29 +4,17 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 
 export class InMemoryServiceRepository implements ServiceRepository {
   private services = new Map<string, Service>();
-  private _lastError?: StorageError;
-
-  setError(error: StorageError) {
-    this._lastError = error;
-  }
-
-  clearError() {
-    this._lastError = undefined;
-  }
 
   clear() {
     this.services.clear();
-    this._lastError = undefined;
   }
 
   async save(service: Service): PromiseResult<void, StorageError> {
-    if (this._lastError) return fail(this._lastError);
     this.services.set(service.id, service);
     return ok(undefined);
   }
 
   async get(establishmentCode: string): PromiseResult<Service[], StorageError> {
-    if (this._lastError) return fail(this._lastError);
     const result = [...this.services.values()].filter(
       (s) => s.establishmentCode === establishmentCode
     );
@@ -37,7 +25,6 @@ export class InMemoryServiceRepository implements ServiceRepository {
     code: string,
     establishmentCode: string
   ): PromiseResult<Service | null, StorageError> {
-    if (this._lastError) return fail(this._lastError);
     const service = [...this.services.values()].find(
       (s) => s.code === code && s.establishmentCode === establishmentCode
     );
@@ -49,7 +36,6 @@ export class InMemoryServiceRepository implements ServiceRepository {
     establishmentCode: string,
     service: Service
   ): PromiseResult<void, StorageError> {
-    if (this._lastError) return fail(this._lastError);
     const existing = [...this.services.values()].find(
       (s) => s.code === code && s.establishmentCode === establishmentCode
     );
@@ -64,7 +50,6 @@ export class InMemoryServiceRepository implements ServiceRepository {
     code: string,
     establishmentCode: string
   ): PromiseResult<void, StorageError | NotFoundError> {
-    if (this._lastError) return fail(this._lastError);
     const entry = [...this.services.values()].find(
       (s) => s.code === code && s.establishmentCode === establishmentCode
     );

@@ -1,8 +1,5 @@
-import { AuthenticationError } from '@app/domain/errors';
-import { fail, ok } from '@shared/result';
-import { asValue } from 'awilix';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createToken, registerUser } from '../helpers';
+import { createToken, registerUser } from '../helpers/auth';
 import { createTestContext } from '../setup';
 
 describe('Auth Feature', () => {
@@ -16,9 +13,6 @@ describe('Auth Feature', () => {
 
   describe('Google Login', () => {
     it('POST /auth/google — returns 200 with token and user for valid token', async () => {
-      const mockVerifyToken = async () => ok({ email: 'alice@example.com', name: 'Alice' });
-      ctx.container.register('googleAuth', asValue({ verifyToken: mockVerifyToken }));
-
       const res = await ctx.request.post('/auth/google').send({ token: 'valid-google-token' });
 
       expect(res.status).toBe(200);
@@ -28,16 +22,20 @@ describe('Auth Feature', () => {
       expect(res.body.user.name).toBe('Alice');
     });
 
+    it('POST /auth/google — returns 200 for existing user (no duplicate)', async () => {
+      await ctx.request.post('/auth/google').send({ token: 'valid-google-token' });
+
+      const res = await ctx.request.post('/auth/google').send({ token: 'valid-google-token' });
+
+      expect(res.status).toBe(200);
+    });
+
     it('POST /auth/google — returns 400 when token missing', async () => {
       const res = await ctx.request.post('/auth/google').send({});
       expect(res.status).toBe(400);
     });
 
     it('POST /auth/google — returns 401 for invalid token', async () => {
-      const mockVerifyToken = async () =>
-        fail(new AuthenticationError('Invalid or expired Google token.'));
-      ctx.container.register('googleAuth', asValue({ verifyToken: mockVerifyToken }));
-
       const res = await ctx.request.post('/auth/google').send({ token: 'invalid-token' });
 
       expect(res.status).toBe(401);

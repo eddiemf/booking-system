@@ -1,13 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  registerUser,
-  seedBooking,
-  seedEstablishment,
-  seedResource,
-  seedSchedule,
-  seedService,
-  seedServiceOffering,
-} from '../helpers';
+import { seedBooking, setupFullScenario } from '../helpers';
+import { registerUser } from '../helpers/auth';
 import { createTestContext } from '../setup';
 
 describe('Bookings Feature', () => {
@@ -17,26 +10,18 @@ describe('Bookings Feature', () => {
     ctx.clearAllRepositories();
   });
 
-  async function setupFullScenario() {
-    const { user, token } = await registerUser(ctx.container, 'alice@test.com', 'Alice');
-    const est = await seedEstablishment(ctx.container, 'Salon', user.id, 'UTC');
-    const resource = await seedResource(ctx.container, 'Bob', est.id, est.code);
-    const service = await seedService(ctx.container, 'Haircut', 60, est.id, est.code);
-    await seedServiceOffering(ctx.container, service.id, resource.id, 60, 60);
-    await seedSchedule(ctx.container, resource.id, 3, '09:00', '17:00');
-    return { user, token, est, resource, service };
-  }
-
   // ── Create Booking ──
 
   describe('Create Booking', () => {
     it('POST /bookings — returns 201 with DTO for valid data', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -45,18 +30,20 @@ describe('Bookings Feature', () => {
       expect(res.body.id).toBeDefined();
       expect(res.body.serviceCode).toBe(service.code);
       expect(res.body.resourceCode).toBe(resource.code);
-      expect(res.body.establishmentCode).toBe(est.code);
+      expect(res.body.establishmentCode).toBe(establishment.code);
       expect(res.body.status).toBe('confirmed');
       expect(res.body.serviceDuration).toBe(60);
     });
 
     it('POST /bookings — returns 404 for non-existent service', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: 'nonexistent',
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -65,12 +52,14 @@ describe('Bookings Feature', () => {
     });
 
     it('POST /bookings — returns 404 for non-existent resource', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: 'nonexistent',
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -79,13 +68,15 @@ describe('Bookings Feature', () => {
     });
 
     it('POST /bookings — returns 409 when resource already booked (same time)', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       // Create first booking
       await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -94,7 +85,7 @@ describe('Bookings Feature', () => {
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -104,13 +95,15 @@ describe('Bookings Feature', () => {
     });
 
     it('POST /bookings — returns 409 when resource booked (overlapping time)', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       // Book 09:00-10:00
       await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -119,7 +112,7 @@ describe('Bookings Feature', () => {
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:30',
       });
@@ -128,12 +121,14 @@ describe('Bookings Feature', () => {
     });
 
     it('POST /bookings — returns 201 when owner books their own establishment', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
 
       const res = await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '10:00',
       });
@@ -147,14 +142,16 @@ describe('Bookings Feature', () => {
 
   describe('Get Booking', () => {
     it('GET /bookings/:code — returns 200 with DTO', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       const createRes = await ctx.request
         .post('/bookings')
         .set('Authorization', `Bearer ${token}`)
         .send({
           serviceCode: service.code,
           resourceCode: resource.code,
-          establishmentCode: est.code,
+          establishmentCode: establishment.code,
           date: '2026-06-15',
           startTime: '09:00',
         });
@@ -169,14 +166,16 @@ describe('Bookings Feature', () => {
     });
 
     it('GET /bookings/:code — returns 403 when not owner', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       const createRes = await ctx.request
         .post('/bookings')
         .set('Authorization', `Bearer ${token}`)
         .send({
           serviceCode: service.code,
           resourceCode: resource.code,
-          establishmentCode: est.code,
+          establishmentCode: establishment.code,
           date: '2026-06-15',
           startTime: '09:00',
         });
@@ -204,11 +203,13 @@ describe('Bookings Feature', () => {
 
   describe('List Bookings', () => {
     it('GET /bookings — returns own bookings as customer', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
         serviceCode: service.code,
         resourceCode: resource.code,
-        establishmentCode: est.code,
+        establishmentCode: establishment.code,
         date: '2026-06-15',
         startTime: '09:00',
       });
@@ -234,14 +235,16 @@ describe('Bookings Feature', () => {
 
   describe('Cancel Booking', () => {
     it('DELETE /bookings/:code — cancels future booking, returns 200', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       const createRes = await ctx.request
         .post('/bookings')
         .set('Authorization', `Bearer ${token}`)
         .send({
           serviceCode: service.code,
           resourceCode: resource.code,
-          establishmentCode: est.code,
+          establishmentCode: establishment.code,
           date: '2026-06-15',
           startTime: '09:00',
         });
@@ -255,14 +258,16 @@ describe('Bookings Feature', () => {
     });
 
     it('DELETE /bookings/:code — returns 403 when not owner', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       const createRes = await ctx.request
         .post('/bookings')
         .set('Authorization', `Bearer ${token}`)
         .send({
           serviceCode: service.code,
           resourceCode: resource.code,
-          establishmentCode: est.code,
+          establishmentCode: establishment.code,
           date: '2026-06-15',
           startTime: '09:00',
         });
@@ -276,14 +281,16 @@ describe('Bookings Feature', () => {
     });
 
     it('DELETE /bookings/:code — returns 400 when already cancelled', async () => {
-      const { user, token, est, resource, service } = await setupFullScenario();
+      const { user, token, establishment, resource, service } = await setupFullScenario(
+        ctx.container
+      );
       const createRes = await ctx.request
         .post('/bookings')
         .set('Authorization', `Bearer ${token}`)
         .send({
           serviceCode: service.code,
           resourceCode: resource.code,
-          establishmentCode: est.code,
+          establishmentCode: establishment.code,
           date: '2026-06-15',
           startTime: '09:00',
         });

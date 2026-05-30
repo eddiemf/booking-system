@@ -4,26 +4,17 @@ import { fail, ok, type PromiseResult } from '@shared/result';
 
 export class InMemoryServiceOfferingRepository implements ServiceOfferingRepository {
   private offerings = new Map<string, ServiceOffering>();
-  private _lastError?: StorageError;
-
-  setError(error: StorageError) {
-    this._lastError = error;
-  }
-
-  clearError() {
-    this._lastError = undefined;
-  }
+  private _serviceCodeToIds = new Map<string, Set<string>>(); // serviceCode → Set<serviceId>
 
   clear() {
     this.offerings.clear();
-    this._lastError = undefined;
+    this._serviceCodeToIds.clear();
   }
 
   async assign(
-    serviceOffering: ServiceOffering
+    serviceOffering: ServiceOffering,
+    serviceCode?: string
   ): PromiseResult<ServiceOffering, StorageError | NotFoundError | ConflictError> {
-    if (this._lastError) return fail(this._lastError);
-
     const existing = [...this.offerings.values()].find(
       (o) =>
         o.serviceId === serviceOffering.serviceId && o.resourceId === serviceOffering.resourceId
@@ -33,6 +24,16 @@ export class InMemoryServiceOfferingRepository implements ServiceOfferingReposit
     }
 
     this.offerings.set(serviceOffering.id, serviceOffering);
+
+    if (serviceCode) {
+      const existingCodeEntry = this._serviceCodeToIds.get(serviceCode);
+      if (existingCodeEntry) {
+        existingCodeEntry.add(serviceOffering.serviceId);
+      } else {
+        this._serviceCodeToIds.set(serviceCode, new Set([serviceOffering.serviceId]));
+      }
+    }
+
     return ok(serviceOffering);
   }
 
@@ -40,8 +41,6 @@ export class InMemoryServiceOfferingRepository implements ServiceOfferingReposit
     serviceId: string,
     resourceId: string
   ): PromiseResult<void, StorageError | NotFoundError> {
-    if (this._lastError) return fail(this._lastError);
-
     const entry = [...this.offerings.values()].find(
       (o) => o.serviceId === serviceId && o.resourceId === resourceId
     );
@@ -57,18 +56,17 @@ export class InMemoryServiceOfferingRepository implements ServiceOfferingReposit
     serviceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {
-    if (this._lastError) return fail(this._lastError);
-    // In tests, we store offerings by serviceId but query by serviceCode.
-    // The in-memory repo doesn't have access to the service repo to map code→id,
-    // so we return all offerings. Tests should use serviceId directly.
-    return ok([...this.offerings.values()]);
+    const serviceIds = this._serviceCodeToIds.get(serviceCode);
+    if (!serviceIds) return ok([]);
+
+    const result = [...this.offerings.values()].filter((o) => serviceIds.has(o.serviceId));
+    return ok(result);
   }
 
   async getByResourceCode(
     resourceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {
-    if (this._lastError) return fail(this._lastError);
     return ok([...this.offerings.values()].filter((o) => o.resourceId === resourceCode));
   }
 }

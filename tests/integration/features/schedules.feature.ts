@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { registerUser } from '../helpers';
+import { registerUser } from '../helpers/auth';
 import { createTestContext } from '../setup';
 
 describe('Schedules Feature', () => {

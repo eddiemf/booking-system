@@ -13,8 +13,8 @@ export class ServiceOfferingMapper {
       resourceCode: resource.code,
       resourceName: resource.name,
       maxCapacity: serviceOffering.maxCapacity.value,
-      durationMinutes: serviceOffering.durationMinutes.toMinutes(),
-      slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
+      duration: serviceOffering.duration.toMinutes(),
+      slotInterval: serviceOffering.slotInterval.toMinutes(),
       price: serviceOffering.price.value,
     };
   }

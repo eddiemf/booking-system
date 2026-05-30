@@ -13,7 +13,7 @@ export class ListEstablishments {
   constructor(private readonly establishmentRepository: EstablishmentRepository) {}
 
   async execute({ limit, offset }: Input): PromiseResult<EstablishmentDTO[], StorageError> {
-    const result = await this.establishmentRepository.findAll(limit, offset);
+    const result = await this.establishmentRepository.get(limit, offset);
     if (!result.isOk) return result;
 
     const establishments = result.data;

@@ -7,7 +7,7 @@ import { isForeignKeyViolation, isNotFound } from '../../db/errors';
 export class PostgressEstablishmentRepository implements EstablishmentRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  async findAll(limit: number, offset: number): PromiseResult<Establishment[], StorageError> {
+  async get(limit: number, offset: number): PromiseResult<Establishment[], StorageError> {
     try {
       const rows = await this.db.establishment.findMany({
         take: limit,

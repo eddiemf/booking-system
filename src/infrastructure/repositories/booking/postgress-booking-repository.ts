@@ -50,7 +50,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findByCustomer(customerId: string): PromiseResult<Booking[], StorageError> {
+  async getByCustomer(customerId: string): PromiseResult<Booking[], StorageError> {
     try {
       const rows = await this.db.booking.findMany({
         where: { customerId },
@@ -63,7 +63,7 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError> {
+  async getByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError> {
     try {
       const rows = await this.db.booking.findMany({
         where: { establishmentCode },
@@ -76,7 +76,32 @@ export class PostgressBookingRepository implements BookingRepository {
     }
   }
 
-  async findOverlapping(
+  async getByResourcesAndDate(
+    resourceIds: string[],
+    date: string
+  ): PromiseResult<Booking[], StorageError> {
+    try {
+      if (resourceIds.length === 0) return ok([]);
+
+      const startOfDay = `${date}T00:00:00.000Z`;
+      const endOfDay = `${date}T23:59:59.999Z`;
+
+      const rows = await this.db.booking.findMany({
+        where: {
+          resourceId: { in: resourceIds },
+          status: 'confirmed',
+          startsAt: { lt: endOfDay },
+          endsAt: { gt: startOfDay },
+        },
+      });
+
+      return ok(rows.map(this.toEntity));
+    } catch {
+      return fail(new StorageError('Failed to find bookings by resources and date.'));
+    }
+  }
+
+  async getOverlapping(
     resourceId: string,
     startsAt: string,
     endsAt: string

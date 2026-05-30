@@ -18,8 +18,8 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
           serviceId: serviceOffering.serviceId,
           resourceId: serviceOffering.resourceId,
           maxCapacity: serviceOffering.maxCapacity.value,
-          durationMinutes: serviceOffering.durationMinutes.toMinutes(),
-          slotIntervalMinutes: serviceOffering.slotIntervalMinutes.toMinutes(),
+          durationMinutes: serviceOffering.duration.toMinutes(),
+          slotIntervalMinutes: serviceOffering.slotInterval.toMinutes(),
           price: serviceOffering.price.value,
         },
       });
@@ -50,7 +50,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
     }
   }
 
-  async findByServiceCode(
+  async getByServiceCode(
     serviceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {
@@ -81,7 +81,7 @@ export class PostgressServiceOfferingRepository implements ServiceOfferingReposi
     }
   }
 
-  async findByResourceCode(
+  async getByResourceCode(
     resourceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError> {

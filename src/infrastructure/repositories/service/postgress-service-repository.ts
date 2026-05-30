@@ -28,7 +28,7 @@ export class PostgressServiceRepository implements ServiceRepository {
     }
   }
 
-  async findAll(establishmentCode: string): PromiseResult<Service[], StorageError> {
+  async get(establishmentCode: string): PromiseResult<Service[], StorageError> {
     try {
       const result = await this.db.establishment.findFirst({
         where: { code: establishmentCode },

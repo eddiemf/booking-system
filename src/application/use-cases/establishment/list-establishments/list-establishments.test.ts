@@ -18,7 +18,7 @@ describe('ListEstablishments', () => {
   });
 
   it('returns storage error when repository fails', async () => {
-    establishmentRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
+    establishmentRepository.get.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase
       .execute({ limit: 10, offset: 0 })
@@ -28,7 +28,7 @@ describe('ListEstablishments', () => {
   });
 
   it('returns list of establishment DTOs on success', async () => {
-    establishmentRepository.findAll.mockResolvedValue(ok([mockEstablishment]));
+    establishmentRepository.get.mockResolvedValue(ok([mockEstablishment]));
 
     const data = await useCase.execute({ limit: 10, offset: 0 }).then((result) => result.getData());
 
@@ -36,7 +36,7 @@ describe('ListEstablishments', () => {
   });
 
   it('returns an empty array when no establishments exist', async () => {
-    establishmentRepository.findAll.mockResolvedValue(ok([]));
+    establishmentRepository.get.mockResolvedValue(ok([]));
 
     const data = await useCase.execute({ limit: 10, offset: 0 }).then((result) => result.getData());
 
@@ -44,10 +44,10 @@ describe('ListEstablishments', () => {
   });
 
   it('passes limit and offset to the repository', async () => {
-    establishmentRepository.findAll.mockResolvedValue(ok([]));
+    establishmentRepository.get.mockResolvedValue(ok([]));
 
     await useCase.execute({ limit: 10, offset: 5 });
 
-    expect(establishmentRepository.findAll).toHaveBeenCalledWith(10, 5);
+    expect(establishmentRepository.get).toHaveBeenCalledWith(10, 5);
   });
 });

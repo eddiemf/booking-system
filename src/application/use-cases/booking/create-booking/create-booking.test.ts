@@ -83,8 +83,8 @@ describe('CreateBooking', () => {
     );
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
-    bookingRepository.findOverlapping.mockResolvedValue(ok([]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    bookingRepository.getOverlapping.mockResolvedValue(ok([]));
   });
 
   it('returns not-found error when service does not exist', async () => {
@@ -123,7 +123,7 @@ describe('CreateBooking', () => {
   it('returns not-found error when resource is not assigned to the service', async () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([]));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 
@@ -133,7 +133,7 @@ describe('CreateBooking', () => {
   it('returns conflict error when resource is already booked at that time', async () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
     const overlappingBooking = Booking.reconstruct({
       id: 'overlap',
       code: 'overlap',
@@ -154,7 +154,7 @@ describe('CreateBooking', () => {
       servicePrice: 0,
       serviceDuration: 60,
     });
-    bookingRepository.findOverlapping.mockResolvedValue(ok([overlappingBooking]));
+    bookingRepository.getOverlapping.mockResolvedValue(ok([overlappingBooking]));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
 
@@ -174,8 +174,8 @@ describe('CreateBooking', () => {
   it('returns storage error when save fails', async () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
-    bookingRepository.findOverlapping.mockResolvedValue(ok([]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    bookingRepository.getOverlapping.mockResolvedValue(ok([]));
     bookingRepository.save.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute(validInput).then((r) => r.getError());
@@ -186,8 +186,8 @@ describe('CreateBooking', () => {
   it('returns booking DTO on success', async () => {
     serviceRepository.findByCode.mockResolvedValue(ok(mockService));
     resourceRepository.findByCode.mockResolvedValue(ok(mockResource));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
-    bookingRepository.findOverlapping.mockResolvedValue(ok([]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    bookingRepository.getOverlapping.mockResolvedValue(ok([]));
     bookingRepository.save.mockResolvedValue(ok(undefined));
 
     const data = await useCase.execute(validInput).then((r) => r.getData());

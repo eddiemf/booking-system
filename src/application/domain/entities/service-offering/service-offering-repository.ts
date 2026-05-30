@@ -10,11 +10,11 @@ export interface ServiceOfferingRepository {
     serviceId: string,
     resourceId: string
   ): PromiseResult<void, StorageError | NotFoundError>;
-  findByServiceCode(
+  getByServiceCode(
     serviceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError>;
-  findByResourceCode(
+  getByResourceCode(
     resourceCode: string,
     establishmentCode: string
   ): PromiseResult<ServiceOffering[], StorageError>;

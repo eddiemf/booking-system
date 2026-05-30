@@ -26,7 +26,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findAll(establishmentCode: string): PromiseResult<Resource[], StorageError> {
+  async get(establishmentCode: string): PromiseResult<Resource[], StorageError> {
     try {
       const result = await this.db.establishment.findFirst({
         where: { code: establishmentCode },
@@ -65,7 +65,7 @@ export class PostgressResourceRepository implements ResourceRepository {
     }
   }
 
-  async findByIds(
+  async getByIds(
     ids: string[],
     establishmentCode: string
   ): PromiseResult<Resource[], StorageError> {

@@ -40,7 +40,7 @@ describe('ListBookings', () => {
   });
 
   it('returns customer bookings when no establishment code given', async () => {
-    bookingRepository.findByCustomer.mockResolvedValue(ok([mockBooking]));
+    bookingRepository.getByCustomer.mockResolvedValue(ok([mockBooking]));
 
     const data = await useCase.execute({ userId }).then((r) => r.getData());
 
@@ -56,7 +56,7 @@ describe('ListBookings', () => {
       userId,
     });
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEst));
-    bookingRepository.findByEstablishment.mockResolvedValue(ok([mockBooking]));
+    bookingRepository.getByEstablishment.mockResolvedValue(ok([mockBooking]));
 
     const data = await useCase.execute({ establishmentCode, userId }).then((r) => r.getData());
 
@@ -71,7 +71,7 @@ describe('ListBookings', () => {
       userId: 'other-user',
     });
     establishmentRepository.findByCode.mockResolvedValue(ok(mockEst));
-    bookingRepository.findByCustomer.mockResolvedValue(ok([mockBooking]));
+    bookingRepository.getByCustomer.mockResolvedValue(ok([mockBooking]));
 
     const data = await useCase.execute({ establishmentCode, userId }).then((r) => r.getData());
 
@@ -87,7 +87,7 @@ describe('ListBookings', () => {
   });
 
   it('returns storage error when booking repository fails', async () => {
-    bookingRepository.findByCustomer.mockResolvedValue(fail(new StorageError('DB error')));
+    bookingRepository.getByCustomer.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute({ userId }).then((r) => r.getError());
 

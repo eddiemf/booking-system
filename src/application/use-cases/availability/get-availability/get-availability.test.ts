@@ -1,43 +1,32 @@
 import {
+  type BookingRepository,
   Resource,
   type ResourceRepository,
-  Service,
   ServiceOffering,
   type ServiceOfferingRepository,
 } from '@app/domain/entities';
-import { NotFoundError, StorageError, ValidationError } from '@app/domain/errors';
+import { StorageError, ValidationError } from '@app/domain/errors';
 import type { AvailabilityService } from '@app/domain/services';
-import type { ServiceLoader } from '@app/loaders';
 import { fail, ok } from '@shared/result';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 import { GetAvailability } from './get-availability';
 
 describe('GetAvailability', () => {
-  const serviceLoader = mock<ServiceLoader>();
   const serviceOfferingRepository = mock<ServiceOfferingRepository>();
   const resourceRepository = mock<ResourceRepository>();
+  const bookingRepository = mock<BookingRepository>();
   const availabilityService = mock<AvailabilityService>();
   const useCase = new GetAvailability(
-    serviceLoader,
     serviceOfferingRepository,
     resourceRepository,
+    bookingRepository,
     availabilityService
   );
 
   const serviceCode = 'svc123';
   const establishmentCode = 'est123';
   const date = '2026-06-03';
-
-  const mockService = Service.reconstruct({
-    id: 'uuid-svc',
-    code: serviceCode,
-    name: 'Haircut',
-    description: '',
-    duration: 30,
-    establishmentId: 'uuid-est',
-    establishmentCode,
-  });
 
   const mockOffering = ServiceOffering.reconstruct({
     id: 'uuid-offering',
@@ -61,6 +50,7 @@ describe('GetAvailability', () => {
 
   beforeEach(() => {
     availabilityService.validateDate.mockReturnValue(ok(undefined));
+    bookingRepository.getByResourcesAndDate.mockResolvedValue(ok([]));
   });
 
   it('returns validation error when date is in the past', async () => {
@@ -76,29 +66,8 @@ describe('GetAvailability', () => {
     expect(error.message).toContain('past');
   });
 
-  it('returns not-found error when service does not exist', async () => {
-    serviceLoader.load.mockResolvedValue(fail(new NotFoundError('Service', serviceCode)));
-
-    const error = await useCase
-      .execute({ serviceCode, establishmentCode, date })
-      .then((r) => r.getError());
-
-    expect(error).toBeInstanceOf(NotFoundError);
-  });
-
-  it('returns storage error when service lookup fails', async () => {
-    serviceLoader.load.mockResolvedValue(fail(new StorageError('DB error')));
-
-    const error = await useCase
-      .execute({ serviceCode, establishmentCode, date })
-      .then((r) => r.getError());
-
-    expect(error).toBeInstanceOf(StorageError);
-  });
-
   it('returns empty array when no resources are assigned to the service', async () => {
-    serviceLoader.load.mockResolvedValue(ok(mockService));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -108,8 +77,7 @@ describe('GetAvailability', () => {
   });
 
   it('returns available slots from resource schedules', async () => {
-    serviceLoader.load.mockResolvedValue(ok(mockService));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
     availabilityService.generateResourceSlots.mockReturnValue([
       {
         startTime: '09:00',
@@ -126,7 +94,7 @@ describe('GetAvailability', () => {
         price: 0,
       },
     ]);
-    resourceRepository.findByIds.mockResolvedValue(ok([mockResource]));
+    resourceRepository.getByIds.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -151,10 +119,9 @@ describe('GetAvailability', () => {
   });
 
   it('returns empty array when domain service returns no slots', async () => {
-    serviceLoader.load.mockResolvedValue(ok(mockService));
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([mockOffering]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
     availabilityService.generateResourceSlots.mockReturnValue([]);
-    resourceRepository.findByIds.mockResolvedValue(ok([mockResource]));
+    resourceRepository.getByIds.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -164,8 +131,6 @@ describe('GetAvailability', () => {
   });
 
   it('returns slots from multiple resources', async () => {
-    serviceLoader.load.mockResolvedValue(ok(mockService));
-
     const offering1 = ServiceOffering.reconstruct({
       id: 'l1',
       code: 'l1',
@@ -186,7 +151,7 @@ describe('GetAvailability', () => {
       slotIntervalMinutes: 30,
       price: 0,
     });
-    serviceOfferingRepository.findByServiceCode.mockResolvedValue(ok([offering1, offering2]));
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([offering1, offering2]));
 
     availabilityService.generateResourceSlots
       .mockReturnValueOnce([
@@ -224,7 +189,7 @@ describe('GetAvailability', () => {
       establishmentCode,
       schedules: [],
     });
-    resourceRepository.findByIds.mockResolvedValue(ok([resource1, resource2]));
+    resourceRepository.getByIds.mockResolvedValue(ok([resource1, resource2]));
 
     const data = await useCase
       .execute({ serviceCode, establishmentCode, date })
@@ -233,5 +198,40 @@ describe('GetAvailability', () => {
     expect(data).toHaveLength(2);
     expect(data[0]?.resourceCode).toBe('res1');
     expect(data[1]?.resourceCode).toBe('res2');
+  });
+
+  it('returns storage error when offerings lookup fails', async () => {
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(
+      fail(new StorageError('DB error'))
+    );
+
+    const error = await useCase
+      .execute({ serviceCode, establishmentCode, date })
+      .then((r) => r.getError());
+
+    expect(error).toBeInstanceOf(StorageError);
+  });
+
+  it('returns storage error when resources lookup fails', async () => {
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    resourceRepository.getByIds.mockResolvedValue(fail(new StorageError('DB error')));
+
+    const error = await useCase
+      .execute({ serviceCode, establishmentCode, date })
+      .then((r) => r.getError());
+
+    expect(error).toBeInstanceOf(StorageError);
+  });
+
+  it('returns storage error when booking lookup fails', async () => {
+    serviceOfferingRepository.getByServiceCode.mockResolvedValue(ok([mockOffering]));
+    resourceRepository.getByIds.mockResolvedValue(ok([mockResource]));
+    bookingRepository.getByResourcesAndDate.mockResolvedValue(fail(new StorageError('DB error')));
+
+    const error = await useCase
+      .execute({ serviceCode, establishmentCode, date })
+      .then((r) => r.getError());
+
+    expect(error).toBeInstanceOf(StorageError);
   });
 });

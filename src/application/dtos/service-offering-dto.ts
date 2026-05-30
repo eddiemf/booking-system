@@ -4,7 +4,7 @@ export interface ServiceOfferingDTO {
   resourceCode: string;
   resourceName: string;
   maxCapacity: number;
-  durationMinutes: number;
-  slotIntervalMinutes: number;
+  duration: number;
+  slotInterval: number;
   price: number;
 }

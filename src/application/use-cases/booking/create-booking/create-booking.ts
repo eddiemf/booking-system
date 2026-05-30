@@ -49,7 +49,7 @@ export class CreateBooking {
     const [serviceResult, resourceResult, offeringsResult] = await Promise.all([
       this.serviceRepository.findByCode(serviceCode, establishmentCode),
       this.resourceRepository.findByCode(resourceCode),
-      this.serviceOfferingRepository.findByServiceCode(serviceCode, establishmentCode),
+      this.serviceOfferingRepository.getByServiceCode(serviceCode, establishmentCode),
     ]);
 
     if (!serviceResult.isOk) return serviceResult;
@@ -73,7 +73,7 @@ export class CreateBooking {
     if (!slotResult.isOk) return slotResult;
 
     const slot = slotResult.data;
-    const overlapResult = await this.bookingRepository.findOverlapping(
+    const overlapResult = await this.bookingRepository.getOverlapping(
       resource.id,
       slot.startsAt,
       slot.endsAt
@@ -100,7 +100,7 @@ export class CreateBooking {
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
       servicePrice: offering.price.value,
-      serviceDuration: offering.durationMinutes.toMinutes(),
+      serviceDuration: offering.duration.toMinutes(),
     });
     if (!entityResult.isOk) return entityResult;
 

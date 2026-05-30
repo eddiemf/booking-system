@@ -12,7 +12,7 @@ export class ListResources {
   async execute({
     establishmentCode,
   }: Input): PromiseResult<ResourceDTO[], StorageError | NotFoundError> {
-    const result = await this.resourceRepository.findAll(establishmentCode);
+    const result = await this.resourceRepository.get(establishmentCode);
     if (!result.isOk) return result;
 
     return ok(result.data.map(ResourceMapper.toDTO));

@@ -3,7 +3,7 @@ import type { PromiseResult } from '@shared/result';
 import type { Establishment } from './establishment-entity';
 
 export interface EstablishmentRepository {
-  findAll(limit: number, offset: number): PromiseResult<Establishment[], StorageError>;
+  get(limit: number, offset: number): PromiseResult<Establishment[], StorageError>;
   findByCode(code: string): PromiseResult<Establishment | null, StorageError>;
   save(establishment: Establishment): PromiseResult<void, StorageError>;
   update(

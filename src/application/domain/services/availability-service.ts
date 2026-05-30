@@ -1,5 +1,6 @@
 import { ValidationError } from '@app/domain/errors';
 import { fail, ok, type Result } from '@shared/result';
+import type { Booking } from '../entities/booking/booking-entity';
 import type { Resource } from '../entities/resource/resource-entity';
 import { TimeOfDay } from '../entities/schedule/time-of-day/time-of-day';
 import type { ServiceOffering } from '../entities/service-offering/service-offering-entity';
@@ -55,7 +56,7 @@ export class AvailabilityService {
       return fail(new ValidationError('startsAt', 'Must be in the future.'));
     }
 
-    const endDate = new Date(startDate.getTime() + offering.durationMinutes.toMinutes() * 60000);
+    const endDate = new Date(startDate.getTime() + offering.duration.toMinutes() * 60000);
 
     return ok({ startsAt, endsAt: endDate.toISOString() });
   }
@@ -72,32 +73,34 @@ export class AvailabilityService {
     date,
     offering,
     resource,
+    bookings = [],
   }: {
     date: string;
     resource: Resource;
     offering: ServiceOffering;
+    bookings?: Booking[];
   }): ResourceSlot[] {
     const slots: ResourceSlot[] = [];
     const dayOfWeek = new Date(date).getDay();
-    const durationMinutes = offering.durationMinutes.toMinutes();
-    const slotIntervalMinutes = offering.slotIntervalMinutes.toMinutes();
+    const duration = offering.duration.toMinutes();
+    const slotIntervalMinutes = offering.slotInterval.toMinutes();
     const resourceCode = resource.code;
     const resourceName = resource.name;
-
     const windows = resource.schedules.filter((schedule) => schedule.dayOfWeek.value === dayOfWeek);
 
     for (const window of windows) {
       const windowStart = window.timeRange.start.toMinutes();
       const windowEnd = window.timeRange.end.toMinutes();
 
-      for (
-        let time = windowStart;
-        time + durationMinutes <= windowEnd;
-        time += slotIntervalMinutes
-      ) {
+      for (let time = windowStart; time + duration <= windowEnd; time += slotIntervalMinutes) {
+        const slotStart = time;
+        const slotEnd = time + duration;
+
+        if (this.isOverlapping(bookings, slotStart, slotEnd)) continue;
+
         slots.push({
-          startTime: TimeOfDay.fromMinutes(time).value,
-          endTime: TimeOfDay.fromMinutes(time + durationMinutes).value,
+          startTime: TimeOfDay.fromMinutes(slotStart).value,
+          endTime: TimeOfDay.fromMinutes(slotEnd).value,
           resourceCode,
           resourceName,
           price: offering.price.value,
@@ -106,5 +109,16 @@ export class AvailabilityService {
     }
 
     return slots;
+  }
+
+  private isOverlapping(bookings: Booking[], slotStart: number, slotEnd: number): boolean {
+    return bookings.some((booking) => {
+      const bookingStartDate = new Date(booking.startsAt);
+      const bookingEndDate = new Date(booking.endsAt);
+      const bookingStart = bookingStartDate.getUTCHours() * 60 + bookingStartDate.getUTCMinutes();
+      const bookingEnd = bookingEndDate.getUTCHours() * 60 + bookingEndDate.getUTCMinutes();
+
+      return slotStart < bookingEnd && slotEnd > bookingStart;
+    });
   }
 }

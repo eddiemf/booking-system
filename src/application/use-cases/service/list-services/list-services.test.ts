@@ -22,7 +22,7 @@ describe('ListServices', () => {
   });
 
   it('returns storage error when repository fails', async () => {
-    serviceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
+    serviceRepository.get.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute({ establishmentCode }).then((result) => result.getError());
 
@@ -30,7 +30,7 @@ describe('ListServices', () => {
   });
 
   it('returns a list of service DTOs on success', async () => {
-    serviceRepository.findAll.mockResolvedValue(ok([mockService]));
+    serviceRepository.get.mockResolvedValue(ok([mockService]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
@@ -46,7 +46,7 @@ describe('ListServices', () => {
   });
 
   it('returns an empty array when establishment has no services', async () => {
-    serviceRepository.findAll.mockResolvedValue(ok([]));
+    serviceRepository.get.mockResolvedValue(ok([]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 

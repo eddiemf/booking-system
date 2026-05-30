@@ -24,14 +24,14 @@ export class ListBookings {
 
       // If user owns the establishment, return establishment bookings
       if (establishmentResult.data.userId === userId) {
-        const result = await this.bookingRepository.findByEstablishment(establishmentCode);
+        const result = await this.bookingRepository.getByEstablishment(establishmentCode);
         if (!result.isOk) return result;
         return ok(result.data.map(BookingMapper.toDTO));
       }
     }
 
     // Otherwise return customer's own bookings
-    const result = await this.bookingRepository.findByCustomer(userId);
+    const result = await this.bookingRepository.getByCustomer(userId);
     if (!result.isOk) return result;
 
     return ok(result.data.map(BookingMapper.toDTO));

@@ -20,7 +20,7 @@ describe('ListResources', () => {
   });
 
   it('returns storage error when repository fails', async () => {
-    resourceRepository.findAll.mockResolvedValue(fail(new StorageError('DB error')));
+    resourceRepository.get.mockResolvedValue(fail(new StorageError('DB error')));
 
     const error = await useCase.execute({ establishmentCode }).then((result) => result.getError());
 
@@ -28,7 +28,7 @@ describe('ListResources', () => {
   });
 
   it('returns list of resource DTOs on success', async () => {
-    resourceRepository.findAll.mockResolvedValue(ok([mockResource]));
+    resourceRepository.get.mockResolvedValue(ok([mockResource]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 
@@ -36,7 +36,7 @@ describe('ListResources', () => {
   });
 
   it('returns an empty array when establishment has no resources', async () => {
-    resourceRepository.findAll.mockResolvedValue(ok([]));
+    resourceRepository.get.mockResolvedValue(ok([]));
 
     const data = await useCase.execute({ establishmentCode }).then((result) => result.getData());
 

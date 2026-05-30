@@ -5,9 +5,13 @@ import type { Booking } from './booking-entity';
 export interface BookingRepository {
   save(booking: Booking): PromiseResult<void, StorageError | ConflictError>;
   findByCode(code: string): PromiseResult<Booking | null, StorageError>;
-  findByCustomer(customerId: string): PromiseResult<Booking[], StorageError>;
-  findByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError>;
-  findOverlapping(
+  getByCustomer(customerId: string): PromiseResult<Booking[], StorageError>;
+  getByEstablishment(establishmentCode: string): PromiseResult<Booking[], StorageError>;
+  getByResourcesAndDate(
+    resourceIds: string[],
+    date: string
+  ): PromiseResult<Booking[], StorageError>;
+  getOverlapping(
     resourceId: string,
     startsAt: string,
     endsAt: string

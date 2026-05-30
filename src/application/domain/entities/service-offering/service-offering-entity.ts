@@ -15,8 +15,8 @@ export class ServiceOffering {
     private _serviceId: string,
     private _resourceId: string,
     private _maxCapacity: Capacity,
-    private _durationMinutes: Duration,
-    private _slotIntervalMinutes: Duration,
+    private _duration: Duration,
+    private _slotInterval: Duration,
     private _price: Price
   ) {}
 
@@ -40,12 +40,12 @@ export class ServiceOffering {
     return this._maxCapacity;
   }
 
-  get durationMinutes(): Duration {
-    return this._durationMinutes;
+  get duration(): Duration {
+    return this._duration;
   }
 
-  get slotIntervalMinutes(): Duration {
-    return this._slotIntervalMinutes;
+  get slotInterval(): Duration {
+    return this._slotInterval;
   }
 
   get price(): Price {

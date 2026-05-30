@@ -120,7 +120,7 @@ export interface SeedServiceOfferingProps {
 
 /**
  * Create a service offering directly via the repository.
- * Registers the serviceCode-to-serviceId mapping internally.
+ * Registers the serviceCode-to-serviceId mapping via registerServiceCodeMapping.
  */
 export async function seedServiceOffering(
   container: AwilixContainer,
@@ -140,7 +140,10 @@ export async function seedServiceOffering(
   });
   if (!soResult.isOk) throw new Error('Failed to create service offering');
   const so = soResult.data;
-  await soRepo.assign(so, props.serviceCode);
+  await soRepo.assign(so);
+  if (props.serviceCode) {
+    soRepo.registerServiceCodeMapping(props.serviceId, props.serviceCode);
+  }
   return so;
 }
 

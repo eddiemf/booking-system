@@ -11,9 +11,23 @@ export class InMemoryServiceOfferingRepository implements ServiceOfferingReposit
     this._serviceCodeToIds.clear();
   }
 
+  /**
+   * Register a mapping between a service code and a service ID.
+   * Must be called before getByServiceCode() can find offerings by service code.
+   * This is separate from assign() to keep the interface clean — assign() only
+   * takes the entity, while code mappings are established explicitly in seed code.
+   */
+  registerServiceCodeMapping(serviceId: string, serviceCode: string): void {
+    const existingCodeEntry = this._serviceCodeToIds.get(serviceCode);
+    if (existingCodeEntry) {
+      existingCodeEntry.add(serviceId);
+    } else {
+      this._serviceCodeToIds.set(serviceCode, new Set([serviceId]));
+    }
+  }
+
   async assign(
-    serviceOffering: ServiceOffering,
-    serviceCode?: string
+    serviceOffering: ServiceOffering
   ): PromiseResult<ServiceOffering, StorageError | NotFoundError | ConflictError> {
     const existing = [...this.offerings.values()].find(
       (o) =>
@@ -24,15 +38,6 @@ export class InMemoryServiceOfferingRepository implements ServiceOfferingReposit
     }
 
     this.offerings.set(serviceOffering.id, serviceOffering);
-
-    if (serviceCode) {
-      const existingCodeEntry = this._serviceCodeToIds.get(serviceCode);
-      if (existingCodeEntry) {
-        existingCodeEntry.add(serviceOffering.serviceId);
-      } else {
-        this._serviceCodeToIds.set(serviceCode, new Set([serviceOffering.serviceId]));
-      }
-    }
 
     return ok(serviceOffering);
   }

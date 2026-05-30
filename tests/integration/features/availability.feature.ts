@@ -135,6 +135,32 @@ describe('Availability Feature', () => {
       expect(res.status).toBe(400);
     });
 
+    it('GET .../availability — excludes slots overlapping confirmed bookings', async () => {
+      const { establishment, resource, service, token } = await setupFullScenario(ctx.container, {
+        scheduleEntries: [{ dayOfWeek: 3, startTime: '09:00', endTime: '12:00' }],
+      });
+
+      // Create a booking for 10:00-11:00
+      await ctx.request.post('/bookings').set('Authorization', `Bearer ${token}`).send({
+        serviceCode: service.code,
+        resourceCode: resource.code,
+        establishmentCode: establishment.code,
+        date: '2026-06-03',
+        startTime: '10:00',
+      });
+
+      const res = await ctx.request.get(
+        `/establishments/${establishment.code}/services/${service.code}/availability?date=2026-06-03`
+      );
+
+      // Without booking: 09:00, 10:00, 11:00 = 3 slots
+      // With booking 10:00-11:00: 10:00 slot overlaps. Expected: 09:00, 11:00 = 2 slots
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].startTime).toBe('09:00');
+      expect(res.body[1].startTime).toBe('11:00');
+    });
+
     it('GET .../availability — returns slots from multiple resources', async () => {
       const { user } = await registerUser(ctx.container, 'o@test.com', 'O');
       const establishment = await seedEstablishment(ctx.container, 'Salon', user.id, 'UTC');

@@ -126,6 +126,11 @@ describe('Establishments Feature', () => {
       const res = await ctx.request.get('/establishments?limit=abc');
       expect(res.status).toBe(400);
     });
+
+    it('GET /establishments — returns 400 for negative offset', async () => {
+      const res = await ctx.request.get('/establishments?offset=-1');
+      expect(res.status).toBe(400);
+    });
   });
 
   // ── Find Establishment ──
@@ -231,6 +236,22 @@ describe('Establishments Feature', () => {
         .send({ name: 'Salon', timezone: 'bogus' });
 
       expect(res.status).toBe(400);
+    });
+
+    it('PUT /establishments/:code — updates timezone', async () => {
+      const { token } = await registerUser(ctx.container, 'alice@test.com', 'Alice');
+      const createRes = await ctx.request
+        .post('/establishments')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Salon' });
+
+      const res = await ctx.request
+        .put(`/establishments/${createRes.body.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Salon', timezone: 'America/New_York' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.timezone).toBe('America/New_York');
     });
   });
 

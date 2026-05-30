@@ -2,11 +2,10 @@ import express from 'express';
 import { createIocContainer } from '../ioc-container';
 import { type AuthenticatedRequest, getAuthMiddleware } from './middleware/auth-middleware';
 
-export function createServer() {
+export function createServer(container = createIocContainer()) {
   const app = express();
-  const container = createIocContainer();
-  const config = container.resolve('config');
 
+  const config = container.resolve('config');
   const authController = container.resolve('authController');
   const availabilityController = container.resolve('availabilityController');
   const establishmentController = container.resolve('establishmentController');
@@ -15,10 +14,10 @@ export function createServer() {
   const serviceController = container.resolve('serviceController');
   const bookingController = container.resolve('bookingController');
 
+  const requireAuth = getAuthMiddleware(config.auth.jwtSecret);
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-
-  const requireAuth = getAuthMiddleware(config.auth.jwtSecret);
 
   // Auth routes
   app.post('/auth/google', (req, res) => authController.googleLogin(req, res));

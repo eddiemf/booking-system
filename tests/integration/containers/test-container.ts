@@ -27,20 +27,7 @@ import {
   UpdateResource,
   UpdateService,
 } from '@app/use-cases';
-import { getConfig } from '@config/config';
-import { PrismaClient } from '@prisma/client';
-import type { InferCradleFromContainer } from 'awilix';
-import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
-import { AppleAuthAdapter, GoogleAuthAdapter, JwtAdapter } from '../adapters';
-import {
-  PostgressBookingRepository,
-  PostgressEstablishmentRepository,
-  PostgressResourceRepository,
-  PostgressScheduleRepository,
-  PostgressServiceOfferingRepository,
-  PostgressServiceRepository,
-  PostgressUserRepository,
-} from '../repositories';
+import { JwtAdapter } from '@infrastructure/adapters';
 import {
   AuthController,
   AvailabilityController,
@@ -49,16 +36,34 @@ import {
   ResourceController,
   ScheduleController,
   ServiceController,
-} from '../server/controllers';
+} from '@infrastructure/server/controllers';
+import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
+import { MockAppleAuth, MockGoogleAuth } from '../adapters';
+import {
+  InMemoryBookingRepository,
+  InMemoryEstablishmentRepository,
+  InMemoryResourceRepository,
+  InMemoryScheduleRepository,
+  InMemoryServiceOfferingRepository,
+  InMemoryServiceRepository,
+  InMemoryUserRepository,
+} from '../repositories';
 
-export const createIocContainer = () => {
-  const config = getConfig();
+export function createTestContainer() {
+  const db = {} as any;
+
   const container = createContainer({
     injectionMode: InjectionMode.CLASSIC,
     strict: true,
-  }).register({
-    // Config (needed by server.ts)
-    config: asValue(config),
+  });
+
+  container.register({
+    // Config
+    config: asValue({
+      auth: {
+        jwtSecret: 'test-secret-key',
+      },
+    }),
 
     // Controllers
     authController: asClass(AuthController).singleton(),
@@ -105,29 +110,32 @@ export const createIocContainer = () => {
     // Domain services
     availabilityService: asClass(AvailabilityService).singleton(),
 
-    // Repositories
-    establishmentRepository: asClass(PostgressEstablishmentRepository).singleton(),
-    resourceRepository: asClass(PostgressResourceRepository).singleton(),
-    scheduleRepository: asClass(PostgressScheduleRepository).singleton(),
-    serviceRepository: asClass(PostgressServiceRepository).singleton(),
-    serviceOfferingRepository: asClass(PostgressServiceOfferingRepository).singleton(),
-    bookingRepository: asClass(PostgressBookingRepository).singleton(),
-    userRepository: asClass(PostgressUserRepository).singleton(),
+    // In-memory repositories
+    userRepository: asClass(InMemoryUserRepository).singleton(),
+    establishmentRepository: asClass(InMemoryEstablishmentRepository).singleton(),
+    resourceRepository: asClass(InMemoryResourceRepository).singleton(),
+    scheduleRepository: asClass(InMemoryScheduleRepository).singleton(),
+    serviceRepository: asClass(InMemoryServiceRepository).singleton(),
+    serviceOfferingRepository: asClass(InMemoryServiceOfferingRepository).singleton(),
+    bookingRepository: asClass(InMemoryBookingRepository).singleton(),
 
-    // Ports / Adapters
-    appleAuth: asClass(AppleAuthAdapter)
-      .inject(() => ({ clientId: config.auth.appleClientId }))
-      .singleton(),
-    googleAuth: asClass(GoogleAuthAdapter)
-      .inject(() => ({ clientId: config.auth.googleClientId }))
-      .singleton(),
+    // Mock auth adapters
+    googleAuth: asClass(MockGoogleAuth).singleton(),
+    appleAuth: asClass(MockAppleAuth).singleton(),
+
+    // Real JWT with test secret
     jwt: asClass(JwtAdapter)
-      .inject(() => ({ jwtSecret: config.auth.jwtSecret }))
+      .inject(() => ({ jwtSecret: 'test-secret-key' }))
       .singleton(),
 
-    // Database
-    db: asValue(new PrismaClient()),
+    // Fake DB (not used)
+    db: asValue(db),
   });
 
+  // Wire schedule repo into resource repo for schedule hydration
+  const resourceRepo = container.resolve('resourceRepository') as InMemoryResourceRepository;
+  const scheduleRepo = container.resolve('scheduleRepository') as InMemoryScheduleRepository;
+  resourceRepo.setScheduleRepo(scheduleRepo);
+
   return container;
-};
+}
